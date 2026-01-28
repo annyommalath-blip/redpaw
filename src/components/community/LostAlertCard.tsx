@@ -1,15 +1,19 @@
-import { MapPin, Clock, MessageCircle, Dog, Eye } from "lucide-react";
+import { MapPin, Clock, MessageCircle, Dog, Eye, Calendar, Scale } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { calculateAge } from "@/lib/ageCalculator";
 
 interface LostAlertCardProps {
   id: string;
   dogName: string;
   breed: string;
   photoUrl?: string;
+  age?: string;
+  weight?: string;
+  weightUnit?: string;
   description: string;
   lastSeenLocation: string;
   createdAt: Date;
@@ -23,6 +27,9 @@ export function LostAlertCard({
   dogName,
   breed,
   photoUrl,
+  age,
+  weight,
+  weightUnit,
   description,
   lastSeenLocation,
   createdAt,
@@ -79,6 +86,23 @@ export function LostAlertCard({
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-bold text-foreground">{dogName}</h3>
               <p className="text-sm text-muted-foreground">{breed}</p>
+              
+              {/* Age & Weight */}
+              <div className="flex flex-wrap gap-2 mt-1">
+                {age && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    <span>{age.includes("-") ? calculateAge(age) : age}</span>
+                  </div>
+                )}
+                {weight && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Scale className="h-3 w-3" />
+                    <span>{weight} {weightUnit || "lbs"}</span>
+                  </div>
+                )}
+              </div>
+              
               <p className="text-sm text-foreground mt-2 line-clamp-2">{description}</p>
             </div>
           </div>
