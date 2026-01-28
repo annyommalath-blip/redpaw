@@ -133,11 +133,6 @@ export default function HomePage() {
     }
   };
 
-  const handleAddRecord = () => {
-    setEditingRecord(null);
-    setFormOpen(true);
-  };
-
   const handleEditRecord = (record: MedRecordWithStatus) => {
     setEditingRecord(record);
     setFormOpen(true);
@@ -283,14 +278,14 @@ export default function HomePage() {
               />
             </section>
 
-            {/* Medication & Vaccine Records */}
+            {/* Medication Records */}
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <Syringe className="h-4 w-4" />
-                  Medication & Vaccine Records
+                  Medication Records
                 </h2>
-                <Button variant="ghost" size="sm" onClick={handleAddRecord}>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=meds")}>
                   <PlusCircle className="h-4 w-4 mr-1" />
                   Add
                 </Button>
@@ -310,9 +305,9 @@ export default function HomePage() {
                 <div className="text-center py-6 bg-muted/30 rounded-xl border border-dashed">
                   <Syringe className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground mb-3">
-                    No records yet. Track vaccines & medications!
+                    No records yet. Track medications!
                   </p>
-                  <Button variant="outline" size="sm" onClick={handleAddRecord}>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/create?type=meds")}>
                     <PlusCircle className="h-4 w-4 mr-1" />
                     Add Record
                   </Button>
