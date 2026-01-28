@@ -1,8 +1,9 @@
-import { MapPin, Clock, MessageCircle, Dog } from "lucide-react";
+import { MapPin, Clock, MessageCircle, Dog, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface LostAlertCardProps {
   id: string;
@@ -18,6 +19,7 @@ interface LostAlertCardProps {
 }
 
 export function LostAlertCard({
+  id,
   dogName,
   breed,
   photoUrl,
@@ -26,12 +28,29 @@ export function LostAlertCard({
   createdAt,
   status,
   onContact,
-  onReportSighting,
 }: LostAlertCardProps) {
   const isActive = status === "active";
+  const navigate = useNavigate();
+
+  const handleViewDetails = () => {
+    navigate(`/lost-alert/${id}`);
+  };
+
+  const handleReportSighting = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/lost-alert/${id}`);
+  };
+
+  const handleContact = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onContact();
+  };
 
   return (
-    <Card className={`overflow-hidden ${isActive ? "border-lost" : "border-success"}`}>
+    <Card 
+      className={`overflow-hidden cursor-pointer transition-shadow hover:shadow-md ${isActive ? "border-lost" : "border-success"}`}
+      onClick={handleViewDetails}
+    >
       <CardContent className="p-0">
         {/* Header with status */}
         <div className={`px-4 py-2 ${isActive ? "bg-lost" : "bg-success"}`}>
@@ -76,12 +95,12 @@ export function LostAlertCard({
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={onReportSighting}
+                onClick={handleReportSighting}
               >
-                <Clock className="h-4 w-4 mr-2" />
+                <Eye className="h-4 w-4 mr-2" />
                 Report Sighting
               </Button>
-              <Button className="flex-1 bg-primary" onClick={onContact}>
+              <Button className="flex-1 bg-primary" onClick={handleContact}>
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Contact
               </Button>
