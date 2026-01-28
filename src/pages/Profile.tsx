@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Phone, Eye, EyeOff, Archive, ChevronRight, ArchiveX, AlertTriangle } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -32,7 +32,6 @@ interface OwnerProfile {
   last_name: string | null;
   city: string | null;
   postal_code: string | null;
-  phone_number: string | null;
 }
 
 interface MyCareRequest {
@@ -91,14 +90,12 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [showPhone, setShowPhone] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [editForm, setEditForm] = useState({
     first_name: "",
     last_name: "",
     city: "",
     postal_code: "",
-    phone_number: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -116,7 +113,7 @@ export default function ProfilePage() {
       // Fetch profile with all fields
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, first_name, last_name, city, postal_code, phone_number")
+        .select("display_name, avatar_url, first_name, last_name, city, postal_code")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -127,7 +124,6 @@ export default function ProfilePage() {
           last_name: profileData.last_name || "",
           city: profileData.city || "",
           postal_code: profileData.postal_code || "",
-          phone_number: profileData.phone_number || "",
         });
       }
 
@@ -180,15 +176,6 @@ export default function ProfilePage() {
     }
   };
 
-  const maskPhoneNumber = (phone: string | null): string => {
-    if (!phone) return "";
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length >= 3) {
-      return `${digits.slice(0, 3)}-XXX-XXXX`;
-    }
-    return "XXX-XXX-XXXX";
-  };
-
   const handleSaveProfile = async () => {
     if (!user) return;
     setSaving(true);
@@ -200,7 +187,6 @@ export default function ProfilePage() {
           last_name: editForm.last_name.trim() || null,
           city: editForm.city.trim() || null,
           postal_code: editForm.postal_code.trim() || null,
-          phone_number: editForm.phone_number.trim() || null,
         })
         .eq("user_id", user.id);
 
@@ -212,7 +198,6 @@ export default function ProfilePage() {
         last_name: editForm.last_name.trim() || null,
         city: editForm.city.trim() || null,
         postal_code: editForm.postal_code.trim() || null,
-        phone_number: editForm.phone_number.trim() || null,
       } : null);
       
       setIsEditing(false);
@@ -394,24 +379,6 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Phone Number Field */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="phone_number" className="text-xs text-muted-foreground">
-                      Phone Number
-                    </Label>
-                    <Input
-                      id="phone_number"
-                      type="tel"
-                      value={editForm.phone_number}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, phone_number: e.target.value }))}
-                      placeholder="206-555-1234"
-                      className="h-9"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Others will only see your full number after a care request is confirmed.
-                    </p>
-                  </div>
-
                   {/* Save Button */}
                   <div className="flex gap-2">
                     <Button
@@ -442,7 +409,6 @@ export default function ProfilePage() {
                           last_name: profile?.last_name || "",
                           city: profile?.city || "",
                           postal_code: profile?.postal_code || "",
-                          phone_number: profile?.phone_number || "",
                         });
                       }}
                     >
@@ -474,26 +440,6 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  {/* Phone Display (masked by default for owner viewing their own) */}
-                  {profile?.phone_number && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        <span className="text-muted-foreground">Contact: </span>
-                        <span className="font-medium text-foreground">
-                          {showPhone ? profile.phone_number : maskPhoneNumber(profile.phone_number)}
-                        </span>
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => setShowPhone(!showPhone)}
-                      >
-                        {showPhone ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                      </Button>
-                    </div>
-                  )}
 
                   {/* Owner of Dogs */}
                   {dogs.length > 0 && (
@@ -516,7 +462,7 @@ export default function ProfilePage() {
                   )}
 
                   {/* Show hint if no details filled */}
-                  {!formatName() && !formatLocation() && !profile?.phone_number && (
+                  {!formatName() && !formatLocation() && (
                     <p className="text-sm text-muted-foreground italic">
                       Tap the edit icon to add your profile details.
                     </p>
