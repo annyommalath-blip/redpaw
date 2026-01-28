@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { PlusCircle, AlertTriangle, HandHeart, Clock, MapPin, FileText, Loader2, Pill } from "lucide-react";
+import { format } from "date-fns";
+import { PlusCircle, AlertTriangle, HandHeart, Clock, MapPin, FileText, Loader2, Pill, CalendarIcon, Syringe } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import { calculateExpirationDate } from "@/lib/medRecordUtils";
 
 type CreateType = "log" | "lost" | "care" | "meds" | null;
 
@@ -43,6 +48,14 @@ export default function CreatePage() {
   // Lost alert form state
   const [lostDescription, setLostDescription] = useState("");
   const [lastSeenLocation, setLastSeenLocation] = useState("");
+
+  // Med record form state
+  const [medName, setMedName] = useState("");
+  const [medType, setMedType] = useState<"vaccine" | "medication">("medication");
+  const [medDateGiven, setMedDateGiven] = useState<Date | undefined>();
+  const [medDurationValue, setMedDurationValue] = useState("");
+  const [medDurationUnit, setMedDurationUnit] = useState<"days" | "months" | "years">("months");
+  const [medNotes, setMedNotes] = useState("");
 
   // Care request form state
   const [careType, setCareType] = useState<string>("");
@@ -95,6 +108,44 @@ export default function CreatePage() {
 
       if (error) throw error;
       toast({ title: "Health log added! 🐾" });
+      navigate("/");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateMedRecord = async () => {
+    if (!medName.trim() || !medDateGiven || !medDurationValue || !selectedDogId) {
+      toast({ variant: "destructive", title: "Please fill in all required fields" });
+      return;
+    }
+
+    const durVal = parseInt(medDurationValue, 10);
+    if (isNaN(durVal) || durVal <= 0) {
+      toast({ variant: "destructive", title: "Duration must be a positive number" });
+      return;
+    }
+
+    const expiresOn = calculateExpirationDate(medDateGiven, durVal, medDurationUnit);
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("med_records").insert({
+        dog_id: selectedDogId,
+        owner_id: user!.id,
+        name: medName.trim(),
+        record_type: medType,
+        date_given: format(medDateGiven, "yyyy-MM-dd"),
+        duration_value: durVal,
+        duration_unit: medDurationUnit,
+        expires_on: format(expiresOn, "yyyy-MM-dd"),
+        notes: medNotes.trim() || null,
+      });
+
+      if (error) throw error;
+      toast({ title: "Medication record added! 💊" });
       navigate("/");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -343,34 +394,105 @@ export default function CreatePage() {
                     <Pill className="h-5 w-5 text-primary" />
                     Medication Records
                   </CardTitle>
-                  <CardDescription>Log medications, treatments & vaccines</CardDescription>
+                  <CardDescription>Track medications, treatments & vaccines with expiration dates</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Medication / Treatment Name</Label>
+                    <Label>Name *</Label>
                     <Input
-                      placeholder="e.g., Heartgard, Flea treatment, Vaccine..."
-                      value={logValue}
-                      onChange={(e) => setLogValue(e.target.value)}
+                      placeholder="e.g., Rabies, Heartworm, Flea treatment..."
+                      value={medName}
+                      onChange={(e) => setMedName(e.target.value)}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Type *</Label>
+                    <Select value={medType} onValueChange={(v) => setMedType(v as any)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-lg z-50">
+                        <SelectItem value="medication">
+                          <span className="flex items-center gap-2">
+                            <Pill className="h-4 w-4" /> Medication
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="vaccine">
+                          <span className="flex items-center gap-2">
+                            <Syringe className="h-4 w-4" /> Vaccine
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Date Given *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !medDateGiven && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {medDateGiven ? format(medDateGiven, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-50" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={medDateGiven}
+                          onSelect={setMedDateGiven}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Duration / Validity *</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="e.g., 12"
+                        value={medDurationValue}
+                        onChange={(e) => setMedDurationValue(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Select value={medDurationUnit} onValueChange={(v) => setMedDurationUnit(v as any)}>
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          <SelectItem value="days">Days</SelectItem>
+                          <SelectItem value="months">Months</SelectItem>
+                          <SelectItem value="years">Years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Notes (optional)</Label>
                     <Textarea
-                      placeholder="Dosage, frequency, vet instructions..."
-                      value={logNotes}
-                      onChange={(e) => setLogNotes(e.target.value)}
+                      placeholder="Dosage, vet info, side effects..."
+                      value={medNotes}
+                      onChange={(e) => setMedNotes(e.target.value)}
+                      rows={2}
                     />
                   </div>
 
                   <Button 
                     className="w-full" 
-                    onClick={() => {
-                      setLogType("meds");
-                      handleCreateLog();
-                    }} 
-                    disabled={submitting || !logValue.trim()}
+                    onClick={handleCreateMedRecord} 
+                    disabled={submitting || !medName.trim() || !medDateGiven || !medDurationValue}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Pill className="h-4 w-4 mr-2" />}
                     Add Medication Record
