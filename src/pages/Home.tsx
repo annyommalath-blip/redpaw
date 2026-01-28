@@ -11,6 +11,17 @@ import { Button } from "@/components/ui/button";
 import { MedRecordCardReadOnly } from "@/components/med/MedRecordCardReadOnly";
 import { ExpirationNotices } from "@/components/med/ExpirationNotices";
 import { LostModeDialog } from "@/components/dog/LostModeDialog";
+import { MedRecordEditDialog } from "@/components/med/MedRecordEditDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,6 +48,12 @@ export default function HomePage() {
   const [medRecords, setMedRecords] = useState<MedRecordWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [lostModeDialogOpen, setLostModeDialogOpen] = useState(false);
+  
+  // Edit/Delete states
+  const [editingMedRecord, setEditingMedRecord] = useState<MedRecordWithStatus | null>(null);
+  const [deletingMedRecord, setDeletingMedRecord] = useState<MedRecordWithStatus | null>(null);
+  const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -92,17 +109,14 @@ export default function HomePage() {
 
   const handleLostModeToggle = (dogId: string, currentlyLost: boolean) => {
     if (currentlyLost) {
-      // If already lost, turn off lost mode
       handleEndLostMode(dogId);
     } else {
-      // If not lost, open the dialog to collect details
       setLostModeDialogOpen(true);
     }
   };
 
   const handleEndLostMode = async (dogId: string) => {
     try {
-      // Update dog's lost status
       const { error: dogError } = await supabase
         .from("dogs")
         .update({ is_lost: false })
@@ -110,7 +124,6 @@ export default function HomePage() {
 
       if (dogError) throw dogError;
 
-      // Also resolve any active lost alerts for this dog
       await supabase
         .from("lost_alerts")
         .update({ status: "resolved" })
@@ -131,8 +144,54 @@ export default function HomePage() {
   };
 
   const handleLostModeSuccess = () => {
-    // Refresh data to update the lost status
     fetchData();
+  };
+
+  // Med Record handlers
+  const handleDeleteMedRecord = async () => {
+    if (!deletingMedRecord) return;
+    
+    try {
+      const { error } = await supabase
+        .from("med_records")
+        .delete()
+        .eq("id", deletingMedRecord.id);
+
+      if (error) throw error;
+
+      setMedRecords((prev) => prev.filter((r) => r.id !== deletingMedRecord.id));
+      toast({ title: "Record deleted" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setDeletingMedRecord(null);
+    }
+  };
+
+  const handleMedRecordUpdated = () => {
+    fetchData();
+    setEditingMedRecord(null);
+  };
+
+  // Health Log handlers
+  const handleDeleteLog = async () => {
+    if (!deletingLogId) return;
+    
+    try {
+      const { error } = await supabase
+        .from("health_logs")
+        .delete()
+        .eq("id", deletingLogId);
+
+      if (error) throw error;
+
+      setLogs((prev) => prev.filter((l) => l.id !== deletingLogId));
+      toast({ title: "Log deleted" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setDeletingLogId(null);
+    }
   };
 
   const primaryDog = dogs[0];
@@ -205,7 +264,7 @@ export default function HomePage() {
               />
             </section>
 
-            {/* Medication Records - Read Only */}
+            {/* Medication Records */}
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
@@ -218,7 +277,7 @@ export default function HomePage() {
                   onClick={() => navigate("/create?type=meds")}
                   className="text-muted-foreground"
                 >
-                  Manage
+                  Add
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -228,6 +287,8 @@ export default function HomePage() {
                     <MedRecordCardReadOnly
                       key={record.id}
                       record={record}
+                      onEdit={setEditingMedRecord}
+                      onDelete={setDeletingMedRecord}
                     />
                   ))}
                 </div>
@@ -254,9 +315,11 @@ export default function HomePage() {
                   {logs.map((log) => (
                     <HealthLogCard
                       key={log.id}
+                      id={log.id}
                       type={log.log_type}
                       value={log.value || ""}
                       createdAt={new Date(log.created_at)}
+                      onDelete={setDeletingLogId}
                     />
                   ))}
                 </div>
@@ -279,6 +342,50 @@ export default function HomePage() {
           />
         )}
       </div>
+
+      {/* Edit Med Record Dialog */}
+      <MedRecordEditDialog
+        record={editingMedRecord}
+        open={!!editingMedRecord}
+        onOpenChange={(open) => !open && setEditingMedRecord(null)}
+        onSuccess={handleMedRecordUpdated}
+      />
+
+      {/* Delete Med Record Confirmation */}
+      <AlertDialog open={!!deletingMedRecord} onOpenChange={(open) => !open && setDeletingMedRecord(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingMedRecord?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteMedRecord} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Log Confirmation */}
+      <AlertDialog open={!!deletingLogId} onOpenChange={(open) => !open && setDeletingLogId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Log?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this health log? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileLayout>
   );
 }

@@ -1,13 +1,23 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 type LogType = "walk" | "food" | "meds" | "mood" | "symptom";
 
 interface HealthLogCardProps {
+  id?: string;
   type: LogType;
   value?: string;
   notes?: string;
   createdAt: Date;
+  onDelete?: (id: string) => void;
 }
 
 const logTypeConfig: Record<LogType, { icon: string; label: string; color: string }> = {
@@ -18,7 +28,7 @@ const logTypeConfig: Record<LogType, { icon: string; label: string; color: strin
   symptom: { icon: "🩺", label: "Symptom", color: "bg-destructive/10 text-destructive" },
 };
 
-export function HealthLogCard({ type, value, notes, createdAt }: HealthLogCardProps) {
+export function HealthLogCard({ id, type, value, notes, createdAt, onDelete }: HealthLogCardProps) {
   const config = logTypeConfig[type];
 
   return (
@@ -42,6 +52,25 @@ export function HealthLogCard({ type, value, notes, createdAt }: HealthLogCardPr
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notes}</p>
             )}
           </div>
+          
+          {onDelete && id && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem 
+                  onClick={() => onDelete(id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardContent>
     </Card>
