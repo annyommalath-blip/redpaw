@@ -192,3 +192,17 @@ export function convertDbTimeToDisplay(dbTime: string): string {
   
   return `${hours}:${minutes} ${period}`;
 }
+
+export function parseDbTimeToInput(dbTime: string): string {
+  if (!dbTime) return "";
+  
+  const parts = dbTime.split(":");
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  const period = hours >= 12 ? "PM" : "AM";
+  
+  if (hours === 0) hours = 12;
+  else if (hours > 12) hours -= 12;
+  
+  return `${hours}:${minutes} ${period}`;
+}
