@@ -60,6 +60,7 @@ export type Database = {
       }
       care_requests: {
         Row: {
+          archived_at: string | null
           assigned_sitter_id: string | null
           care_type: Database["public"]["Enums"]["care_type"]
           created_at: string
@@ -79,6 +80,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           assigned_sitter_id?: string | null
           care_type: Database["public"]["Enums"]["care_type"]
           created_at?: string
@@ -98,6 +100,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           assigned_sitter_id?: string | null
           care_type?: Database["public"]["Enums"]["care_type"]
           created_at?: string

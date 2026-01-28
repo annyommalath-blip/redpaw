@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Phone, Eye, EyeOff, Archive, ChevronRight } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Phone, Eye, EyeOff, Archive, ChevronRight, ArchiveX } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,14 +44,19 @@ interface MyCareRequest {
   created_at: string;
   request_date: string | null;
   end_time: string | null;
+  archived_at: string | null;
   dogs: {
     name: string;
     breed: string | null;
   } | null;
 }
 
-// Helper to check if a care request is archived (1 hour after end time)
+// Helper to check if a care request is archived (manually or 1 hour after end time)
 const isRequestArchived = (request: MyCareRequest): boolean => {
+  // Check if manually archived
+  if (request.archived_at) return true;
+  
+  // Check auto-archive (1 hour after end time)
   if (!request.request_date || !request.end_time) return false;
   
   // Parse request_date and end_time to create a full datetime
@@ -221,6 +226,36 @@ export default function ProfilePage() {
       description: "See you soon! 🐾",
     });
     navigate("/auth");
+  };
+
+  const handleArchiveRequest = async (requestId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation to detail page
+    
+    try {
+      const { error } = await supabase
+        .from("care_requests")
+        .update({ archived_at: new Date().toISOString() })
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      // Update local state
+      setMyCareRequests(prev =>
+        prev.map(r => r.id === requestId ? { ...r, archived_at: new Date().toISOString() } : r)
+      );
+
+      toast({
+        title: "📦 Archived",
+        description: "Care request moved to archive.",
+      });
+    } catch (error) {
+      console.error("Error archiving request:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to archive request.",
+      });
+    }
   };
 
   const careTypeLabels: Record<string, string> = {
@@ -552,25 +587,34 @@ export default function ProfilePage() {
                         className="cursor-pointer hover:border-primary transition-colors"
                         onClick={() => navigate(`/care-request/${request.id}`)}
                       >
-                        <CardContent className="p-3 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <HandHeart className="h-5 w-5 text-primary" />
-                            <div>
-                              <p className="text-sm font-medium text-foreground">
+                        <CardContent className="p-3 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <HandHeart className="h-5 w-5 text-primary shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">
                                 {careTypeLabels[request.care_type]}
                                 {request.dogs?.name && (
                                   <span className="text-muted-foreground font-normal"> - {request.dogs.name}</span>
                                 )}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-xs text-muted-foreground truncate">
                                 {request.time_window}
                                 {!isOwner && isAssignedSitter && " • You're the sitter"}
                               </p>
                             </div>
                           </div>
-                          <Badge className={request.assigned_sitter_id ? "bg-primary" : "bg-warning"}>
-                            {request.assigned_sitter_id ? "Assigned" : "Open"}
-                          </Badge>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge className={request.assigned_sitter_id ? "bg-primary" : "bg-warning"}>
+                              {request.assigned_sitter_id ? "Assigned" : "Open"}
+                            </Badge>
+                            <button
+                              onClick={(e) => handleArchiveRequest(request.id, e)}
+                              className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                              title="Archive this request"
+                            >
+                              <ArchiveX className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                          </div>
                         </CardContent>
                       </Card>
                     );
