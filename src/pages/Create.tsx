@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { PlusCircle, AlertTriangle, HandHeart, Clock, MapPin, FileText, Loader2 } from "lucide-react";
+import { PlusCircle, AlertTriangle, HandHeart, Clock, MapPin, FileText, Loader2, Pill } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-type CreateType = "log" | "lost" | "care" | null;
+type CreateType = "log" | "lost" | "care" | "meds" | null;
 
 interface Dog {
   id: string;
@@ -182,7 +182,22 @@ export default function CreatePage() {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">Add Health Log</h3>
-                <p className="text-sm text-muted-foreground">Track walks, food, meds & more</p>
+                <p className="text-sm text-muted-foreground">Track walks, food, mood & more</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer hover:border-primary transition-colors"
+            onClick={() => setCreateType("meds")}
+          >
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Pill className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Medication Records</h3>
+                <p className="text-sm text-muted-foreground">Log medications & treatments</p>
               </div>
             </CardContent>
           </Card>
@@ -227,6 +242,8 @@ export default function CreatePage() {
         title={
           createType === "log"
             ? "Add Health Log"
+            : createType === "meds"
+            ? "Medication Records"
             : createType === "lost"
             ? "Post Lost Alert"
             : "Post Care Request"
@@ -287,7 +304,6 @@ export default function CreatePage() {
                       <SelectContent>
                         <SelectItem value="walk">🚶 Walk</SelectItem>
                         <SelectItem value="food">🍖 Food</SelectItem>
-                        <SelectItem value="meds">💊 Medication</SelectItem>
                         <SelectItem value="mood">😊 Mood</SelectItem>
                         <SelectItem value="symptom">🩺 Symptom</SelectItem>
                       </SelectContent>
@@ -315,6 +331,49 @@ export default function CreatePage() {
                   <Button className="w-full" onClick={handleCreateLog} disabled={submitting}>
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />}
                     Add Log
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {createType === "meds" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Pill className="h-5 w-5 text-primary" />
+                    Medication Records
+                  </CardTitle>
+                  <CardDescription>Log medications, treatments & vaccines</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Medication / Treatment Name</Label>
+                    <Input
+                      placeholder="e.g., Heartgard, Flea treatment, Vaccine..."
+                      value={logValue}
+                      onChange={(e) => setLogValue(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Notes (optional)</Label>
+                    <Textarea
+                      placeholder="Dosage, frequency, vet instructions..."
+                      value={logNotes}
+                      onChange={(e) => setLogNotes(e.target.value)}
+                    />
+                  </div>
+
+                  <Button 
+                    className="w-full" 
+                    onClick={() => {
+                      setLogType("meds");
+                      handleCreateLog();
+                    }} 
+                    disabled={submitting || !logValue.trim()}
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Pill className="h-4 w-4 mr-2" />}
+                    Add Medication Record
                   </Button>
                 </CardContent>
               </Card>
