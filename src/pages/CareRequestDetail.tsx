@@ -255,6 +255,23 @@ export default function CareRequestDetailPage() {
     }
   };
 
+  const handleWithdraw = async () => {
+    if (!myApplication) return;
+    
+    try {
+      const { error } = await supabase
+        .from("care_applications")
+        .update({ status: "withdrawn" })
+        .eq("id", myApplication.id);
+
+      if (error) throw error;
+      toast({ title: "Application withdrawn" });
+      fetchData();
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    }
+  };
+
   const handleChat = async (applicantId: string) => {
     try {
       // Check for existing conversation with this context
@@ -489,6 +506,7 @@ export default function CareRequestDetailPage() {
                 createdAt={myApplication.created_at}
                 isOwner={false}
                 canApprove={false}
+                onWithdraw={myApplication.status === "pending" ? handleWithdraw : undefined}
               />
             ) : showApplyForm ? (
               <ApplicationForm

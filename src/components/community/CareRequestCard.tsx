@@ -1,6 +1,5 @@
-import { MapPin, Clock, MessageCircle, Dog, DollarSign, Check, ChevronRight } from "lucide-react";
+import { MapPin, Clock, Dog, DollarSign, Check, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
@@ -19,7 +18,7 @@ interface CareRequestCardProps {
   createdAt: Date;
   status: "open" | "closed";
   isAssigned?: boolean;
-  onRespond?: () => void;
+  hasApplied?: boolean;
   onClick?: () => void;
 }
 
@@ -42,20 +41,19 @@ export function CareRequestCard({
   createdAt,
   status,
   isAssigned,
-  onRespond,
+  hasApplied,
   onClick,
 }: CareRequestCardProps) {
   const config = careTypeConfig[careType];
-  const isOpen = status === "open" && !isAssigned;
 
   return (
     <Card 
-      className={`overflow-hidden ${isOpen ? "" : "opacity-80"} ${onClick ? "cursor-pointer hover:border-primary transition-colors" : ""}`}
+      className={`overflow-hidden ${onClick ? "cursor-pointer hover:border-primary transition-colors" : ""}`}
       onClick={onClick}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Badge className={config.color}>
               {config.icon} {config.label}
             </Badge>
@@ -65,8 +63,14 @@ export function CareRequestCard({
                 Assigned
               </Badge>
             )}
+            {hasApplied && !isAssigned && (
+              <Badge variant="outline" className="border-primary text-primary">
+                <Check className="h-3 w-3 mr-1" />
+                Applied
+              </Badge>
+            )}
           </div>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground shrink-0">
             {formatDistanceToNow(createdAt, { addSuffix: true })}
           </span>
         </div>
@@ -83,8 +87,8 @@ export function CareRequestCard({
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-foreground">{dogName}</h3>
-            <p className="text-sm text-muted-foreground">{breed}</p>
+            <h3 className="font-bold text-foreground">{dogName || "Unknown"}</h3>
+            <p className="text-sm text-muted-foreground">{breed || "Unknown breed"}</p>
           </div>
 
           {onClick && (
@@ -112,20 +116,6 @@ export function CareRequestCard({
 
         {notes && (
           <p className="text-sm text-foreground mt-3 line-clamp-2">{notes}</p>
-        )}
-
-        {/* Action */}
-        {isOpen && onRespond && (
-          <Button 
-            className="w-full mt-4" 
-            onClick={(e) => {
-              e.stopPropagation();
-              onRespond();
-            }}
-          >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Respond to Request
-          </Button>
         )}
       </CardContent>
     </Card>

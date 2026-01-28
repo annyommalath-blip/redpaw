@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, X, MessageCircle, User, Clock, DollarSign } from "lucide-react";
+import { Check, X, MessageCircle, Clock, Undo2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ interface ApplicationCardProps {
   onApprove?: () => void;
   onDecline?: () => void;
   onChat?: () => void;
+  onWithdraw?: () => void;
 }
 
 const statusConfig = {
@@ -29,10 +30,9 @@ const statusConfig = {
 };
 
 export function ApplicationCard({
+  id,
   applicantName,
-  availabilityText,
   message,
-  rateOffered,
   status,
   createdAt,
   isOwner,
@@ -40,8 +40,9 @@ export function ApplicationCard({
   onApprove,
   onDecline,
   onChat,
+  onWithdraw,
 }: ApplicationCardProps) {
-  const [loading, setLoading] = useState<"approve" | "decline" | null>(null);
+  const [loading, setLoading] = useState<"approve" | "decline" | "withdraw" | null>(null);
   const config = statusConfig[status];
 
   const handleApprove = async () => {
@@ -53,6 +54,12 @@ export function ApplicationCard({
   const handleDecline = async () => {
     setLoading("decline");
     await onDecline?.();
+    setLoading(null);
+  };
+
+  const handleWithdraw = async () => {
+    setLoading("withdraw");
+    await onWithdraw?.();
     setLoading(null);
   };
 
@@ -80,26 +87,12 @@ export function ApplicationCard({
           </Badge>
         </div>
 
-        {/* Details */}
-        <div className="space-y-2 mb-3">
-          <div className="flex items-start gap-2 text-sm">
-            <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-            <span className="text-foreground">{availabilityText}</span>
-          </div>
-          {rateOffered && (
-            <div className="flex items-center gap-2 text-sm">
-              <DollarSign className="h-4 w-4 text-success shrink-0" />
-              <span className="text-success font-medium">{rateOffered}</span>
-            </div>
-          )}
-        </div>
-
         {/* Message */}
         <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg mb-3">
           "{message}"
         </p>
 
-        {/* Actions */}
+        {/* Owner Actions */}
         {isOwner && status === "pending" && (
           <div className="flex gap-2">
             <Button
@@ -140,6 +133,7 @@ export function ApplicationCard({
           </Button>
         )}
 
+        {/* Applicant View */}
         {!isOwner && status === "approved" && (
           <div className="flex items-center gap-2 text-sm text-primary font-medium">
             <Check className="h-4 w-4" />
@@ -148,8 +142,35 @@ export function ApplicationCard({
         )}
 
         {!isOwner && status === "pending" && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              Waiting for owner's response...
+            </div>
+            {onWithdraw && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={handleWithdraw}
+                disabled={loading !== null}
+              >
+                <Undo2 className="h-4 w-4 mr-1" />
+                {loading === "withdraw" ? "..." : "Withdraw"}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {!isOwner && status === "declined" && (
           <div className="text-sm text-muted-foreground">
-            Waiting for owner's response...
+            This application was not accepted.
+          </div>
+        )}
+
+        {!isOwner && status === "withdrawn" && (
+          <div className="text-sm text-muted-foreground">
+            You withdrew this application.
           </div>
         )}
       </CardContent>
