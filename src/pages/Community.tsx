@@ -49,6 +49,15 @@ export default function CommunityPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Check for tab parameter in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab === "lost" || tab === "care") {
+      setActiveTab(tab);
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, []);
