@@ -1,4 +1,4 @@
-import { MapPin, Clock, MessageCircle, Dog, DollarSign } from "lucide-react";
+import { MapPin, Clock, MessageCircle, Dog, DollarSign, Check, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,9 @@ interface CareRequestCardProps {
   payOffered?: string;
   createdAt: Date;
   status: "open" | "closed";
-  onRespond: () => void;
+  isAssigned?: boolean;
+  onRespond?: () => void;
+  onClick?: () => void;
 }
 
 const careTypeConfig: Record<CareType, { icon: string; label: string; color: string }> = {
@@ -39,18 +41,31 @@ export function CareRequestCard({
   payOffered,
   createdAt,
   status,
+  isAssigned,
   onRespond,
+  onClick,
 }: CareRequestCardProps) {
   const config = careTypeConfig[careType];
-  const isOpen = status === "open";
+  const isOpen = status === "open" && !isAssigned;
 
   return (
-    <Card className={`overflow-hidden ${isOpen ? "" : "opacity-70"}`}>
+    <Card 
+      className={`overflow-hidden ${isOpen ? "" : "opacity-80"} ${onClick ? "cursor-pointer hover:border-primary transition-colors" : ""}`}
+      onClick={onClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
-          <Badge className={config.color}>
-            {config.icon} {config.label}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge className={config.color}>
+              {config.icon} {config.label}
+            </Badge>
+            {isAssigned && (
+              <Badge className="bg-primary text-primary-foreground">
+                <Check className="h-3 w-3 mr-1" />
+                Assigned
+              </Badge>
+            )}
+          </div>
           <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(createdAt, { addSuffix: true })}
           </span>
@@ -71,6 +86,10 @@ export function CareRequestCard({
             <h3 className="font-bold text-foreground">{dogName}</h3>
             <p className="text-sm text-muted-foreground">{breed}</p>
           </div>
+
+          {onClick && (
+            <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+          )}
         </div>
 
         {/* Details */}
@@ -96,8 +115,14 @@ export function CareRequestCard({
         )}
 
         {/* Action */}
-        {isOpen && (
-          <Button className="w-full mt-4" onClick={onRespond}>
+        {isOpen && onRespond && (
+          <Button 
+            className="w-full mt-4" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onRespond();
+            }}
+          >
             <MessageCircle className="h-4 w-4 mr-2" />
             Respond to Request
           </Button>

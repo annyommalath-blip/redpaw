@@ -14,8 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      care_applications: {
+        Row: {
+          applicant_id: string
+          availability_text: string
+          created_at: string
+          id: string
+          message: string
+          rate_offered: string | null
+          request_id: string
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          availability_text: string
+          created_at?: string
+          id?: string
+          message: string
+          rate_offered?: string | null
+          request_id: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          availability_text?: string
+          created_at?: string
+          id?: string
+          message?: string
+          rate_offered?: string | null
+          request_id?: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_applications_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "care_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       care_requests: {
         Row: {
+          assigned_sitter_id: string | null
           care_type: Database["public"]["Enums"]["care_type"]
           created_at: string
           dog_id: string
@@ -29,6 +74,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_sitter_id?: string | null
           care_type: Database["public"]["Enums"]["care_type"]
           created_at?: string
           dog_id: string
@@ -42,6 +88,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_sitter_id?: string | null
           care_type?: Database["public"]["Enums"]["care_type"]
           created_at?: string
           dog_id?: string
@@ -66,6 +113,8 @@ export type Database = {
       }
       conversations: {
         Row: {
+          context_id: string | null
+          context_type: string | null
           created_at: string
           id: string
           last_message: string | null
@@ -73,6 +122,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          context_id?: string | null
+          context_type?: string | null
           created_at?: string
           id?: string
           last_message?: string | null
@@ -80,6 +131,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          context_id?: string | null
+          context_type?: string | null
           created_at?: string
           id?: string
           last_message?: string | null
@@ -309,6 +362,57 @@ export type Database = {
           },
         ]
       }
+      sitter_logs: {
+        Row: {
+          created_at: string
+          dog_id: string
+          id: string
+          log_type: Database["public"]["Enums"]["sitter_log_type"]
+          media_urls: string[] | null
+          note_text: string | null
+          owner_id: string
+          request_id: string
+          sitter_id: string
+        }
+        Insert: {
+          created_at?: string
+          dog_id: string
+          id?: string
+          log_type: Database["public"]["Enums"]["sitter_log_type"]
+          media_urls?: string[] | null
+          note_text?: string | null
+          owner_id: string
+          request_id: string
+          sitter_id: string
+        }
+        Update: {
+          created_at?: string
+          dog_id?: string
+          id?: string
+          log_type?: Database["public"]["Enums"]["sitter_log_type"]
+          media_urls?: string[] | null
+          note_text?: string | null
+          owner_id?: string
+          request_id?: string
+          sitter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sitter_logs_dog_id_fkey"
+            columns: ["dog_id"]
+            isOneToOne: false
+            referencedRelation: "dogs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sitter_logs_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "care_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -318,9 +422,11 @@ export type Database = {
     }
     Enums: {
       alert_status: "active" | "resolved"
+      application_status: "pending" | "approved" | "declined" | "withdrawn"
       care_type: "walk" | "watch" | "overnight" | "check-in"
       log_type: "walk" | "food" | "meds" | "mood" | "symptom"
       request_status: "open" | "closed"
+      sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -449,9 +555,11 @@ export const Constants = {
   public: {
     Enums: {
       alert_status: ["active", "resolved"],
+      application_status: ["pending", "approved", "declined", "withdrawn"],
       care_type: ["walk", "watch", "overnight", "check-in"],
       log_type: ["walk", "food", "meds", "mood", "symptom"],
       request_status: ["open", "closed"],
+      sitter_log_type: ["walk", "meal", "potty", "play", "note"],
     },
   },
 } as const
