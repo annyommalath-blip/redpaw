@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { MedRecordCardReadOnly } from "@/components/med/MedRecordCardReadOnly";
 import { ExpirationNotices } from "@/components/med/ExpirationNotices";
+import { LostModeDialog } from "@/components/dog/LostModeDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +36,7 @@ export default function HomePage() {
   const [logs, setLogs] = useState<HealthLog[]>([]);
   const [medRecords, setMedRecords] = useState<MedRecordWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lostModeDialogOpen, setLostModeDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -88,34 +90,49 @@ export default function HomePage() {
     }
   };
 
-  const handleLostToggle = async (dogId: string, isLost: boolean) => {
+  const handleLostModeToggle = (dogId: string, currentlyLost: boolean) => {
+    if (currentlyLost) {
+      // If already lost, turn off lost mode
+      handleEndLostMode(dogId);
+    } else {
+      // If not lost, open the dialog to collect details
+      setLostModeDialogOpen(true);
+    }
+  };
+
+  const handleEndLostMode = async (dogId: string) => {
     try {
-      const { error } = await supabase
+      // Update dog's lost status
+      const { error: dogError } = await supabase
         .from("dogs")
-        .update({ is_lost: isLost })
+        .update({ is_lost: false })
         .eq("id", dogId);
 
-      if (error) throw error;
+      if (dogError) throw dogError;
+
+      // Also resolve any active lost alerts for this dog
+      await supabase
+        .from("lost_alerts")
+        .update({ status: "resolved" })
+        .eq("dog_id", dogId)
+        .eq("status", "active");
 
       setDogs((prev) =>
-        prev.map((d) => (d.id === dogId ? { ...d, is_lost: isLost } : d))
+        prev.map((d) => (d.id === dogId ? { ...d, is_lost: false } : d))
       );
 
-      if (isLost) {
-        toast({
-          title: "🚨 Lost Mode Activated",
-          description: "Your dog's profile is now in Lost Mode. Post an alert in Community.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "✅ Lost Mode Deactivated",
-          description: "Glad your pup is safe!",
-        });
-      }
+      toast({
+        title: "✅ Lost Mode Deactivated",
+        description: "Glad your pup is safe! The alert has been resolved.",
+      });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
     }
+  };
+
+  const handleLostModeSuccess = () => {
+    // Refresh data to update the lost status
+    fetchData();
   };
 
   const primaryDog = dogs[0];
@@ -159,10 +176,23 @@ export default function HomePage() {
                 breed={primaryDog.breed || "Mixed breed"}
                 photoUrl={primaryDog.photo_url || ""}
                 isLost={primaryDog.is_lost}
-                onLostToggle={(isLost) => handleLostToggle(primaryDog.id, isLost)}
+                onLostToggle={(isLost) => handleLostModeToggle(primaryDog.id, primaryDog.is_lost)}
                 onClick={() => navigate(`/dog/${primaryDog.id}`)}
               />
             </section>
+
+            {/* Lost Mode Dialog */}
+            <LostModeDialog
+              open={lostModeDialogOpen}
+              onOpenChange={setLostModeDialogOpen}
+              dog={{
+                id: primaryDog.id,
+                name: primaryDog.name,
+                breed: primaryDog.breed,
+                photo_url: primaryDog.photo_url,
+              }}
+              onSuccess={handleLostModeSuccess}
+            />
 
             {/* Quick Actions */}
             <section>
@@ -171,7 +201,7 @@ export default function HomePage() {
               </h2>
               <QuickActions
                 isLost={primaryDog.is_lost}
-                onToggleLost={() => handleLostToggle(primaryDog.id, !primaryDog.is_lost)}
+                onToggleLost={() => handleLostModeToggle(primaryDog.id, primaryDog.is_lost)}
               />
             </section>
 
