@@ -202,21 +202,9 @@ export default function HomePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 bg-muted/30 rounded-xl border border-dashed">
-                  <Syringe className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground mb-3">
-                    No medication records yet. Add one from the Create tab.
-                  </p>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => navigate("/create?type=meds")}
-                    className="text-primary"
-                  >
-                    Go to Create
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No medication records yet. Start tracking!
+                </p>
               )}
             </section>
 
