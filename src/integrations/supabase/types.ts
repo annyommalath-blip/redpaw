@@ -581,7 +581,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_profile_phone_number: {
+        Args: { profile_user_id: string }
+        Returns: string
+      }
     }
     Enums: {
       alert_status: "active" | "resolved"
