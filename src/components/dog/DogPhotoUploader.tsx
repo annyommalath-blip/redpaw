@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Plus, X, Star, Loader2, ImageIcon } from "lucide-react";
+import { Plus, X, Loader2, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -187,56 +187,22 @@ export function DogPhotoUploader({
     onChange(newPhotos);
   };
 
-  const handleSetCover = (index: number) => {
-    if (index === 0) return; // Already the cover
-    const newPhotos = [...photos];
-    const [photo] = newPhotos.splice(index, 1);
-    newPhotos.unshift(photo);
-    onChange(newPhotos);
-    toast({
-      title: "Cover photo set! ⭐",
-      description: "This photo will be your dog's main profile picture.",
-    });
-  };
-
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-3">
         {photos.map((url, index) => (
           <div
             key={url}
-            className={cn(
-              "relative aspect-square rounded-lg overflow-hidden border-2 group",
-              index === 0 ? "border-primary" : "border-border"
-            )}
+            className="relative aspect-square rounded-lg overflow-hidden border-2 border-border group"
           >
             <img
               src={url}
               alt={`Dog photo ${index + 1}`}
               className="w-full h-full object-cover"
             />
-            
-            {/* Cover badge */}
-            {index === 0 && (
-              <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
-                <Star className="h-3 w-3" />
-                Cover
-              </div>
-            )}
 
             {/* Actions overlay */}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              {index !== 0 && (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="secondary"
-                  className="h-8 w-8"
-                  onClick={() => handleSetCover(index)}
-                >
-                  <Star className="h-4 w-4" />
-                </Button>
-              )}
               <Button
                 type="button"
                 size="icon"
@@ -285,7 +251,7 @@ export function DogPhotoUploader({
       {photos.length === 0 && !uploading && (
         <div className="text-center py-4 text-muted-foreground">
           <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Add photos of your dog</p>
+          <p className="text-sm">Add additional photos of your dog</p>
           <p className="text-xs">Supports JPG, PNG, WebP, HEIC • Up to {maxPhotos} photos, 10MB each</p>
         </div>
       )}
@@ -300,7 +266,7 @@ export function DogPhotoUploader({
       />
 
       <p className="text-xs text-muted-foreground text-center">
-        {photos.length}/{maxPhotos} photos • First photo is the cover
+        {photos.length}/{maxPhotos} additional photos
       </p>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog, Loader2, Calendar, Camera } from "lucide-react";
+import { Dog, Loader2, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -17,9 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { BreedSelector } from "@/components/dog/BreedSelector";
 import { DogPhotoUploader } from "@/components/dog/DogPhotoUploader";
+import { ProfilePhotoUploader } from "@/components/dog/ProfilePhotoUploader";
 import { calculateAge } from "@/lib/ageCalculator";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function AddDogPage() {
   const navigate = useNavigate();
@@ -32,7 +32,8 @@ export default function AddDogPage() {
   const [weight, setWeight] = useState("");
   const [weightUnit, setWeightUnit] = useState("lbs");
   const [notes, setNotes] = useState("");
-  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [additionalPhotos, setAdditionalPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Calculate age from DOB
@@ -65,8 +66,8 @@ export default function AddDogPage() {
         weight: weight.trim() || null,
         weight_unit: weightUnit,
         notes: notes.trim() || null,
-        photo_url: photoUrls[0] || null, // First photo as cover
-        photo_urls: photoUrls,
+        photo_url: profilePhoto,
+        photo_urls: additionalPhotos,
       });
 
       if (error) throw error;
@@ -95,17 +96,16 @@ export default function AddDogPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Cover Photo Avatar */}
-              <div className="flex flex-col items-center gap-2">
-                <Avatar className="h-24 w-24 border-4 border-primary/20">
-                  <AvatarImage src={photoUrls[0]} alt="Dog cover photo" />
-                  <AvatarFallback className="bg-muted">
-                    <Camera className="h-8 w-8 text-muted-foreground" />
-                  </AvatarFallback>
-                </Avatar>
-                <p className="text-xs text-muted-foreground">
-                  {photoUrls[0] ? "Cover photo set!" : "Add a photo below to set cover"}
-                </p>
+              {/* Profile Photo */}
+              <div className="space-y-2">
+                <Label className="text-center block">Profile Photo</Label>
+                {user && (
+                  <ProfilePhotoUploader
+                    userId={user.id}
+                    photoUrl={profilePhoto}
+                    onChange={setProfilePhoto}
+                  />
+                )}
               </div>
 
               {/* Name */}
@@ -191,14 +191,14 @@ export default function AddDogPage() {
                 </div>
               </div>
 
-              {/* Photos Section */}
+              {/* Additional Photos Section */}
               <div className="space-y-2">
-                <Label>Photos</Label>
+                <Label>Additional Photos (optional)</Label>
                 {user && (
                   <DogPhotoUploader
                     userId={user.id}
-                    photos={photoUrls}
-                    onChange={setPhotoUrls}
+                    photos={additionalPhotos}
+                    onChange={setAdditionalPhotos}
                     maxPhotos={5}
                   />
                 )}
