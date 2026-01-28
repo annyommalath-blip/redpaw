@@ -46,12 +46,23 @@ export function DogPhotoUploader({
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
 
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
+      // Validate file type - also check for HEIC which browsers can't display
+      const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+      if (!file.type.startsWith("image/") && !isHeic) {
         toast({
           variant: "destructive",
           title: "Invalid file type",
           description: `${file.name} is not an image file.`,
+        });
+        continue;
+      }
+
+      // Warn about HEIC files - browsers can't display them natively
+      if (isHeic) {
+        toast({
+          variant: "destructive",
+          title: "Unsupported format",
+          description: `${file.name} is HEIC format. Please convert to JPG or PNG.`,
         });
         continue;
       }

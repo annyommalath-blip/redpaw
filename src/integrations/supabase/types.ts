@@ -156,6 +156,7 @@ export type Database = {
           photo_urls: string[] | null
           updated_at: string
           weight: string | null
+          weight_unit: string | null
         }
         Insert: {
           age?: string | null
@@ -171,6 +172,7 @@ export type Database = {
           photo_urls?: string[] | null
           updated_at?: string
           weight?: string | null
+          weight_unit?: string | null
         }
         Update: {
           age?: string | null
@@ -186,6 +188,7 @@ export type Database = {
           photo_urls?: string[] | null
           updated_at?: string
           weight?: string | null
+          weight_unit?: string | null
         }
         Relationships: []
       }
