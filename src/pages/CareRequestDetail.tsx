@@ -71,9 +71,12 @@ interface Application {
     display_name: string | null;
     first_name: string | null;
     last_name: string | null;
+    avatar_url: string | null;
+  };
+  // Location only available for assigned sitters (fetched separately via get_profile_location)
+  location?: {
     city: string | null;
     postal_code: string | null;
-    avatar_url: string | null;
   };
 }
 
@@ -184,18 +187,33 @@ export default function CareRequestDetailPage() {
           .eq("request_id", requestId)
           .order("created_at", { ascending: false });
 
-        // Fetch applicant profiles separately
+        // Fetch applicant profiles separately (excluding location for security)
         if (appsData && appsData.length > 0) {
           const applicantIds = appsData.map(app => app.applicant_id);
           const { data: profilesData } = await supabase
             .from("profiles")
-            .select("user_id, display_name, first_name, last_name, city, postal_code, avatar_url")
+            .select("user_id, display_name, first_name, last_name, avatar_url")
             .in("user_id", applicantIds);
 
-          // Combine applications with profiles
-          const appsWithProfiles = appsData.map(app => ({
-            ...app,
-            profiles: profilesData?.find(p => p.user_id === app.applicant_id) || null
+          // Fetch location only for approved applicants using security function
+          const appsWithProfiles = await Promise.all(appsData.map(async (app) => {
+            const profile = profilesData?.find(p => p.user_id === app.applicant_id) || null;
+            
+            // Only fetch location for approved applicants (assigned sitters)
+            let location = null;
+            if (app.status === "approved") {
+              const { data: locationData } = await supabase
+                .rpc("get_profile_location", { target_user_id: app.applicant_id });
+              if (locationData && locationData.length > 0) {
+                location = locationData[0];
+              }
+            }
+            
+            return {
+              ...app,
+              profiles: profile,
+              location
+            };
           }));
           setApplications(appsWithProfiles as any);
         } else {
@@ -511,8 +529,8 @@ export default function CareRequestDetailPage() {
                       applicantName={app.profiles?.display_name || "Applicant"}
                       applicantFirstName={app.profiles?.first_name}
                       applicantLastName={app.profiles?.last_name}
-                      applicantCity={app.profiles?.city}
-                      applicantPostalCode={app.profiles?.postal_code}
+                      applicantCity={app.location?.city}
+                      applicantPostalCode={app.location?.postal_code}
                       applicantAvatarUrl={app.profiles?.avatar_url}
                       availabilityText={app.availability_text}
                       message={app.message}
