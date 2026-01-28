@@ -16,6 +16,7 @@ import AddDog from "./pages/AddDog";
 import EditDog from "./pages/EditDog";
 import DogDetail from "./pages/DogDetail";
 import CareRequestDetail from "./pages/CareRequestDetail";
+import LostAlertDetail from "./pages/LostAlertDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
             <Route path="/care-request/:requestId" element={<ProtectedRoute><CareRequestDetail /></ProtectedRoute>} />
+            <Route path="/lost-alert/:id" element={<ProtectedRoute><LostAlertDetail /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/messages/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
