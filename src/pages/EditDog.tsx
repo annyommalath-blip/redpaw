@@ -48,13 +48,9 @@ export default function EditDogPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    if (dogId) {
+    if (dogId && user) {
       fetchDog();
-    } else {
+    } else if (!dogId) {
       navigate("/profile");
     }
   }, [user, dogId]);

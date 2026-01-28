@@ -52,11 +52,9 @@ export default function CreatePage() {
   const [payOffered, setPayOffered] = useState("");
 
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
+    if (user) {
+      fetchDogs();
     }
-    fetchDogs();
   }, [user]);
 
   const fetchDogs = async () => {
@@ -167,8 +165,6 @@ export default function CreatePage() {
       setSubmitting(false);
     }
   };
-
-  if (!user) return null;
 
   if (!createType) {
     return (

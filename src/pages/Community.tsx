@@ -50,12 +50,8 @@ export default function CommunityPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
     fetchData();
-  }, [user]);
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
