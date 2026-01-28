@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog, PlusCircle, Loader2, Syringe } from "lucide-react";
+import { Dog, PlusCircle, Loader2, Syringe, ChevronRight } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DogCard } from "@/components/dog/DogCard";
@@ -8,23 +8,12 @@ import { QuickActions } from "@/components/dog/QuickActions";
 import { HealthLogCard } from "@/components/dog/HealthLogCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { MedRecordCard } from "@/components/med/MedRecordCard";
-import { MedRecordForm } from "@/components/med/MedRecordForm";
+import { MedRecordCardReadOnly } from "@/components/med/MedRecordCardReadOnly";
 import { ExpirationNotices } from "@/components/med/ExpirationNotices";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { enrichRecordWithStatus, MedRecordWithStatus } from "@/lib/medRecordUtils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface UserDog {
   id: string;
@@ -46,10 +35,6 @@ export default function HomePage() {
   const [logs, setLogs] = useState<HealthLog[]>([]);
   const [medRecords, setMedRecords] = useState<MedRecordWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<MedRecordWithStatus | null>(null);
-  const [deleteRecord, setDeleteRecord] = useState<MedRecordWithStatus | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -133,91 +118,6 @@ export default function HomePage() {
     }
   };
 
-  const handleEditRecord = (record: MedRecordWithStatus) => {
-    setEditingRecord(record);
-    setFormOpen(true);
-  };
-
-  const handleDeleteRecord = async () => {
-    if (!deleteRecord) return;
-    try {
-      const { error } = await supabase
-        .from("med_records")
-        .delete()
-        .eq("id", deleteRecord.id);
-
-      if (error) throw error;
-
-      setMedRecords((prev) => prev.filter((r) => r.id !== deleteRecord.id));
-      toast({ title: "Record deleted" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    } finally {
-      setDeleteRecord(null);
-    }
-  };
-
-  const handleSubmitRecord = async (data: {
-    name: string;
-    record_type: "vaccine" | "medication";
-    date_given: string;
-    duration_value: number;
-    duration_unit: "days" | "months" | "years";
-    expires_on: string;
-    notes: string | null;
-  }) => {
-    if (!user || !dogs[0]) return;
-    setSubmitting(true);
-
-    try {
-      if (editingRecord) {
-        // Update
-        const { data: updated, error } = await supabase
-          .from("med_records")
-          .update(data)
-          .eq("id", editingRecord.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        setMedRecords((prev) =>
-          prev.map((r) =>
-            r.id === editingRecord.id ? enrichRecordWithStatus(updated as any) : r
-          ).sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry)
-        );
-        toast({ title: "Record updated! 💉" });
-      } else {
-        // Insert
-        const { data: inserted, error } = await supabase
-          .from("med_records")
-          .insert({
-            ...data,
-            dog_id: dogs[0].id,
-            owner_id: user.id,
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        setMedRecords((prev) =>
-          [...prev, enrichRecordWithStatus(inserted as any)].sort(
-            (a, b) => a.daysUntilExpiry - b.daysUntilExpiry
-          )
-        );
-        toast({ title: "Record added! 💉" });
-      }
-
-      setFormOpen(false);
-      setEditingRecord(null);
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const primaryDog = dogs[0];
 
   if (loading) {
@@ -247,10 +147,7 @@ export default function HomePage() {
         {primaryDog ? (
           <>
             {/* Expiration Notices */}
-            <ExpirationNotices
-              records={medRecords}
-              onRecordClick={handleEditRecord}
-            />
+            <ExpirationNotices records={medRecords} />
 
             {/* My Dog Card */}
             <section>
@@ -278,26 +175,29 @@ export default function HomePage() {
               />
             </section>
 
-            {/* Medication Records */}
+            {/* Medication Records - Read Only */}
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <Syringe className="h-4 w-4" />
                   Medication Records
                 </h2>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=meds")}>
-                  <PlusCircle className="h-4 w-4 mr-1" />
-                  Add
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate("/create?type=meds")}
+                  className="text-muted-foreground"
+                >
+                  Manage
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
               {medRecords.length > 0 ? (
                 <div className="space-y-3">
                   {medRecords.map((record) => (
-                    <MedRecordCard
+                    <MedRecordCardReadOnly
                       key={record.id}
                       record={record}
-                      onEdit={handleEditRecord}
-                      onDelete={setDeleteRecord}
                     />
                   ))}
                 </div>
@@ -305,11 +205,16 @@ export default function HomePage() {
                 <div className="text-center py-6 bg-muted/30 rounded-xl border border-dashed">
                   <Syringe className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground mb-3">
-                    No records yet. Track medications!
+                    No medication records yet. Add one from the Create tab.
                   </p>
-                  <Button variant="outline" size="sm" onClick={() => navigate("/create?type=meds")}>
-                    <PlusCircle className="h-4 w-4 mr-1" />
-                    Add Record
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => navigate("/create?type=meds")}
+                    className="text-primary"
+                  >
+                    Go to Create
+                    <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
               )}
@@ -356,36 +261,6 @@ export default function HomePage() {
           />
         )}
       </div>
-
-      {/* Med Record Form Dialog */}
-      <MedRecordForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        onSubmit={handleSubmitRecord}
-        editingRecord={editingRecord}
-        submitting={submitting}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteRecord} onOpenChange={() => setDeleteRecord(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Record?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the {deleteRecord?.name} record. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteRecord}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </MobileLayout>
   );
 }
