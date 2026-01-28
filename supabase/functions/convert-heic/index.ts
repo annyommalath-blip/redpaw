@@ -14,19 +14,83 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const { tempPath, userId } = await req.json();
-
-    if (!tempPath || !userId) {
+    // Verify authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.error("[convert-heic] Missing or invalid authorization header");
       return new Response(
-        JSON.stringify({ error: "Missing tempPath or userId" }),
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create client with user's auth to verify the user
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(
+      authHeader.replace("Bearer ", "")
+    );
+
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.error("[convert-heic] Auth verification failed:", claimsError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const authenticatedUserId = claimsData.claims.sub as string;
+    console.log(`[convert-heic] Authenticated user: ${authenticatedUserId}`);
+
+    // Parse and validate request body
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON body" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`[convert-heic] Processing: ${tempPath}`);
+    const { tempPath } = body as { tempPath?: unknown };
+
+    // Validate tempPath exists and is a string
+    if (!tempPath || typeof tempPath !== "string") {
+      console.error("[convert-heic] Invalid or missing tempPath");
+      return new Response(
+        JSON.stringify({ error: "Invalid tempPath" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Sanitize and validate path - prevent path traversal attacks
+    if (tempPath.includes("..") || tempPath.includes("//")) {
+      console.error("[convert-heic] Path traversal attempt detected:", tempPath);
+      return new Response(
+        JSON.stringify({ error: "Invalid path" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Ensure path is within the authenticated user's temp folder
+    const expectedPrefix = `temp/${authenticatedUserId}/`;
+    if (!tempPath.startsWith(expectedPrefix)) {
+      console.error("[convert-heic] Path not in user's folder:", tempPath, "expected prefix:", expectedPrefix);
+      return new Response(
+        JSON.stringify({ error: "Access denied - path not in your folder" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[convert-heic] Processing validated path: ${tempPath}`);
+
+    // Use service role client for storage operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Download the HEIC file
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -43,21 +107,6 @@ Deno.serve(async (req) => {
 
     console.log(`[convert-heic] Downloaded file, size: ${fileData.size}`);
 
-    // For server-side HEIC conversion, we use a different approach
-    // Since Deno doesn't have native HEIC support, we'll try using sharp via npm
-    // However, sharp requires native binaries which don't work in edge functions
-    
-    // Alternative: Use a canvas-based approach or external API
-    // For now, we'll use the file as-is if it's small enough to be displayable
-    // This is a fallback - the client-side heic2any should handle most cases
-    
-    // The best server-side solution would be to:
-    // 1. Use an external HEIC conversion API
-    // 2. Or use a separate backend service with sharp/libheif
-    
-    // For this implementation, we'll resize/compress the file assuming
-    // modern browsers/CDNs can sometimes handle HEIC transcoding
-    
     // Since true server-side HEIC conversion requires native libraries not available in edge functions,
     // we return an error indicating client-side conversion is required
     
@@ -76,7 +125,7 @@ Deno.serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("[convert-heic] Error:", errorMessage);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
