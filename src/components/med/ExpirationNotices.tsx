@@ -5,10 +5,9 @@ import { cn } from "@/lib/utils";
 
 interface ExpirationNoticesProps {
   records: MedRecordWithStatus[];
-  onRecordClick: (record: MedRecordWithStatus) => void;
 }
 
-export function ExpirationNotices({ records, onRecordClick }: ExpirationNoticesProps) {
+export function ExpirationNotices({ records }: ExpirationNoticesProps) {
   const urgentRecords = records.filter(
     (r) => r.status === "expired" || r.status === "expiring-soon"
   ).sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
@@ -26,12 +25,11 @@ export function ExpirationNotices({ records, onRecordClick }: ExpirationNoticesP
           <Card
             key={record.id}
             className={cn(
-              "cursor-pointer transition-all hover:scale-[1.01]",
+              "transition-all",
               record.status === "expired"
-                ? "border-destructive bg-destructive/5 hover:border-destructive"
-                : "border-warning bg-warning/5 hover:border-warning"
+                ? "border-destructive bg-destructive/5"
+                : "border-warning bg-warning/5"
             )}
-            onClick={() => onRecordClick(record)}
           >
             <CardContent className="p-3 flex items-center gap-3">
               <div className={cn(
