@@ -10,11 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SingleDateTimePicker, validateSingleDateTime, formatSingleDateTimeWindow, convertTimeToDbFormat, parseDbTimeToInput } from "@/components/care/SingleDateTimePicker";
 import { CurrencyInput } from "@/components/care/CurrencyInput";
 import { DogMultiSelector } from "@/components/dog/DogMultiSelector";
+import { LocationPicker } from "@/components/location/LocationPicker";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import { formatPayAmount } from "@/data/currencies";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +43,10 @@ interface CareRequest {
   request_date: string | null;
   start_time: string | null;
   end_time: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  location_label?: string | null;
+  location_source?: string | null;
 }
 
 interface EditCareRequestDialogProps {
@@ -59,6 +64,7 @@ export function EditCareRequestDialog({
 }: EditCareRequestDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const location = useGeolocation();
 
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [selectedDogIds, setSelectedDogIds] = useState<string[]>([]);
@@ -67,7 +73,6 @@ export function EditCareRequestDialog({
   const [careStartTime, setCareStartTime] = useState<string>("");
   const [careEndTime, setCareEndTime] = useState<string>("");
   const [careTimeError, setCareTimeError] = useState<string>("");
-  const [careLocation, setCareLocation] = useState(request.location_text);
   const [careNotes, setCareNotes] = useState(request.notes || "");
   const [payAmount, setPayAmount] = useState(request.pay_amount?.toString() || "");
   const [payCurrency, setPayCurrency] = useState(request.pay_currency || "USD");
@@ -80,10 +85,16 @@ export function EditCareRequestDialog({
       // Initialize form with request data
       setSelectedDogIds(request.dog_ids || [request.dog_id]);
       setCareType(request.care_type);
-      setCareLocation(request.location_text);
       setCareNotes(request.notes || "");
       setPayAmount(request.pay_amount?.toString() || "");
       setPayCurrency(request.pay_currency || "USD");
+      
+      // Initialize location
+      if (request.latitude && request.longitude) {
+        location.setManualLocation(request.latitude, request.longitude, request.location_label || request.location_text);
+      } else {
+        location.setLocationFromText(request.location_label || request.location_text);
+      }
       
       // Parse date and times
       if (request.request_date) {
@@ -135,7 +146,7 @@ export function EditCareRequestDialog({
     }
     setCareTimeError("");
 
-    if (!careType || !careLocation || selectedDogIds.length === 0) {
+    if (!careType || !location.locationLabel || selectedDogIds.length === 0) {
       toast({ variant: "destructive", title: "Please fill in all required fields" });
       return;
     }
@@ -152,7 +163,7 @@ export function EditCareRequestDialog({
           dog_ids: selectedDogIds,
           care_type: careType as any,
           time_window: timeWindow,
-          location_text: careLocation,
+          location_text: location.locationLabel,
           notes: careNotes || null,
           pay_offered: payAmountNum ? formatPayAmount(payAmountNum, payCurrency) : null,
           request_date: format(careDate!, "yyyy-MM-dd"),
@@ -160,6 +171,10 @@ export function EditCareRequestDialog({
           end_time: convertTimeToDbFormat(careEndTime),
           pay_amount: payAmountNum,
           pay_currency: payAmountNum ? payCurrency : null,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          location_label: location.locationLabel,
+          location_source: location.locationSource,
         })
         .eq("id", request.id);
 
@@ -222,14 +237,22 @@ export function EditCareRequestDialog({
               error={careTimeError}
             />
 
-            <div className="space-y-2">
-              <Label>Location</Label>
-              <Input
-                placeholder="Where should they come?"
-                value={careLocation}
-                onChange={(e) => setCareLocation(e.target.value)}
-              />
-            </div>
+            <LocationPicker
+              latitude={location.latitude}
+              longitude={location.longitude}
+              locationLabel={location.locationLabel}
+              locationSource={location.locationSource}
+              loading={location.loading}
+              error={location.error}
+              permissionDenied={location.permissionDenied}
+              onRequestLocation={location.requestLocation}
+              onManualLocation={location.setManualLocation}
+              onLocationTextChange={location.setLocationFromText}
+              onSearchAddress={location.searchAddress}
+              required
+              placeholder="Where should they come?"
+              description="Help sitters know where to meet you."
+            />
 
             <CurrencyInput
               amount={payAmount}

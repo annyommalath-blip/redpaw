@@ -49,6 +49,10 @@ interface CareRequestCardProps {
     request_date: string | null;
     start_time: string | null;
     end_time: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    location_label?: string | null;
+    location_source?: string | null;
   };
   onDeleted?: () => void;
   onUpdated?: () => void;

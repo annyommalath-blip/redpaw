@@ -18,6 +18,9 @@ interface LostAlert {
   photo_url: string | null;
   status: "active" | "resolved";
   created_at: string;
+  latitude: number | null;
+  longitude: number | null;
+  location_label: string | null;
   dogs: {
     name: string;
     breed: string | null;
@@ -50,6 +53,10 @@ interface CareRequest {
   dog_ids: string[] | null;
   dogs: DogInfo | null;
   allDogs?: DogInfo[];
+  latitude: number | null;
+  longitude: number | null;
+  location_label: string | null;
+  location_source: string | null;
 }
 
 export default function CommunityPage() {
@@ -256,7 +263,7 @@ export default function CommunityPage() {
                   photoUrl={request.dogs?.photo_url || undefined}
                   careType={request.care_type}
                   timeWindow={request.time_window}
-                  location={request.location_text}
+                  location={request.location_label || request.location_text}
                   notes={request.notes || undefined}
                   payOffered={request.pay_offered || undefined}
                   createdAt={new Date(request.created_at)}
@@ -280,6 +287,10 @@ export default function CommunityPage() {
                     request_date: request.request_date,
                     start_time: request.start_time,
                     end_time: request.end_time,
+                    latitude: request.latitude,
+                    longitude: request.longitude,
+                    location_label: request.location_label,
+                    location_source: request.location_source,
                   }}
                   onDeleted={fetchData}
                   onUpdated={fetchData}
@@ -308,6 +319,9 @@ export default function CommunityPage() {
                   weightUnit={(alert.dogs as any)?.weight_unit || undefined}
                   description={alert.description}
                   lastSeenLocation={alert.last_seen_location}
+                  locationLabel={alert.location_label}
+                  latitude={alert.latitude}
+                  longitude={alert.longitude}
                   createdAt={new Date(alert.created_at)}
                   status={alert.status}
                   onContact={() => handleContactOwner(alert.id)}

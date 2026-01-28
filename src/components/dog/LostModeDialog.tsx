@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Clock, AlertTriangle, Loader2 } from "lucide-react";
+import { Clock, AlertTriangle, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { LocationPicker } from "@/components/location/LocationPicker";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 interface LostModeDialogProps {
   open: boolean;
@@ -34,7 +36,7 @@ export function LostModeDialog({
   dog,
   onSuccess,
 }: LostModeDialogProps) {
-  const [lastSeenLocation, setLastSeenLocation] = useState("");
+  const location = useGeolocation();
   const [lastSeenWhen, setLastSeenWhen] = useState("");
   const [extraNotes, setExtraNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +44,7 @@ export function LostModeDialog({
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const isValid = lastSeenLocation.trim() !== "" && lastSeenWhen.trim() !== "";
+  const isValid = location.locationLabel.trim() !== "" && lastSeenWhen.trim() !== "";
 
   const handlePost = async () => {
     if (!isValid || !user) return;
@@ -57,7 +59,7 @@ export function LostModeDialog({
 
       if (dogError) throw dogError;
 
-      // Create lost alert post
+      // Create lost alert post with location data
       const description = extraNotes.trim()
         ? `Last seen: ${lastSeenWhen.trim()}. ${extraNotes.trim()}`
         : `Last seen: ${lastSeenWhen.trim()}`;
@@ -67,9 +69,13 @@ export function LostModeDialog({
         owner_id: user.id,
         title: `${dog.name} is missing!`,
         description: description,
-        last_seen_location: lastSeenLocation.trim(),
+        last_seen_location: location.locationLabel.trim(),
         photo_url: dog.photo_url,
         status: "active",
+        latitude: location.latitude,
+        longitude: location.longitude,
+        location_label: location.locationLabel.trim(),
+        location_source: location.locationSource,
       });
 
       if (alertError) throw alertError;
@@ -81,7 +87,7 @@ export function LostModeDialog({
       });
 
       // Reset form
-      setLastSeenLocation("");
+      location.reset();
       setLastSeenWhen("");
       setExtraNotes("");
       onOpenChange(false);
@@ -103,7 +109,7 @@ export function LostModeDialog({
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setLastSeenLocation("");
+      location.reset();
       setLastSeenWhen("");
       setExtraNotes("");
       onOpenChange(false);
@@ -124,20 +130,23 @@ export function LostModeDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Last Seen Location */}
-          <div className="space-y-2">
-            <Label htmlFor="location" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              Last seen where? <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="location"
-              placeholder="e.g., Central Park, near the fountain"
-              value={lastSeenLocation}
-              onChange={(e) => setLastSeenLocation(e.target.value)}
-              disabled={isSubmitting}
-            />
-          </div>
+          {/* Location Picker */}
+          <LocationPicker
+            latitude={location.latitude}
+            longitude={location.longitude}
+            locationLabel={location.locationLabel}
+            locationSource={location.locationSource}
+            loading={location.loading}
+            error={location.error}
+            permissionDenied={location.permissionDenied}
+            onRequestLocation={location.requestLocation}
+            onManualLocation={location.setManualLocation}
+            onLocationTextChange={location.setLocationFromText}
+            onSearchAddress={location.searchAddress}
+            required
+            placeholder="Where was your dog last seen?"
+            description="Used to show others where to look for your dog."
+          />
 
           {/* Last Seen When */}
           <div className="space-y-2">

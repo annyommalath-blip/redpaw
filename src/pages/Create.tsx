@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { PlusCircle, AlertTriangle, HandHeart, MapPin, FileText, Loader2, Pill, CalendarIcon, Syringe } from "lucide-react";
+import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,8 @@ import { SingleDateTimePicker, validateSingleDateTime, formatSingleDateTimeWindo
 import { CurrencyInput } from "@/components/care/CurrencyInput";
 import { formatPayAmount } from "@/data/currencies";
 import { DogMultiSelector } from "@/components/dog/DogMultiSelector";
+import { LocationPicker } from "@/components/location/LocationPicker";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 type CreateType = "log" | "lost" | "care" | "meds" | null;
 
@@ -53,7 +55,7 @@ export default function CreatePage() {
 
   // Lost alert form state
   const [lostDescription, setLostDescription] = useState("");
-  const [lastSeenLocation, setLastSeenLocation] = useState("");
+  const lostLocation = useGeolocation();
 
   // Med record form state
   const [medName, setMedName] = useState("");
@@ -69,7 +71,7 @@ export default function CreatePage() {
   const [careStartTime, setCareStartTime] = useState<string>("");
   const [careEndTime, setCareEndTime] = useState<string>("");
   const [careTimeError, setCareTimeError] = useState<string>("");
-  const [careLocation, setCareLocation] = useState("");
+  const careLocation = useGeolocation();
   const [careNotes, setCareNotes] = useState("");
   const [payAmount, setPayAmount] = useState("");
   const [payCurrency, setPayCurrency] = useState("USD");
@@ -196,7 +198,7 @@ export default function CreatePage() {
   };
 
   const handleCreateLostAlert = async () => {
-    if (!lostDescription || !lastSeenLocation || !selectedDogId) {
+    if (!lostDescription || !lostLocation.locationLabel || !selectedDogId) {
       toast({ variant: "destructive", title: "Please fill in all fields" });
       return;
     }
@@ -211,13 +213,17 @@ export default function CreatePage() {
         .update({ is_lost: true })
         .eq("id", selectedDogId);
 
-      // Create lost alert
+      // Create lost alert with location data
       const { error } = await supabase.from("lost_alerts").insert({
         dog_id: selectedDogId,
         owner_id: user!.id,
         title: `${selectedDog?.name || "Dog"} is Missing!`,
         description: lostDescription,
-        last_seen_location: lastSeenLocation,
+        last_seen_location: lostLocation.locationLabel,
+        latitude: lostLocation.latitude,
+        longitude: lostLocation.longitude,
+        location_label: lostLocation.locationLabel,
+        location_source: lostLocation.locationSource,
       });
 
       if (error) throw error;
@@ -240,7 +246,7 @@ export default function CreatePage() {
     }
     setCareTimeError("");
 
-    if (!careType || !careLocation || selectedDogIds.length === 0) {
+    if (!careType || !careLocation.locationLabel || selectedDogIds.length === 0) {
       toast({ variant: "destructive", title: "Please fill in all required fields" });
       return;
     }
@@ -259,7 +265,7 @@ export default function CreatePage() {
         owner_id: user!.id,
         care_type: careType as any,
         time_window: timeWindow,
-        location_text: careLocation,
+        location_text: careLocation.locationLabel,
         notes: careNotes || null,
         pay_offered: payAmountNum ? formatPayAmount(payAmountNum, payCurrency) : null,
         request_date: format(careDate!, "yyyy-MM-dd"),
@@ -267,6 +273,10 @@ export default function CreatePage() {
         end_time: convertTimeToDbFormat(careEndTime),
         pay_amount: payAmountNum,
         pay_currency: payAmountNum ? payCurrency : null,
+        latitude: careLocation.latitude,
+        longitude: careLocation.longitude,
+        location_label: careLocation.locationLabel,
+        location_source: careLocation.locationSource,
       });
 
       if (error) throw error;
@@ -587,19 +597,24 @@ export default function CreatePage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>
-                      <MapPin className="h-4 w-4 inline mr-1" />
-                      Last Seen Location
-                    </Label>
-                    <Input
-                      placeholder="e.g., Central Park near 72nd Street"
-                      value={lastSeenLocation}
-                      onChange={(e) => setLastSeenLocation(e.target.value)}
-                    />
-                  </div>
+                  <LocationPicker
+                    latitude={lostLocation.latitude}
+                    longitude={lostLocation.longitude}
+                    locationLabel={lostLocation.locationLabel}
+                    locationSource={lostLocation.locationSource}
+                    loading={lostLocation.loading}
+                    error={lostLocation.error}
+                    permissionDenied={lostLocation.permissionDenied}
+                    onRequestLocation={lostLocation.requestLocation}
+                    onManualLocation={lostLocation.setManualLocation}
+                    onLocationTextChange={lostLocation.setLocationFromText}
+                    onSearchAddress={lostLocation.searchAddress}
+                    required
+                    placeholder="Where was your dog last seen?"
+                    description="Used to show others where to look for your dog."
+                  />
 
-                  <Button className="w-full bg-lost hover:bg-lost/90" onClick={handleCreateLostAlert} disabled={submitting}>
+                  <Button className="w-full bg-lost hover:bg-lost/90" onClick={handleCreateLostAlert} disabled={submitting || !lostLocation.locationLabel}>
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
                     Post Lost Alert
                   </Button>
@@ -652,17 +667,22 @@ export default function CreatePage() {
                     error={careTimeError}
                   />
 
-                  <div className="space-y-2">
-                    <Label>
-                      <MapPin className="h-4 w-4 inline mr-1" />
-                      Location
-                    </Label>
-                    <Input
-                      placeholder="e.g., Upper East Side, Manhattan"
-                      value={careLocation}
-                      onChange={(e) => setCareLocation(e.target.value)}
-                    />
-                  </div>
+                  <LocationPicker
+                    latitude={careLocation.latitude}
+                    longitude={careLocation.longitude}
+                    locationLabel={careLocation.locationLabel}
+                    locationSource={careLocation.locationSource}
+                    loading={careLocation.loading}
+                    error={careLocation.error}
+                    permissionDenied={careLocation.permissionDenied}
+                    onRequestLocation={careLocation.requestLocation}
+                    onManualLocation={careLocation.setManualLocation}
+                    onLocationTextChange={careLocation.setLocationFromText}
+                    onSearchAddress={careLocation.searchAddress}
+                    required
+                    placeholder="Where should they come?"
+                    description="Help sitters know where to meet you."
+                  />
 
                   <div className="space-y-2">
                     <Label>
@@ -688,7 +708,7 @@ export default function CreatePage() {
                   <Button 
                     className="w-full" 
                     onClick={handleCreateCareRequest} 
-                    disabled={submitting || !careType || !careDate || !careStartTime || !careEndTime || !careLocation || selectedDogIds.length === 0}
+                    disabled={submitting || !careType || !careDate || !careStartTime || !careEndTime || !careLocation.locationLabel || selectedDogIds.length === 0}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <HandHeart className="h-4 w-4 mr-2" />}
                     Post Request{selectedDogIds.length > 1 ? ` for ${selectedDogIds.length} Dogs` : ''}
