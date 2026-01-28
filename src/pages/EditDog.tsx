@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Dog, Loader2, Trash2 } from "lucide-react";
+import { Dog, Loader2, Trash2, Calendar } from "lucide-react";
+import { format } from "date-fns";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,9 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { BreedSelector } from "@/components/dog/BreedSelector";
+import { ProfilePhotoUploader } from "@/components/dog/ProfilePhotoUploader";
+import { DogPhotoUploader } from "@/components/dog/DogPhotoUploader";
+import { calculateAge } from "@/lib/ageCalculator";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +38,12 @@ interface DogData {
   breed: string | null;
   age: string | null;
   weight: string | null;
+  weight_unit: string | null;
   microchip_no: string | null;
   notes: string | null;
   photo_url: string | null;
+  photo_urls: string[] | null;
+  date_of_birth: string | null;
 }
 
 export default function EditDogPage() {
@@ -43,11 +55,19 @@ export default function EditDogPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
-  const [age, setAge] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [weight, setWeight] = useState("");
+  const [weightUnit, setWeightUnit] = useState("lbs");
   const [microchipNo, setMicrochipNo] = useState("");
   const [notes, setNotes] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [additionalPhotos, setAdditionalPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Calculate age from DOB
+  const calculatedAge = useMemo(() => {
+    return calculateAge(dateOfBirth);
+  }, [dateOfBirth]);
 
   useEffect(() => {
     if (dogId && user) {
@@ -77,10 +97,13 @@ export default function EditDogPage() {
 
       setName(data.name);
       setBreed(data.breed || "");
-      setAge(data.age || "");
+      setDateOfBirth(data.date_of_birth ? new Date(data.date_of_birth) : undefined);
       setWeight(data.weight || "");
+      setWeightUnit(data.weight_unit || "lbs");
       setMicrochipNo(data.microchip_no || "");
       setNotes(data.notes || "");
+      setProfilePhoto(data.photo_url);
+      setAdditionalPhotos(data.photo_urls || []);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
       navigate("/profile");
@@ -104,10 +127,14 @@ export default function EditDogPage() {
         .update({
           name: name.trim(),
           breed: breed.trim() || null,
-          age: age.trim() || null,
+          date_of_birth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
+          age: calculatedAge || null,
           weight: weight.trim() || null,
+          weight_unit: weightUnit,
           microchip_no: microchipNo.trim() || null,
           notes: notes.trim() || null,
+          photo_url: profilePhoto,
+          photo_urls: additionalPhotos,
         })
         .eq("id", dogId);
 
@@ -163,14 +190,20 @@ export default function EditDogPage() {
             <CardDescription>Update your dog's information</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex justify-center">
-                <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
-                  <Dog className="h-10 w-10 text-muted-foreground" />
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Profile Photo */}
+              <div className="space-y-2">
+                <Label className="text-center block">Profile Photo</Label>
+                {user && (
+                  <ProfilePhotoUploader
+                    userId={user.id}
+                    photoUrl={profilePhoto}
+                    onChange={setProfilePhoto}
+                  />
+                )}
               </div>
-              <p className="text-xs text-center text-muted-foreground">Photo upload coming soon!</p>
 
+              {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
                 <Input
@@ -182,34 +215,74 @@ export default function EditDogPage() {
                 />
               </div>
 
+              {/* Breed Selector */}
               <div className="space-y-2">
-                <Label htmlFor="breed">Breed</Label>
-                <Input
-                  id="breed"
-                  placeholder="e.g., Golden Retriever, Mixed"
-                  value={breed}
-                  onChange={(e) => setBreed(e.target.value)}
-                />
+                <Label>Breed</Label>
+                <BreedSelector value={breed} onChange={setBreed} />
               </div>
 
+              {/* Date of Birth + Age Display */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="age">Age</Label>
-                  <Input
-                    id="age"
-                    placeholder="e.g., 3 years"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                  />
+                  <Label>Date of Birth</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dateOfBirth && "text-muted-foreground"
+                        )}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {dateOfBirth ? format(dateOfBirth, "MMM d, yyyy") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateOfBirth}
+                        onSelect={setDateOfBirth}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="weight">Weight</Label>
+                  <Label>Age</Label>
+                  <div className="h-10 px-3 py-2 rounded-md border border-input bg-muted/50 text-sm flex items-center">
+                    {calculatedAge || (
+                      <span className="text-muted-foreground">Select DOB</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Weight + Unit */}
+              <div className="space-y-2">
+                <Label htmlFor="weight">Weight</Label>
+                <div className="flex gap-2">
                   <Input
                     id="weight"
-                    placeholder="e.g., 65 lbs"
+                    placeholder="e.g., 65"
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
+                    className="flex-1"
                   />
+                  <Select value={weightUnit} onValueChange={setWeightUnit}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue placeholder="Unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lbs">lbs</SelectItem>
+                      <SelectItem value="kg">kg</SelectItem>
+                      <SelectItem value="g">g</SelectItem>
+                      <SelectItem value="other">other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -227,6 +300,20 @@ export default function EditDogPage() {
                 </p>
               </div>
 
+              {/* Additional Photos Section */}
+              <div className="space-y-2">
+                <Label>Additional Photos (optional)</Label>
+                {user && (
+                  <DogPhotoUploader
+                    userId={user.id}
+                    photos={additionalPhotos}
+                    onChange={setAdditionalPhotos}
+                    maxPhotos={5}
+                  />
+                )}
+              </div>
+
+              {/* Notes */}
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
