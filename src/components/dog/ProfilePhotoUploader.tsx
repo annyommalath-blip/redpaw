@@ -4,7 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { isValidImageType, isHeicFile, processImageFile } from "@/lib/imageUtils";
+import { 
+  isValidImageType, 
+  isHeicFile, 
+  processImageForUpload, 
+  uploadProcessedImage 
+} from "@/lib/imageUtils";
 
 interface ProfilePhotoUploaderProps {
   userId: string;
@@ -32,46 +37,38 @@ export function ProfilePhotoUploader({ userId, photoUrl, onChange }: ProfilePhot
       return;
     }
 
-    // Validate file size (15MB max for raw files)
-    if (file.size > 15 * 1024 * 1024) {
+    // Allow up to 50MB raw input (will be compressed)
+    if (file.size > 50 * 1024 * 1024) {
       toast({
         variant: "destructive",
         title: "File too large",
-        description: "Maximum size is 15MB.",
+        description: "Maximum file size is 50MB.",
       });
       return;
     }
 
     setUploading(true);
-    setStatusText(isHeicFile(file) ? "Converting..." : "Uploading...");
+    setStatusText(isHeicFile(file) ? "Converting..." : "Processing...");
 
     try {
-      // Process the image (convert HEIC if needed, compress)
-      const processedFile = await processImageFile(file, (status) => {
-        setStatusText(status);
+      // Process the image (convert HEIC, resize, compress)
+      const result = await processImageForUpload(file, {
+        userId,
+        supabase,
+        onProgress: setStatusText,
+        targetSize: 2 * 1024 * 1024, // 2MB max
       });
 
-      setStatusText("Uploading...");
-
-      // Generate filename with correct extension
-      const fileExt = processedFile.name.split(".").pop()?.toLowerCase() || "jpg";
-      const fileName = `${userId}/profile-${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("dog-photos")
-        .upload(fileName, processedFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("dog-photos")
-        .getPublicUrl(fileName);
+      // Upload the processed image
+      const publicUrl = await uploadProcessedImage(result, {
+        userId,
+        supabase,
+        pathPrefix: "profile-",
+        onProgress: setStatusText,
+      });
 
       // Update state with the new URL
-      onChange(urlData.publicUrl);
+      onChange(publicUrl);
       
       toast({ title: "Photo uploaded! 📸" });
     } catch (error: any) {
@@ -97,7 +94,7 @@ export function ProfilePhotoUploader({ userId, photoUrl, onChange }: ProfilePhot
       const url = new URL(photoUrl);
       const pathParts = url.pathname.split("/dog-photos/");
       if (pathParts[1]) {
-        await supabase.storage.from("dog-photos").remove([pathParts[1]]);
+        await supabase.storage.from("dog-photos").remove([decodeURIComponent(pathParts[1])]);
       }
     } catch (error) {
       console.error("Error removing file:", error);
@@ -120,15 +117,21 @@ export function ProfilePhotoUploader({ userId, photoUrl, onChange }: ProfilePhot
           type="button"
           onClick={handleAvatarClick}
           disabled={uploading}
-          className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
         >
           <Avatar className="h-28 w-28 border-4 border-primary/20">
-            <AvatarImage src={photoUrl || undefined} alt="Dog profile photo" />
+            <AvatarImage 
+              src={photoUrl || undefined} 
+              alt="Dog profile photo"
+              className="object-cover"
+            />
             <AvatarFallback className="bg-muted">
               {uploading ? (
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center gap-1">
                   <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
-                  <span className="text-xs text-muted-foreground mt-1">{statusText}</span>
+                  <span className="text-[10px] text-muted-foreground text-center px-2 leading-tight">
+                    {statusText}
+                  </span>
                 </div>
               ) : (
                 <Plus className="h-8 w-8 text-muted-foreground" />
@@ -140,7 +143,9 @@ export function ProfilePhotoUploader({ userId, photoUrl, onChange }: ProfilePhot
           {uploading && photoUrl && (
             <div className="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center">
               <Loader2 className="h-6 w-6 text-white animate-spin" />
-              <span className="text-xs text-white mt-1">{statusText}</span>
+              <span className="text-[10px] text-white mt-1 text-center px-2">
+                {statusText}
+              </span>
             </div>
           )}
 
@@ -172,7 +177,7 @@ export function ProfilePhotoUploader({ userId, photoUrl, onChange }: ProfilePhot
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
+        accept="image/*"
         className="hidden"
         onChange={handleFileSelect}
       />
