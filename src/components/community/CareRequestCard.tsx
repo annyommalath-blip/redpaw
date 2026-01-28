@@ -63,12 +63,12 @@ export function CareRequestCard({
                 Assigned
               </Badge>
             )}
-            {hasApplied && !isAssigned && (
-              <Badge variant="outline" className="border-primary text-primary">
-                <Check className="h-3 w-3 mr-1" />
-                Applied
-              </Badge>
-            )}
+          {hasApplied && !isAssigned && (
+            <Badge className="bg-success text-success-foreground">
+              <Check className="h-3 w-3 mr-1" />
+              Applied
+            </Badge>
+          )}
           </div>
           <span className="text-xs text-muted-foreground shrink-0">
             {formatDistanceToNow(createdAt, { addSuffix: true })}

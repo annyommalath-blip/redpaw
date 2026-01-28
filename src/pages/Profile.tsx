@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { OwnerProfileSection } from "@/components/profile/OwnerProfileSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -111,7 +112,15 @@ export default function ProfilePage() {
         </div>
       ) : (
         <div className="p-4 space-y-6">
-          {/* User Profile Card */}
+          {/* Owner Profile Section */}
+          {user && (
+            <OwnerProfileSection 
+              userId={user.id} 
+              dogs={dogs.map(d => ({ id: d.id, name: d.name, breed: d.breed }))} 
+            />
+          )}
+
+          {/* User Account Card */}
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
