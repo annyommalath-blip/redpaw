@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { MapPin, Navigation, Search, X, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ interface LocationPickerProps {
   description?: string;
 }
 
-export function LocationPicker({
+export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(function LocationPicker({
   latitude,
   longitude,
   locationLabel,
@@ -53,7 +53,7 @@ export function LocationPicker({
   required = false,
   placeholder = "Enter location or use GPS",
   description,
-}: LocationPickerProps) {
+}, ref) {
   const [showMap, setShowMap] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -328,4 +328,4 @@ export function LocationPicker({
       )}
     </div>
   );
-}
+});
