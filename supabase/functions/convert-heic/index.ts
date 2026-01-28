@@ -31,19 +31,17 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     });
 
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(
-      authHeader.replace("Bearer ", "")
-    );
+    const { data: userData, error: userError } = await userClient.auth.getUser();
 
-    if (claimsError || !claimsData?.claims?.sub) {
-      console.error("[convert-heic] Auth verification failed:", claimsError);
+    if (userError || !userData?.user) {
+      console.error("[convert-heic] Auth verification failed:", userError);
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const authenticatedUserId = claimsData.claims.sub as string;
+    const authenticatedUserId = userData.user.id;
     console.log(`[convert-heic] Authenticated user: ${authenticatedUserId}`);
 
     // Parse and validate request body
