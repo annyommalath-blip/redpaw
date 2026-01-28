@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MapPin, Clock, Dog, MessageCircle, Check, Users, FileText, PlusCircle, Banknote } from "lucide-react";
+import { MapPin, Clock, Dog, MessageCircle, Check, Users, FileText, PlusCircle, Banknote, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ApplicationForm } from "@/components/care/ApplicationForm";
 import { ApplicationCard } from "@/components/care/ApplicationCard";
 import { SitterLogCard } from "@/components/care/SitterLogCard";
 import { SitterLogForm } from "@/components/care/SitterLogForm";
+import { EditCareRequestDialog } from "@/components/care/EditCareRequestDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,6 +46,11 @@ interface CareRequest {
   location_text: string;
   notes: string | null;
   pay_offered: string | null;
+  pay_amount: number | null;
+  pay_currency: string | null;
+  request_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
   status: "open" | "closed";
   assigned_sitter_id: string | null;
   created_at: string;
@@ -95,6 +103,9 @@ export default function CareRequestDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [showLogForm, setShowLogForm] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState("applications");
 
   const isOwner = user?.id === request?.owner_id;
@@ -296,6 +307,28 @@ export default function CareRequestDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!requestId) return;
+    
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("care_requests")
+        .delete()
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      toast({ title: "Care request deleted" });
+      navigate("/community?tab=care");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
   const handleChat = async (otherUserId: string) => {
     if (!user) return;
     
@@ -352,7 +385,34 @@ export default function CareRequestDetailPage() {
 
   return (
     <MobileLayout>
-      <PageHeader title="Care Request" showBack />
+      <PageHeader 
+        title="Care Request" 
+        showBack 
+        action={
+          isOwner && !isAssigned ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Request
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Request
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : undefined
+        }
+      />
 
       <div className="p-4 space-y-4">
         {/* Status Banner for Assigned Requests */}
@@ -609,6 +669,38 @@ export default function CareRequestDetailPage() {
           </Card>
         )}
       </div>
+
+      {/* Edit Care Request Dialog */}
+      {request && (
+        <EditCareRequestDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          request={request}
+          onSuccess={fetchData}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Care Request?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this care request and all applications. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileLayout>
   );
 }
