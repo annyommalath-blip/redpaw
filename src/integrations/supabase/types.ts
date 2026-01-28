@@ -146,12 +146,14 @@ export type Database = {
           age: string | null
           breed: string | null
           created_at: string
+          date_of_birth: string | null
           id: string
           is_lost: boolean
           name: string
           notes: string | null
           owner_id: string
           photo_url: string | null
+          photo_urls: string[] | null
           updated_at: string
           weight: string | null
         }
@@ -159,12 +161,14 @@ export type Database = {
           age?: string | null
           breed?: string | null
           created_at?: string
+          date_of_birth?: string | null
           id?: string
           is_lost?: boolean
           name: string
           notes?: string | null
           owner_id: string
           photo_url?: string | null
+          photo_urls?: string[] | null
           updated_at?: string
           weight?: string | null
         }
@@ -172,12 +176,14 @@ export type Database = {
           age?: string | null
           breed?: string | null
           created_at?: string
+          date_of_birth?: string | null
           id?: string
           is_lost?: boolean
           name?: string
           notes?: string | null
           owner_id?: string
           photo_url?: string | null
+          photo_urls?: string[] | null
           updated_at?: string
           weight?: string | null
         }
