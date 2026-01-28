@@ -91,19 +91,13 @@ export default function CommunityPage() {
         .eq("status", "open")
         .order("created_at", { ascending: false });
 
-      // Filter client-side to show only relevant requests
-      const filteredRequests = (requestsData || []).filter((request: any) => {
-        // If no assigned sitter, show to everyone (public)
-        if (!request.assigned_sitter_id) return true;
-        // If user is the owner, show it
-        if (user && request.owner_id === user.id) return true;
-        // If user is the assigned sitter, show it
-        if (user && request.assigned_sitter_id === user.id) return true;
-        // Otherwise hide from public view
-        return false;
+      // Only show unassigned public requests in Community tab
+      // Assigned requests are shown on Profile tab for owner/sitter
+      const publicRequests = (requestsData || []).filter((request: any) => {
+        return !request.assigned_sitter_id;
       });
 
-      setCareRequests(filteredRequests as any);
+      setCareRequests(publicRequests as any);
 
       // Fetch user's applications to show "Applied" badge
       if (user) {

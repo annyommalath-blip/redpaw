@@ -40,8 +40,12 @@ interface MyCareRequest {
   time_window: string;
   status: "open" | "closed";
   assigned_sitter_id: string | null;
+  owner_id: string;
   created_at: string;
-  _count?: { applications: number };
+  dogs: {
+    name: string;
+    breed: string | null;
+  } | null;
 }
 
 export default function ProfilePage() {
@@ -100,15 +104,29 @@ export default function ProfilePage() {
 
       setDogs(dogsData || []);
 
-      // Fetch my care requests
-      const { data: requestsData } = await supabase
+      // Fetch care requests where user is owner OR assigned sitter
+      const { data: ownedRequests } = await supabase
         .from("care_requests")
-        .select("*")
+        .select("*, dogs (name, breed)")
         .eq("owner_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+        .order("created_at", { ascending: false });
 
-      setMyCareRequests(requestsData || []);
+      const { data: assignedRequests } = await supabase
+        .from("care_requests")
+        .select("*, dogs (name, breed)")
+        .eq("assigned_sitter_id", user.id)
+        .order("created_at", { ascending: false });
+
+      // Combine and deduplicate (in case user is both owner and sitter - unlikely but safe)
+      const allRequests = [...(ownedRequests || []), ...(assignedRequests || [])];
+      const uniqueRequests = allRequests.filter((request, index, self) =>
+        index === self.findIndex((r) => r.id === request.id)
+      );
+      
+      // Sort by created_at desc
+      uniqueRequests.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      setMyCareRequests(uniqueRequests as MyCareRequest[]);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -503,28 +521,39 @@ export default function ProfilePage() {
               </Card>
             ) : (
               <div className="space-y-2">
-                {myCareRequests.map((request) => (
-                  <Card
-                    key={request.id}
-                    className="cursor-pointer hover:border-primary transition-colors"
-                    onClick={() => navigate(`/care-request/${request.id}`)}
-                  >
-                    <CardContent className="p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <HandHeart className="h-5 w-5 text-primary" />
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
-                            {careTypeLabels[request.care_type]}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{request.time_window}</p>
+                {myCareRequests.map((request) => {
+                  const isOwner = request.owner_id === user?.id;
+                  const isAssignedSitter = request.assigned_sitter_id === user?.id;
+                  
+                  return (
+                    <Card
+                      key={request.id}
+                      className="cursor-pointer hover:border-primary transition-colors"
+                      onClick={() => navigate(`/care-request/${request.id}`)}
+                    >
+                      <CardContent className="p-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <HandHeart className="h-5 w-5 text-primary" />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {careTypeLabels[request.care_type]}
+                              {request.dogs?.name && (
+                                <span className="text-muted-foreground font-normal"> - {request.dogs.name}</span>
+                              )}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {request.time_window}
+                              {!isOwner && isAssignedSitter && " • You're the sitter"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <Badge className={request.assigned_sitter_id ? "bg-primary" : "bg-warning"}>
-                        {request.assigned_sitter_id ? "Assigned" : "Open"}
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <Badge className={request.assigned_sitter_id ? "bg-primary" : "bg-warning"}>
+                          {request.assigned_sitter_id ? "Assigned" : "Open"}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </section>
