@@ -578,7 +578,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_profile_location: {
+        Args: { target_user_id: string }
+        Returns: {
+          city: string
+          postal_code: string
+        }[]
+      }
     }
     Enums: {
       alert_status: "active" | "resolved"
