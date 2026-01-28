@@ -460,6 +460,7 @@ export type Database = {
           created_at: string
           id: string
           location_text: string | null
+          media_urls: string[] | null
           message: string
           reporter_id: string
         }
@@ -468,6 +469,7 @@ export type Database = {
           created_at?: string
           id?: string
           location_text?: string | null
+          media_urls?: string[] | null
           message: string
           reporter_id: string
         }
@@ -476,6 +478,7 @@ export type Database = {
           created_at?: string
           id?: string
           location_text?: string | null
+          media_urls?: string[] | null
           message?: string
           reporter_id?: string
         }
