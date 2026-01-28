@@ -157,7 +157,7 @@ export default function LostAlertDetailPage() {
       );
       
       if (existingConvo) {
-        navigate(`/chat/${existingConvo.id}`);
+        navigate(`/messages/${existingConvo.id}`);
       } else {
         // Create new conversation
         const { data: newConvo, error } = await supabase
@@ -171,7 +171,7 @@ export default function LostAlertDetailPage() {
           .single();
         
         if (error) throw error;
-        navigate(`/chat/${newConvo.id}`);
+        navigate(`/messages/${newConvo.id}`);
       }
     } catch (error: any) {
       toast({
