@@ -1,15 +1,24 @@
 import { format } from "date-fns";
-import { Syringe, Pill } from "lucide-react";
+import { Syringe, Pill, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { MedRecordWithStatus } from "@/lib/medRecordUtils";
 import { cn } from "@/lib/utils";
 
 interface MedRecordCardReadOnlyProps {
   record: MedRecordWithStatus;
+  onEdit?: (record: MedRecordWithStatus) => void;
+  onDelete?: (record: MedRecordWithStatus) => void;
 }
 
-export function MedRecordCardReadOnly({ record }: MedRecordCardReadOnlyProps) {
+export function MedRecordCardReadOnly({ record, onEdit, onDelete }: MedRecordCardReadOnlyProps) {
   const statusConfig = {
     active: {
       label: "Active",
@@ -27,6 +36,7 @@ export function MedRecordCardReadOnly({ record }: MedRecordCardReadOnlyProps) {
 
   const status = statusConfig[record.status];
   const Icon = record.record_type === "vaccine" ? Syringe : Pill;
+  const hasActions = onEdit || onDelete;
 
   return (
     <Card className={cn(
@@ -66,6 +76,33 @@ export function MedRecordCardReadOnly({ record }: MedRecordCardReadOnlyProps) {
               </p>
             </div>
           </div>
+
+          {hasActions && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(record)}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <DropdownMenuItem 
+                    onClick={() => onDelete(record)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardContent>
     </Card>
