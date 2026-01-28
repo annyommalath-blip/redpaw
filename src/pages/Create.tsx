@@ -17,7 +17,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { calculateExpirationDate } from "@/lib/medRecordUtils";
-import { DateTimeRangePicker, formatTimeWindow, validateDateTimeRange } from "@/components/care/DateTimeRangePicker";
+import { SingleDateTimePicker, validateSingleDateTime, formatSingleDateTimeWindow, convertTimeToDbFormat } from "@/components/care/SingleDateTimePicker";
+import { CurrencyInput } from "@/components/care/CurrencyInput";
+import { formatPayAmount } from "@/data/currencies";
 
 type CreateType = "log" | "lost" | "care" | "meds" | null;
 
@@ -60,14 +62,14 @@ export default function CreatePage() {
 
   // Care request form state
   const [careType, setCareType] = useState<string>("");
-  const [careStartDate, setCareStartDate] = useState<Date | undefined>();
+  const [careDate, setCareDate] = useState<Date | undefined>();
   const [careStartTime, setCareStartTime] = useState<string>("");
-  const [careEndDate, setCareEndDate] = useState<Date | undefined>();
   const [careEndTime, setCareEndTime] = useState<string>("");
   const [careTimeError, setCareTimeError] = useState<string>("");
   const [careLocation, setCareLocation] = useState("");
   const [careNotes, setCareNotes] = useState("");
-  const [payOffered, setPayOffered] = useState("");
+  const [payAmount, setPayAmount] = useState("");
+  const [payCurrency, setPayCurrency] = useState("USD");
 
   useEffect(() => {
     if (user) {
@@ -195,8 +197,8 @@ export default function CreatePage() {
   };
 
   const handleCreateCareRequest = async () => {
-    // Validate datetime range
-    const timeError = validateDateTimeRange(careStartDate, careStartTime, careEndDate, careEndTime);
+    // Validate datetime
+    const timeError = validateSingleDateTime(careDate, careStartTime, careEndTime);
     if (timeError) {
       setCareTimeError(timeError);
       toast({ variant: "destructive", title: timeError });
@@ -209,7 +211,8 @@ export default function CreatePage() {
       return;
     }
 
-    const timeWindow = formatTimeWindow(careStartDate!, careStartTime, careEndDate!, careEndTime);
+    const timeWindow = formatSingleDateTimeWindow(careDate!, careStartTime, careEndTime);
+    const payAmountNum = payAmount ? parseFloat(payAmount) : null;
 
     setSubmitting(true);
     try {
@@ -220,7 +223,12 @@ export default function CreatePage() {
         time_window: timeWindow,
         location_text: careLocation,
         notes: careNotes || null,
-        pay_offered: payOffered || null,
+        pay_offered: payAmountNum ? formatPayAmount(payAmountNum, payCurrency) : null,
+        request_date: format(careDate!, "yyyy-MM-dd"),
+        start_time: convertTimeToDbFormat(careStartTime),
+        end_time: convertTimeToDbFormat(careEndTime),
+        pay_amount: payAmountNum,
+        pay_currency: payAmountNum ? payCurrency : null,
       });
 
       if (error) throw error;
@@ -576,14 +584,12 @@ export default function CreatePage() {
                     </Select>
                   </div>
 
-                  <DateTimeRangePicker
-                    startDate={careStartDate}
+                  <SingleDateTimePicker
+                    date={careDate}
                     startTime={careStartTime}
-                    endDate={careEndDate}
                     endTime={careEndTime}
-                    onStartDateChange={setCareStartDate}
+                    onDateChange={setCareDate}
                     onStartTimeChange={setCareStartTime}
-                    onEndDateChange={setCareEndDate}
                     onEndTimeChange={setCareEndTime}
                     error={careTimeError}
                   />
@@ -612,19 +618,19 @@ export default function CreatePage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Pay Offered (optional)</Label>
-                    <Input
-                      placeholder="e.g., $25/hour"
-                      value={payOffered}
-                      onChange={(e) => setPayOffered(e.target.value)}
-                    />
-                  </div>
+                  <CurrencyInput
+                    amount={payAmount}
+                    currency={payCurrency}
+                    onAmountChange={setPayAmount}
+                    onCurrencyChange={setPayCurrency}
+                    label="Pay Offered"
+                    optional={true}
+                  />
 
                   <Button 
                     className="w-full" 
                     onClick={handleCreateCareRequest} 
-                    disabled={submitting || !careType || !careStartDate || !careStartTime || !careEndDate || !careEndTime || !careLocation}
+                    disabled={submitting || !careType || !careDate || !careStartTime || !careEndTime || !careLocation}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <HandHeart className="h-4 w-4 mr-2" />}
                     Post Request

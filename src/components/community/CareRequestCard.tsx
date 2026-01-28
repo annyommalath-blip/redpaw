@@ -1,4 +1,4 @@
-import { MapPin, Clock, Dog, DollarSign, Check, ChevronRight } from "lucide-react";
+import { MapPin, Clock, Dog, Check, ChevronRight, Banknote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
@@ -108,7 +108,7 @@ export function CareRequestCard({
           </div>
           {payOffered && (
             <div className="flex items-center gap-2 text-sm text-success font-medium">
-              <DollarSign className="h-4 w-4 shrink-0" />
+              <Banknote className="h-4 w-4 shrink-0" />
               <span>{payOffered}</span>
             </div>
           )}

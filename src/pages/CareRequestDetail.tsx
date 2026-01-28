@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MapPin, Clock, DollarSign, Dog, MessageCircle, Check, Users, FileText, PlusCircle } from "lucide-react";
+import { MapPin, Clock, Dog, MessageCircle, Check, Users, FileText, PlusCircle, Banknote } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -391,7 +391,7 @@ export default function CareRequestDetailPage() {
               </div>
               {request.pay_offered && (
                 <div className="flex items-center gap-2 text-sm text-success font-medium">
-                  <DollarSign className="h-4 w-4 shrink-0" />
+                  <Banknote className="h-4 w-4 shrink-0" />
                   <span>{request.pay_offered}</span>
                 </div>
               )}
