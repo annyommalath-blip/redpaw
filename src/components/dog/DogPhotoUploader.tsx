@@ -4,12 +4,46 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import heic2any from "heic2any";
 
 interface DogPhotoUploaderProps {
   userId: string;
   photos: string[];
   onChange: (photos: string[]) => void;
   maxPhotos?: number;
+}
+
+// Convert HEIC/HEIF to JPEG
+async function convertHeicToJpeg(file: File): Promise<File> {
+  const blob = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.85,
+  });
+  
+  // heic2any can return a single blob or an array
+  const resultBlob = Array.isArray(blob) ? blob[0] : blob;
+  
+  // Create a new file with .jpg extension
+  const newFileName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+  return new File([resultBlob], newFileName, { type: "image/jpeg" });
+}
+
+// Check if file is HEIC/HEIF
+function isHeicFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return name.endsWith('.heic') || name.endsWith('.heif') || 
+         file.type === 'image/heic' || file.type === 'image/heif';
+}
+
+// Check if file is a valid image type
+function isValidImageType(file: File): boolean {
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
+  const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.heic', '.heif'];
+  const name = file.name.toLowerCase();
+  
+  return validTypes.includes(file.type) || 
+         validExtensions.some(ext => name.endsWith(ext));
 }
 
 export function DogPhotoUploader({
@@ -22,6 +56,7 @@ export function DogPhotoUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [convertingHeic, setConvertingHeic] = useState(false);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -44,25 +79,14 @@ export function DogPhotoUploader({
     const newUrls: string[] = [];
 
     for (let i = 0; i < filesToUpload.length; i++) {
-      const file = filesToUpload[i];
+      let file = filesToUpload[i];
 
-      // Validate file type - also check for HEIC which browsers can't display
-      const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
-      if (!file.type.startsWith("image/") && !isHeic) {
+      // Validate file type
+      if (!isValidImageType(file)) {
         toast({
           variant: "destructive",
           title: "Invalid file type",
-          description: `${file.name} is not an image file.`,
-        });
-        continue;
-      }
-
-      // Warn about HEIC files - browsers can't display them natively
-      if (isHeic) {
-        toast({
-          variant: "destructive",
-          title: "Unsupported format",
-          description: `${file.name} is HEIC format. Please convert to JPG or PNG.`,
+          description: `${file.name} is not a supported image file. Use JPG, PNG, WebP, or HEIC.`,
         });
         continue;
       }
@@ -78,7 +102,30 @@ export function DogPhotoUploader({
       }
 
       try {
-        const fileExt = file.name.split(".").pop();
+        // Convert HEIC/HEIF to JPEG
+        if (isHeicFile(file)) {
+          setConvertingHeic(true);
+          toast({
+            title: "Converting photo...",
+            description: `Converting ${file.name} to JPEG format.`,
+          });
+          
+          try {
+            file = await convertHeicToJpeg(file);
+          } catch (convError) {
+            console.error("HEIC conversion error:", convError);
+            toast({
+              variant: "destructive",
+              title: "Conversion failed",
+              description: `Could not convert ${file.name}. Please convert to JPG/PNG manually.`,
+            });
+            setConvertingHeic(false);
+            continue;
+          }
+          setConvertingHeic(false);
+        }
+
+        const fileExt = file.name.split(".").pop() || "jpg";
         const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
@@ -107,7 +154,8 @@ export function DogPhotoUploader({
     }
 
     if (newUrls.length > 0) {
-      onChange([...photos, ...newUrls]);
+      const updatedPhotos = [...photos, ...newUrls];
+      onChange(updatedPhotos);
       toast({
         title: "Photos uploaded! 📸",
         description: `${newUrls.length} photo(s) added successfully.`,
@@ -216,10 +264,12 @@ export function DogPhotoUploader({
               uploading && "opacity-50 cursor-not-allowed"
             )}
           >
-            {uploading ? (
+            {uploading || convertingHeic ? (
               <>
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="text-xs">{Math.round(uploadProgress)}%</span>
+                <span className="text-xs">
+                  {convertingHeic ? "Converting..." : `${Math.round(uploadProgress)}%`}
+                </span>
               </>
             ) : (
               <>
@@ -236,14 +286,14 @@ export function DogPhotoUploader({
         <div className="text-center py-4 text-muted-foreground">
           <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">Add photos of your dog</p>
-          <p className="text-xs">Up to {maxPhotos} photos, 10MB each</p>
+          <p className="text-xs">Supports JPG, PNG, WebP, HEIC • Up to {maxPhotos} photos, 10MB each</p>
         </div>
       )}
 
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif"
         multiple
         className="hidden"
         onChange={handleFileSelect}
