@@ -1,10 +1,11 @@
-import { MapPin, Clock, MessageCircle, Dog, Eye, Calendar, Scale } from "lucide-react";
+import { MapPin, MessageCircle, Dog, Eye, Calendar, Scale } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { calculateAge } from "@/lib/ageCalculator";
+import { LocationDisplay } from "@/components/location/LocationDisplay";
 
 interface LostAlertCardProps {
   id: string;
@@ -16,6 +17,9 @@ interface LostAlertCardProps {
   weightUnit?: string;
   description: string;
   lastSeenLocation: string;
+  locationLabel?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   createdAt: Date;
   status: "active" | "resolved";
   onContact: () => void;
@@ -32,6 +36,9 @@ export function LostAlertCard({
   weightUnit,
   description,
   lastSeenLocation,
+  locationLabel,
+  latitude,
+  longitude,
   createdAt,
   status,
   onContact,
@@ -110,7 +117,7 @@ export function LostAlertCard({
           {/* Location */}
           <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4 shrink-0" />
-            <span className="truncate">{lastSeenLocation}</span>
+            <span className="truncate">{locationLabel || lastSeenLocation}</span>
           </div>
 
           {/* Actions */}

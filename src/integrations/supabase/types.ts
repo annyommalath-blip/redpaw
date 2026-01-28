@@ -68,7 +68,11 @@ export type Database = {
           dog_ids: string[] | null
           end_time: string | null
           id: string
+          latitude: number | null
+          location_label: string | null
+          location_source: string | null
           location_text: string
+          longitude: number | null
           notes: string | null
           owner_id: string
           pay_amount: number | null
@@ -89,7 +93,11 @@ export type Database = {
           dog_ids?: string[] | null
           end_time?: string | null
           id?: string
+          latitude?: number | null
+          location_label?: string | null
+          location_source?: string | null
           location_text: string
+          longitude?: number | null
           notes?: string | null
           owner_id: string
           pay_amount?: number | null
@@ -110,7 +118,11 @@ export type Database = {
           dog_ids?: string[] | null
           end_time?: string | null
           id?: string
+          latitude?: number | null
+          location_label?: string | null
+          location_source?: string | null
           location_text?: string
+          longitude?: number | null
           notes?: string | null
           owner_id?: string
           pay_amount?: number | null
@@ -293,6 +305,10 @@ export type Database = {
           dog_id: string
           id: string
           last_seen_location: string
+          latitude: number | null
+          location_label: string | null
+          location_source: string | null
+          longitude: number | null
           owner_id: string
           photo_url: string | null
           resolved_at: string | null
@@ -306,6 +322,10 @@ export type Database = {
           dog_id: string
           id?: string
           last_seen_location: string
+          latitude?: number | null
+          location_label?: string | null
+          location_source?: string | null
+          longitude?: number | null
           owner_id: string
           photo_url?: string | null
           resolved_at?: string | null
@@ -319,6 +339,10 @@ export type Database = {
           dog_id?: string
           id?: string
           last_seen_location?: string
+          latitude?: number | null
+          location_label?: string | null
+          location_source?: string | null
+          longitude?: number | null
           owner_id?: string
           photo_url?: string | null
           resolved_at?: string | null

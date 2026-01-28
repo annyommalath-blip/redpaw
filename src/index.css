@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet map styling fixes for mobile */
+@import 'leaflet/dist/leaflet.css';
+
 /* RedPaw Design System - Pet-lover friendly aesthetic */
 
 @layer base {
