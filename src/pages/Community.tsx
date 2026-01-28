@@ -66,12 +66,12 @@ export default function CommunityPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch lost alerts with owner_id
+      // Fetch lost alerts with owner_id and dog details including photo
       const { data: alertsData } = await supabase
         .from("lost_alerts")
         .select(`
           *,
-          dogs (name, breed)
+          dogs (name, breed, photo_url)
         `)
         .eq("status", "active")
         .order("created_at", { ascending: false });
@@ -242,7 +242,7 @@ export default function CommunityPage() {
                   id={alert.id}
                   dogName={alert.dogs?.name || "Unknown"}
                   breed={alert.dogs?.breed || ""}
-                  photoUrl={alert.photo_url || undefined}
+                  photoUrl={alert.photo_url || (alert.dogs as any)?.photo_url || undefined}
                   description={alert.description}
                   lastSeenLocation={alert.last_seen_location}
                   createdAt={new Date(alert.created_at)}
