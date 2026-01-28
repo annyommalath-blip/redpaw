@@ -9,7 +9,10 @@ import {
   Dog,
   Loader2,
   CheckCircle,
+  Calendar,
+  Scale,
 } from "lucide-react";
+import { calculateAge } from "@/lib/ageCalculator";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,9 +33,15 @@ interface LostAlert {
   status: "active" | "resolved";
   created_at: string;
   owner_id: string;
+  dog_id: string;
   dogs: {
     name: string;
     breed: string | null;
+    photo_url: string | null;
+    age: string | null;
+    weight: string | null;
+    weight_unit: string | null;
+    date_of_birth: string | null;
   } | null;
 }
 
@@ -103,12 +112,12 @@ export default function LostAlertDetailPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch alert details
+      // Fetch alert details with full dog info
       const { data: alertData, error: alertError } = await supabase
         .from("lost_alerts")
         .select(`
           *,
-          dogs (name, breed)
+          dogs (name, breed, photo_url, age, weight, weight_unit, date_of_birth)
         `)
         .eq("id", id)
         .maybeSingle();
@@ -288,11 +297,11 @@ export default function LostAlertDetailPage() {
           </div>
           <CardContent className="p-4">
             <div className="flex gap-4">
-              {/* Dog Photo */}
+              {/* Dog Photo - use dog's photo_url as fallback */}
               <div className="h-28 w-28 rounded-xl overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                {alert.photo_url ? (
+                {(alert.photo_url || alert.dogs?.photo_url) ? (
                   <img
-                    src={alert.photo_url}
+                    src={alert.photo_url || alert.dogs?.photo_url || ""}
                     alt={alert.dogs?.name}
                     className="h-full w-full object-cover"
                   />
@@ -309,6 +318,27 @@ export default function LostAlertDetailPage() {
                 <p className="text-sm text-muted-foreground">
                   {alert.dogs?.breed || "Unknown breed"}
                 </p>
+                
+                {/* Age & Weight */}
+                <div className="flex flex-wrap gap-3 mt-2">
+                  {(alert.dogs?.date_of_birth || alert.dogs?.age) && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>
+                        {alert.dogs?.date_of_birth 
+                          ? calculateAge(alert.dogs.date_of_birth) 
+                          : alert.dogs?.age}
+                      </span>
+                    </div>
+                  )}
+                  {alert.dogs?.weight && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Scale className="h-3 w-3" />
+                      <span>{alert.dogs.weight} {alert.dogs.weight_unit || "lbs"}</span>
+                    </div>
+                  )}
+                </div>
+                
                 <p className="text-sm text-foreground mt-2">{alert.description}</p>
               </div>
             </div>
