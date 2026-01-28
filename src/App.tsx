@@ -10,6 +10,9 @@ import Create from "./pages/Create";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
+import AddDog from "./pages/AddDog";
+import EditDog from "./pages/EditDog";
+import CareRequestDetail from "./pages/CareRequestDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,10 +27,13 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/care-request/:requestId" element={<CareRequestDetail />} />
           <Route path="/create" element={<Create />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:conversationId" element={<Chat />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/add-dog" element={<AddDog />} />
+          <Route path="/profile/edit-dog/:dogId" element={<EditDog />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

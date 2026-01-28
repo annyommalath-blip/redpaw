@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { PlusCircle, AlertTriangle, HandHeart, Calendar, Clock, MapPin, FileText } from "lucide-react";
+import { PlusCircle, AlertTriangle, HandHeart, Clock, MapPin, FileText, Loader2 } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 type CreateType = "log" | "lost" | "care" | null;
+
+interface Dog {
+  id: string;
+  name: string;
+}
 
 export default function CreatePage() {
   const [searchParams] = useSearchParams();
@@ -20,6 +27,13 @@ export default function CreatePage() {
   );
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Dogs state
+  const [dogs, setDogs] = useState<Dog[]>([]);
+  const [selectedDogId, setSelectedDogId] = useState<string>("");
+  const [loadingDogs, setLoadingDogs] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // Log form state
   const [logType, setLogType] = useState<string>("");
@@ -37,35 +51,124 @@ export default function CreatePage() {
   const [careNotes, setCareNotes] = useState("");
   const [payOffered, setPayOffered] = useState("");
 
-  const handleCreateLog = () => {
-    if (!logType) {
-      toast({ variant: "destructive", title: "Please select a log type" });
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
       return;
     }
-    // TODO: Save to database
-    toast({ title: "Health log added! 🐾" });
-    navigate("/");
+    fetchDogs();
+  }, [user]);
+
+  const fetchDogs = async () => {
+    if (!user) return;
+    setLoadingDogs(true);
+    try {
+      const { data } = await supabase
+        .from("dogs")
+        .select("id, name")
+        .eq("owner_id", user.id);
+
+      setDogs(data || []);
+      if (data && data.length > 0) {
+        setSelectedDogId(data[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching dogs:", error);
+    } finally {
+      setLoadingDogs(false);
+    }
   };
 
-  const handleCreateLostAlert = () => {
-    if (!lostDescription || !lastSeenLocation) {
+  const handleCreateLog = async () => {
+    if (!logType || !selectedDogId) {
+      toast({ variant: "destructive", title: "Please select a log type and dog" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("health_logs").insert({
+        dog_id: selectedDogId,
+        owner_id: user!.id,
+        log_type: logType as any,
+        value: logValue || null,
+        notes: logNotes || null,
+      });
+
+      if (error) throw error;
+      toast({ title: "Health log added! 🐾" });
+      navigate("/");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateLostAlert = async () => {
+    if (!lostDescription || !lastSeenLocation || !selectedDogId) {
       toast({ variant: "destructive", title: "Please fill in all fields" });
       return;
     }
-    // TODO: Save to database
-    toast({ title: "Lost alert posted! 🚨", description: "The community will help find your pup." });
-    navigate("/community");
+
+    setSubmitting(true);
+    try {
+      const selectedDog = dogs.find(d => d.id === selectedDogId);
+
+      // Update dog to lost mode
+      await supabase
+        .from("dogs")
+        .update({ is_lost: true })
+        .eq("id", selectedDogId);
+
+      // Create lost alert
+      const { error } = await supabase.from("lost_alerts").insert({
+        dog_id: selectedDogId,
+        owner_id: user!.id,
+        title: `${selectedDog?.name || "Dog"} is Missing!`,
+        description: lostDescription,
+        last_seen_location: lastSeenLocation,
+      });
+
+      if (error) throw error;
+      toast({ title: "Lost alert posted! 🚨", description: "The community will help find your pup." });
+      navigate("/community");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleCreateCareRequest = () => {
-    if (!careType || !timeWindow || !careLocation) {
+  const handleCreateCareRequest = async () => {
+    if (!careType || !timeWindow || !careLocation || !selectedDogId) {
       toast({ variant: "destructive", title: "Please fill in all required fields" });
       return;
     }
-    // TODO: Save to database
-    toast({ title: "Care request posted! 🐕", description: "Check messages for responses." });
-    navigate("/community");
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("care_requests").insert({
+        dog_id: selectedDogId,
+        owner_id: user!.id,
+        care_type: careType as any,
+        time_window: timeWindow,
+        location_text: careLocation,
+        notes: careNotes || null,
+        pay_offered: payOffered || null,
+      });
+
+      if (error) throw error;
+      toast({ title: "Care request posted! 🐕", description: "Check messages for responses." });
+      navigate("/community");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (!user) return null;
 
   if (!createType) {
     return (
@@ -136,165 +239,203 @@ export default function CreatePage() {
       />
 
       <div className="p-4">
-        {createType === "log" && (
+        {loadingDogs ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : dogs.length === 0 ? (
           <Card>
-            <CardHeader>
-              <CardTitle>Log Health Event</CardTitle>
-              <CardDescription>Track your dog's daily activities and health</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <Select value={logType} onValueChange={setLogType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="walk">🚶 Walk</SelectItem>
-                    <SelectItem value="food">🍖 Food</SelectItem>
-                    <SelectItem value="meds">💊 Medication</SelectItem>
-                    <SelectItem value="mood">😊 Mood</SelectItem>
-                    <SelectItem value="symptom">🩺 Symptom</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Value / Details</Label>
-                <Input
-                  placeholder="e.g., 30 minutes, Morning kibble..."
-                  value={logValue}
-                  onChange={(e) => setLogValue(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Notes (optional)</Label>
-                <Textarea
-                  placeholder="Any additional notes..."
-                  value={logNotes}
-                  onChange={(e) => setLogNotes(e.target.value)}
-                />
-              </div>
-
-              <Button className="w-full" onClick={handleCreateLog}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add Log
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground mb-4">You need to add a dog first!</p>
+              <Button onClick={() => navigate("/profile")}>
+                Add Your Dog
               </Button>
             </CardContent>
           </Card>
-        )}
+        ) : (
+          <>
+            {/* Dog Selector (if multiple dogs) */}
+            {dogs.length > 1 && (
+              <Card className="mb-4">
+                <CardContent className="p-4">
+                  <Label>Select Dog</Label>
+                  <Select value={selectedDogId} onValueChange={setSelectedDogId}>
+                    <SelectTrigger className="mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dogs.map((dog) => (
+                        <SelectItem key={dog.id} value={dog.id}>
+                          {dog.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            )}
 
-        {createType === "lost" && (
-          <Card className="border-lost">
-            <CardHeader>
-              <CardTitle className="text-lost">🚨 Lost Dog Alert</CardTitle>
-              <CardDescription>Provide details to help the community find your dog</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  placeholder="Describe your dog: color, size, collar, distinguishing features..."
-                  value={lostDescription}
-                  onChange={(e) => setLostDescription(e.target.value)}
-                  rows={4}
-                />
-              </div>
+            {createType === "log" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Log Health Event</CardTitle>
+                  <CardDescription>Track your dog's daily activities and health</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Type</Label>
+                    <Select value={logType} onValueChange={setLogType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="walk">🚶 Walk</SelectItem>
+                        <SelectItem value="food">🍖 Food</SelectItem>
+                        <SelectItem value="meds">💊 Medication</SelectItem>
+                        <SelectItem value="mood">😊 Mood</SelectItem>
+                        <SelectItem value="symptom">🩺 Symptom</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="space-y-2">
-                <Label>
-                  <MapPin className="h-4 w-4 inline mr-1" />
-                  Last Seen Location
-                </Label>
-                <Input
-                  placeholder="e.g., Central Park near 72nd Street"
-                  value={lastSeenLocation}
-                  onChange={(e) => setLastSeenLocation(e.target.value)}
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label>Value / Details</Label>
+                    <Input
+                      placeholder="e.g., 30 minutes, Morning kibble..."
+                      value={logValue}
+                      onChange={(e) => setLogValue(e.target.value)}
+                    />
+                  </div>
 
-              <Button className="w-full bg-lost hover:bg-lost/90" onClick={handleCreateLostAlert}>
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Post Lost Alert
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+                  <div className="space-y-2">
+                    <Label>Notes (optional)</Label>
+                    <Textarea
+                      placeholder="Any additional notes..."
+                      value={logNotes}
+                      onChange={(e) => setLogNotes(e.target.value)}
+                    />
+                  </div>
 
-        {createType === "care" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Care Request</CardTitle>
-              <CardDescription>Find trusted help for your dog</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Type of Care</Label>
-                <Select value={careType} onValueChange={setCareType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="walk">🚶 Walk</SelectItem>
-                    <SelectItem value="watch">👀 Short Watch</SelectItem>
-                    <SelectItem value="overnight">🌙 Overnight</SelectItem>
-                    <SelectItem value="check-in">👋 Check-in</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <Button className="w-full" onClick={handleCreateLog} disabled={submitting}>
+                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />}
+                    Add Log
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
-              <div className="space-y-2">
-                <Label>
-                  <Clock className="h-4 w-4 inline mr-1" />
-                  Time Window
-                </Label>
-                <Input
-                  placeholder="e.g., Today 2-4 PM, or Jan 30 - Feb 2"
-                  value={timeWindow}
-                  onChange={(e) => setTimeWindow(e.target.value)}
-                />
-              </div>
+            {createType === "lost" && (
+              <Card className="border-lost">
+                <CardHeader>
+                  <CardTitle className="text-lost">🚨 Lost Dog Alert</CardTitle>
+                  <CardDescription>Provide details to help the community find your dog</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea
+                      placeholder="Describe your dog: color, size, collar, distinguishing features..."
+                      value={lostDescription}
+                      onChange={(e) => setLostDescription(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label>
-                  <MapPin className="h-4 w-4 inline mr-1" />
-                  Location
-                </Label>
-                <Input
-                  placeholder="e.g., Upper East Side, Manhattan"
-                  value={careLocation}
-                  onChange={(e) => setCareLocation(e.target.value)}
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label>
+                      <MapPin className="h-4 w-4 inline mr-1" />
+                      Last Seen Location
+                    </Label>
+                    <Input
+                      placeholder="e.g., Central Park near 72nd Street"
+                      value={lastSeenLocation}
+                      onChange={(e) => setLastSeenLocation(e.target.value)}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label>
-                  <FileText className="h-4 w-4 inline mr-1" />
-                  Notes (optional)
-                </Label>
-                <Textarea
-                  placeholder="Any special instructions or info about your dog..."
-                  value={careNotes}
-                  onChange={(e) => setCareNotes(e.target.value)}
-                />
-              </div>
+                  <Button className="w-full bg-lost hover:bg-lost/90" onClick={handleCreateLostAlert} disabled={submitting}>
+                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
+                    Post Lost Alert
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
-              <div className="space-y-2">
-                <Label>Pay Offered (optional)</Label>
-                <Input
-                  placeholder="e.g., $25/hour"
-                  value={payOffered}
-                  onChange={(e) => setPayOffered(e.target.value)}
-                />
-              </div>
+            {createType === "care" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Care Request</CardTitle>
+                  <CardDescription>Find trusted help for your dog</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Type of Care</Label>
+                    <Select value={careType} onValueChange={setCareType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="walk">🚶 Walk</SelectItem>
+                        <SelectItem value="watch">👀 Short Watch</SelectItem>
+                        <SelectItem value="overnight">🌙 Overnight</SelectItem>
+                        <SelectItem value="check-in">👋 Check-in</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <Button className="w-full" onClick={handleCreateCareRequest}>
-                <HandHeart className="h-4 w-4 mr-2" />
-                Post Request
-              </Button>
-            </CardContent>
-          </Card>
+                  <div className="space-y-2">
+                    <Label>
+                      <Clock className="h-4 w-4 inline mr-1" />
+                      Time Window
+                    </Label>
+                    <Input
+                      placeholder="e.g., Today 2-4 PM, or Jan 30 - Feb 2"
+                      value={timeWindow}
+                      onChange={(e) => setTimeWindow(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>
+                      <MapPin className="h-4 w-4 inline mr-1" />
+                      Location
+                    </Label>
+                    <Input
+                      placeholder="e.g., Upper East Side, Manhattan"
+                      value={careLocation}
+                      onChange={(e) => setCareLocation(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>
+                      <FileText className="h-4 w-4 inline mr-1" />
+                      Notes (optional)
+                    </Label>
+                    <Textarea
+                      placeholder="Any special instructions or info about your dog..."
+                      value={careNotes}
+                      onChange={(e) => setCareNotes(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Pay Offered (optional)</Label>
+                    <Input
+                      placeholder="e.g., $25/hour"
+                      value={payOffered}
+                      onChange={(e) => setPayOffered(e.target.value)}
+                    />
+                  </div>
+
+                  <Button className="w-full" onClick={handleCreateCareRequest} disabled={submitting}>
+                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <HandHeart className="h-4 w-4 mr-2" />}
+                    Post Request
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </MobileLayout>
