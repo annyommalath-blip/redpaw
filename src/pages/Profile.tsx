@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Phone, Eye, EyeOff, Archive, ChevronRight, ArchiveX } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Phone, Eye, EyeOff, Archive, ChevronRight, ArchiveX, AlertTriangle } from "lucide-react";
+import { format } from "date-fns";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,6 +52,17 @@ interface MyCareRequest {
   } | null;
 }
 
+interface ArchivedLostAlert {
+  id: string;
+  title: string;
+  created_at: string;
+  resolved_at: string | null;
+  dogs: {
+    name: string;
+    breed: string | null;
+  } | null;
+}
+
 // Helper to check if a care request is archived (manually or 1 hour after end time)
 const isRequestArchived = (request: MyCareRequest): boolean => {
   // Check if manually archived
@@ -75,6 +87,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<OwnerProfile | null>(null);
   const [dogs, setDogs] = useState<UserDog[]>([]);
   const [myCareRequests, setMyCareRequests] = useState<MyCareRequest[]>([]);
+  const [archivedLostAlerts, setArchivedLostAlerts] = useState<ArchivedLostAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -150,6 +163,16 @@ export default function ProfilePage() {
       uniqueRequests.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
       setMyCareRequests(uniqueRequests as MyCareRequest[]);
+
+      // Fetch resolved (archived) lost alerts
+      const { data: resolvedAlerts } = await supabase
+        .from("lost_alerts")
+        .select("id, title, created_at, resolved_at, dogs (name, breed)")
+        .eq("owner_id", user.id)
+        .eq("status", "resolved")
+        .order("resolved_at", { ascending: false });
+
+      setArchivedLostAlerts((resolvedAlerts as any) || []);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -698,12 +721,44 @@ export default function ProfilePage() {
                       })()}
                     </div>
 
-                    {/* Archived Dog Posts - Placeholder for future */}
+                    {/* Archived Lost Dog Alerts */}
                     <div>
                       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                        Archived Dog Posts
+                        Resolved Lost Alerts
                       </h3>
-                      <p className="text-sm text-muted-foreground italic">No archived dog posts</p>
+                      {archivedLostAlerts.length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic">No resolved lost alerts</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {archivedLostAlerts.map((alert) => (
+                            <Card
+                              key={alert.id}
+                              className="cursor-pointer hover:border-primary transition-colors opacity-70"
+                              onClick={() => navigate(`/lost-alert/${alert.id}`)}
+                            >
+                              <CardContent className="p-3">
+                                <div className="flex items-center gap-3">
+                                  <AlertTriangle className="h-5 w-5 text-success shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-foreground truncate">
+                                      {alert.dogs?.name || "Unknown"} - Found! ✅
+                                    </p>
+                                    <div className="text-xs text-muted-foreground space-y-0.5">
+                                      <p>Lost: {format(new Date(alert.created_at), "MMM d, yyyy")}</p>
+                                      {alert.resolved_at && (
+                                        <p>Found: {format(new Date(alert.resolved_at), "MMM d, yyyy")}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+                                    Resolved
+                                  </Badge>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

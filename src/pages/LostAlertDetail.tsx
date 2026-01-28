@@ -168,10 +168,13 @@ export default function LostAlertDetailPage() {
     if (!alert || !user) return;
 
     try {
-      // Update alert status
+      // Update alert status and set resolved_at timestamp
       const { error: alertError } = await supabase
         .from("lost_alerts")
-        .update({ status: "resolved" })
+        .update({ 
+          status: "resolved",
+          resolved_at: new Date().toISOString()
+        })
         .eq("id", alert.id);
 
       if (alertError) throw alertError;

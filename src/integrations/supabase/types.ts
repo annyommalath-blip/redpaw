@@ -292,6 +292,7 @@ export type Database = {
           last_seen_location: string
           owner_id: string
           photo_url: string | null
+          resolved_at: string | null
           status: Database["public"]["Enums"]["alert_status"]
           title: string
           updated_at: string
@@ -304,6 +305,7 @@ export type Database = {
           last_seen_location: string
           owner_id: string
           photo_url?: string | null
+          resolved_at?: string | null
           status?: Database["public"]["Enums"]["alert_status"]
           title: string
           updated_at?: string
@@ -316,6 +318,7 @@ export type Database = {
           last_seen_location?: string
           owner_id?: string
           photo_url?: string | null
+          resolved_at?: string | null
           status?: Database["public"]["Enums"]["alert_status"]
           title?: string
           updated_at?: string
