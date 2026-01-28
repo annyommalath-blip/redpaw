@@ -20,12 +20,14 @@ import { calculateExpirationDate } from "@/lib/medRecordUtils";
 import { SingleDateTimePicker, validateSingleDateTime, formatSingleDateTimeWindow, convertTimeToDbFormat } from "@/components/care/SingleDateTimePicker";
 import { CurrencyInput } from "@/components/care/CurrencyInput";
 import { formatPayAmount } from "@/data/currencies";
+import { DogMultiSelector } from "@/components/dog/DogMultiSelector";
 
 type CreateType = "log" | "lost" | "care" | "meds" | null;
 
 interface Dog {
   id: string;
   name: string;
+  photo_url?: string | null;
 }
 
 export default function CreatePage() {
@@ -40,6 +42,7 @@ export default function CreatePage() {
   // Dogs state
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [selectedDogId, setSelectedDogId] = useState<string>("");
+  const [selectedDogIds, setSelectedDogIds] = useState<string[]>([]); // For care requests (multi-select)
   const [loadingDogs, setLoadingDogs] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -94,7 +97,7 @@ export default function CreatePage() {
     try {
       const { data } = await supabase
         .from("dogs")
-        .select("id, name")
+        .select("id, name, photo_url")
         .eq("owner_id", user.id);
 
       setDogs(data || []);
@@ -103,8 +106,10 @@ export default function CreatePage() {
         const dogIdFromUrl = searchParams.get("dog_id");
         if (dogIdFromUrl && data.some(d => d.id === dogIdFromUrl)) {
           setSelectedDogId(dogIdFromUrl);
+          setSelectedDogIds([dogIdFromUrl]); // Pre-select for care request too
         } else {
           setSelectedDogId(data[0].id);
+          setSelectedDogIds([data[0].id]);
         }
       }
     } catch (error) {
@@ -112,6 +117,18 @@ export default function CreatePage() {
     } finally {
       setLoadingDogs(false);
     }
+  };
+
+  const handleToggleDog = (dogId: string) => {
+    setSelectedDogIds(prev => {
+      if (prev.includes(dogId)) {
+        // Don't allow deselecting if it's the only one
+        if (prev.length === 1) return prev;
+        return prev.filter(id => id !== dogId);
+      } else {
+        return [...prev, dogId];
+      }
+    });
   };
 
   const handleCreateLog = async () => {
@@ -223,7 +240,7 @@ export default function CreatePage() {
     }
     setCareTimeError("");
 
-    if (!careType || !careLocation || !selectedDogId) {
+    if (!careType || !careLocation || selectedDogIds.length === 0) {
       toast({ variant: "destructive", title: "Please fill in all required fields" });
       return;
     }
@@ -233,8 +250,9 @@ export default function CreatePage() {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("care_requests").insert({
-        dog_id: selectedDogId,
+      // Create one care request per selected dog
+      const requests = selectedDogIds.map(dogId => ({
+        dog_id: dogId,
         owner_id: user!.id,
         care_type: careType as any,
         time_window: timeWindow,
@@ -246,10 +264,19 @@ export default function CreatePage() {
         end_time: convertTimeToDbFormat(careEndTime),
         pay_amount: payAmountNum,
         pay_currency: payAmountNum ? payCurrency : null,
-      });
+      }));
+
+      const { error } = await supabase.from("care_requests").insert(requests);
 
       if (error) throw error;
-      toast({ title: "Care request posted! 🐕", description: "Check Community for responses." });
+      
+      const dogCount = selectedDogIds.length;
+      toast({ 
+        title: `Care request${dogCount > 1 ? 's' : ''} posted! 🐕`, 
+        description: dogCount > 1 
+          ? `Posted ${dogCount} care requests. Check Community for responses.`
+          : "Check Community for responses." 
+      });
       navigate("/community?tab=care");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -583,9 +610,22 @@ export default function CreatePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Care Request</CardTitle>
-                  <CardDescription>Find trusted help for your dog</CardDescription>
+                  <CardDescription>Find trusted help for your dog{dogs.length > 1 ? 's' : ''}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Multi-dog selector for care requests */}
+                  {dogs.length > 1 && (
+                    <div className="space-y-2">
+                      <Label>Select Dog{selectedDogIds.length > 1 ? 's' : ''} *</Label>
+                      <p className="text-xs text-muted-foreground">Select one or more dogs for this care request</p>
+                      <DogMultiSelector
+                        dogs={dogs}
+                        selectedDogIds={selectedDogIds}
+                        onToggleDog={handleToggleDog}
+                      />
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label>Type of Care</Label>
                     <Select value={careType} onValueChange={setCareType}>
@@ -647,10 +687,10 @@ export default function CreatePage() {
                   <Button 
                     className="w-full" 
                     onClick={handleCreateCareRequest} 
-                    disabled={submitting || !careType || !careDate || !careStartTime || !careEndTime || !careLocation}
+                    disabled={submitting || !careType || !careDate || !careStartTime || !careEndTime || !careLocation || selectedDogIds.length === 0}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <HandHeart className="h-4 w-4 mr-2" />}
-                    Post Request
+                    Post Request{selectedDogIds.length > 1 ? ` for ${selectedDogIds.length} Dogs` : ''}
                   </Button>
                 </CardContent>
               </Card>
