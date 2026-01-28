@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog, Loader2, Calendar } from "lucide-react";
+import { Dog, Loader2, Calendar, Camera } from "lucide-react";
 import { format } from "date-fns";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -19,6 +19,7 @@ import { BreedSelector } from "@/components/dog/BreedSelector";
 import { DogPhotoUploader } from "@/components/dog/DogPhotoUploader";
 import { calculateAge } from "@/lib/ageCalculator";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function AddDogPage() {
   const navigate = useNavigate();
@@ -94,6 +95,19 @@ export default function AddDogPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Cover Photo Avatar */}
+              <div className="flex flex-col items-center gap-2">
+                <Avatar className="h-24 w-24 border-4 border-primary/20">
+                  <AvatarImage src={photoUrls[0]} alt="Dog cover photo" />
+                  <AvatarFallback className="bg-muted">
+                    <Camera className="h-8 w-8 text-muted-foreground" />
+                  </AvatarFallback>
+                </Avatar>
+                <p className="text-xs text-muted-foreground">
+                  {photoUrls[0] ? "Cover photo set!" : "Add a photo below to set cover"}
+                </p>
+              </div>
+
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
