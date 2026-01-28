@@ -114,13 +114,12 @@ export default function CareRequestDetailPage() {
     
     setLoading(true);
     try {
-      // Fetch care request with dog and owner info
+      // Fetch care request with dog info (no FK to profiles, so fetch separately)
       const { data: requestData, error: requestError } = await supabase
         .from("care_requests")
         .select(`
           *,
-          dogs (name, breed, photo_url),
-          profiles:owner_id (display_name)
+          dogs (name, breed, photo_url)
         `)
         .eq("id", requestId)
         .maybeSingle();
@@ -132,7 +131,20 @@ export default function CareRequestDetailPage() {
         return;
       }
 
-      setRequest(requestData as any);
+      // Fetch owner profile separately
+      const { data: ownerProfile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", requestData.owner_id)
+        .maybeSingle();
+
+      // Combine the data
+      const combinedRequest = {
+        ...requestData,
+        profiles: ownerProfile
+      };
+
+      setRequest(combinedRequest as any);
 
       // Fetch applications if owner
       if (requestData.owner_id === user?.id) {
