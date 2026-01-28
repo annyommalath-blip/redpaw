@@ -4,7 +4,12 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { isValidImageType, isHeicFile, processImageFile } from "@/lib/imageUtils";
+import { 
+  isValidImageType, 
+  isHeicFile, 
+  processImageForUpload, 
+  uploadProcessedImage 
+} from "@/lib/imageUtils";
 
 interface DogPhotoUploaderProps {
   userId: string;
@@ -46,7 +51,7 @@ export function DogPhotoUploader({
 
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
-      setStatusText(`Processing ${i + 1}/${filesToUpload.length}...`);
+      setStatusText(`Photo ${i + 1}/${filesToUpload.length}...`);
 
       // Validate file type
       if (!isValidImageType(file)) {
@@ -58,43 +63,40 @@ export function DogPhotoUploader({
         continue;
       }
 
-      // Validate file size (15MB max for raw files)
-      if (file.size > 15 * 1024 * 1024) {
+      // Allow up to 50MB raw input (will be compressed)
+      if (file.size > 50 * 1024 * 1024) {
         toast({
           variant: "destructive",
           title: "File too large",
-          description: `${file.name} exceeds the 15MB limit.`,
+          description: `${file.name} exceeds the 50MB limit.`,
         });
         continue;
       }
 
       try {
-        // Process the image (convert HEIC if needed, compress)
-        setStatusText(isHeicFile(file) ? "Converting..." : "Uploading...");
-        const processedFile = await processImageFile(file, (status) => {
-          setStatusText(status);
+        // Process the image (convert HEIC, resize, compress)
+        setStatusText(
+          isHeicFile(file) 
+            ? `Converting ${i + 1}/${filesToUpload.length}...` 
+            : `Processing ${i + 1}/${filesToUpload.length}...`
+        );
+        
+        const result = await processImageForUpload(file, {
+          userId,
+          supabase,
+          onProgress: (status) => setStatusText(`${i + 1}/${filesToUpload.length}: ${status}`),
+          targetSize: 2 * 1024 * 1024, // 2MB max
         });
 
-        setStatusText(`Uploading ${i + 1}/${filesToUpload.length}...`);
+        // Upload the processed image
+        const publicUrl = await uploadProcessedImage(result, {
+          userId,
+          supabase,
+          pathPrefix: "gallery-",
+          onProgress: (status) => setStatusText(`${i + 1}/${filesToUpload.length}: ${status}`),
+        });
 
-        // Generate filename with correct extension
-        const fileExt = processedFile.name.split(".").pop()?.toLowerCase() || "jpg";
-        const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("dog-photos")
-          .upload(fileName, processedFile, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from("dog-photos")
-          .getPublicUrl(fileName);
-
-        newUrls.push(urlData.publicUrl);
+        newUrls.push(publicUrl);
         successCount++;
       } catch (error: any) {
         console.error("Upload error:", error);
@@ -130,7 +132,7 @@ export function DogPhotoUploader({
       const url = new URL(urlToRemove);
       const pathParts = url.pathname.split("/dog-photos/");
       if (pathParts[1]) {
-        await supabase.storage.from("dog-photos").remove([pathParts[1]]);
+        await supabase.storage.from("dog-photos").remove([decodeURIComponent(pathParts[1])]);
       }
     } catch (error) {
       console.error("Error removing file from storage:", error);
@@ -152,10 +154,11 @@ export function DogPhotoUploader({
               src={url}
               alt={`Dog photo ${index + 1}`}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
 
-            {/* Actions overlay */}
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            {/* Remove button overlay */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <Button
                 type="button"
                 size="icon"
@@ -186,7 +189,7 @@ export function DogPhotoUploader({
             {uploading ? (
               <>
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="text-xs text-center px-1">{statusText}</span>
+                <span className="text-xs text-center px-1 leading-tight">{statusText}</span>
               </>
             ) : (
               <>
@@ -210,7 +213,7 @@ export function DogPhotoUploader({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
+        accept="image/*"
         multiple
         className="hidden"
         onChange={handleFileSelect}
