@@ -137,8 +137,49 @@ export default function LostAlertDetailPage() {
     }
   };
 
-  const handleContact = () => {
-    navigate("/messages");
+  const handleContact = async () => {
+    if (!user || !alert) return;
+    
+    // Don't message yourself
+    if (user.id === alert.owner_id) return;
+    
+    try {
+      // Check for existing conversation for this lost alert
+      const { data: conversations } = await supabase
+        .from("conversations")
+        .select("id, participant_ids")
+        .eq("context_type", "lostAlert")
+        .eq("context_id", alert.id);
+      
+      // Find existing conversation between these two users
+      const existingConvo = conversations?.find(c => 
+        c.participant_ids.includes(user.id) && c.participant_ids.includes(alert.owner_id)
+      );
+      
+      if (existingConvo) {
+        navigate(`/chat/${existingConvo.id}`);
+      } else {
+        // Create new conversation
+        const { data: newConvo, error } = await supabase
+          .from("conversations")
+          .insert({
+            participant_ids: [user.id, alert.owner_id],
+            context_type: "lostAlert",
+            context_id: alert.id,
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        navigate(`/chat/${newConvo.id}`);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not start conversation",
+      });
+    }
   };
 
   if (loading) {
