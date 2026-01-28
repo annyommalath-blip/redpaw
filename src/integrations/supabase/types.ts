@@ -64,11 +64,16 @@ export type Database = {
           care_type: Database["public"]["Enums"]["care_type"]
           created_at: string
           dog_id: string
+          end_time: string | null
           id: string
           location_text: string
           notes: string | null
           owner_id: string
+          pay_amount: number | null
+          pay_currency: string | null
           pay_offered: string | null
+          request_date: string | null
+          start_time: string | null
           status: Database["public"]["Enums"]["request_status"]
           time_window: string
           updated_at: string
@@ -78,11 +83,16 @@ export type Database = {
           care_type: Database["public"]["Enums"]["care_type"]
           created_at?: string
           dog_id: string
+          end_time?: string | null
           id?: string
           location_text: string
           notes?: string | null
           owner_id: string
+          pay_amount?: number | null
+          pay_currency?: string | null
           pay_offered?: string | null
+          request_date?: string | null
+          start_time?: string | null
           status?: Database["public"]["Enums"]["request_status"]
           time_window: string
           updated_at?: string
@@ -92,11 +102,16 @@ export type Database = {
           care_type?: Database["public"]["Enums"]["care_type"]
           created_at?: string
           dog_id?: string
+          end_time?: string | null
           id?: string
           location_text?: string
           notes?: string | null
           owner_id?: string
+          pay_amount?: number | null
+          pay_currency?: string | null
           pay_offered?: string | null
+          request_date?: string | null
+          start_time?: string | null
           status?: Database["public"]["Enums"]["request_status"]
           time_window?: string
           updated_at?: string
