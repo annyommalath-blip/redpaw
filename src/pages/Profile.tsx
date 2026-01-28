@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Phone, Eye, EyeOff } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Phone, Eye, EyeOff, Archive, ChevronRight } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,11 +42,28 @@ interface MyCareRequest {
   assigned_sitter_id: string | null;
   owner_id: string;
   created_at: string;
+  request_date: string | null;
+  end_time: string | null;
   dogs: {
     name: string;
     breed: string | null;
   } | null;
 }
+
+// Helper to check if a care request is archived (1 hour after end time)
+const isRequestArchived = (request: MyCareRequest): boolean => {
+  if (!request.request_date || !request.end_time) return false;
+  
+  // Parse request_date and end_time to create a full datetime
+  const [hours, minutes] = request.end_time.split(':').map(Number);
+  const endDateTime = new Date(request.request_date);
+  endDateTime.setHours(hours, minutes, 0, 0);
+  
+  // Add 1 hour for archive threshold
+  const archiveTime = new Date(endDateTime.getTime() + 60 * 60 * 1000);
+  
+  return new Date() > archiveTime;
+};
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
@@ -57,6 +74,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
   const [editForm, setEditForm] = useState({
     first_name: "",
     last_name: "",
@@ -505,7 +523,7 @@ export default function ProfilePage() {
             )}
           </section>
 
-          {/* My Care Requests */}
+          {/* My Care Requests - Active Only */}
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -513,49 +531,53 @@ export default function ProfilePage() {
               </h2>
             </div>
 
-            {myCareRequests.length === 0 ? (
-              <Card>
-                <CardContent className="p-4 text-center text-muted-foreground">
-                  <p>No care requests yet</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-2">
-                {myCareRequests.map((request) => {
-                  const isOwner = request.owner_id === user?.id;
-                  const isAssignedSitter = request.assigned_sitter_id === user?.id;
-                  
-                  return (
-                    <Card
-                      key={request.id}
-                      className="cursor-pointer hover:border-primary transition-colors"
-                      onClick={() => navigate(`/care-request/${request.id}`)}
-                    >
-                      <CardContent className="p-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <HandHeart className="h-5 w-5 text-primary" />
-                          <div>
-                            <p className="text-sm font-medium text-foreground">
-                              {careTypeLabels[request.care_type]}
-                              {request.dogs?.name && (
-                                <span className="text-muted-foreground font-normal"> - {request.dogs.name}</span>
-                              )}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {request.time_window}
-                              {!isOwner && isAssignedSitter && " • You're the sitter"}
-                            </p>
+            {(() => {
+              const activeRequests = myCareRequests.filter(r => !isRequestArchived(r));
+              
+              return activeRequests.length === 0 ? (
+                <Card>
+                  <CardContent className="p-4 text-center text-muted-foreground">
+                    <p>No active care requests</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {activeRequests.map((request) => {
+                    const isOwner = request.owner_id === user?.id;
+                    const isAssignedSitter = request.assigned_sitter_id === user?.id;
+                    
+                    return (
+                      <Card
+                        key={request.id}
+                        className="cursor-pointer hover:border-primary transition-colors"
+                        onClick={() => navigate(`/care-request/${request.id}`)}
+                      >
+                        <CardContent className="p-3 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <HandHeart className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm font-medium text-foreground">
+                                {careTypeLabels[request.care_type]}
+                                {request.dogs?.name && (
+                                  <span className="text-muted-foreground font-normal"> - {request.dogs.name}</span>
+                                )}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {request.time_window}
+                                {!isOwner && isAssignedSitter && " • You're the sitter"}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                        <Badge className={request.assigned_sitter_id ? "bg-primary" : "bg-warning"}>
-                          {request.assigned_sitter_id ? "Assigned" : "Open"}
-                        </Badge>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
+                          <Badge className={request.assigned_sitter_id ? "bg-primary" : "bg-warning"}>
+                            {request.assigned_sitter_id ? "Assigned" : "Open"}
+                          </Badge>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </section>
 
           {/* Settings */}
@@ -569,6 +591,79 @@ export default function ProfilePage() {
                   <Settings className="h-5 w-5 text-muted-foreground" />
                   <span className="text-foreground">App Settings</span>
                 </button>
+                <Separator />
+                <button 
+                  className="w-full flex items-center justify-between p-4 hover:bg-accent transition-colors text-left"
+                  onClick={() => setShowArchive(!showArchive)}
+                >
+                  <div className="flex items-center gap-3">
+                    <Archive className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-foreground">Archive</span>
+                  </div>
+                  <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${showArchive ? 'rotate-90' : ''}`} />
+                </button>
+                
+                {/* Archive Section - Expandable */}
+                {showArchive && (
+                  <div className="border-t bg-muted/30 p-4 space-y-4">
+                    {/* Archived Care Requests */}
+                    <div>
+                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                        Archived Care Requests
+                      </h3>
+                      {(() => {
+                        const archivedRequests = myCareRequests.filter(r => isRequestArchived(r));
+                        
+                        return archivedRequests.length === 0 ? (
+                          <p className="text-sm text-muted-foreground italic">No archived care requests</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {archivedRequests.map((request) => {
+                              const isOwner = request.owner_id === user?.id;
+                              const isAssignedSitter = request.assigned_sitter_id === user?.id;
+                              
+                              return (
+                                <Card
+                                  key={request.id}
+                                  className="cursor-pointer hover:border-primary transition-colors opacity-70"
+                                  onClick={() => navigate(`/care-request/${request.id}`)}
+                                >
+                                  <CardContent className="p-3 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <HandHeart className="h-5 w-5 text-muted-foreground" />
+                                      <div>
+                                        <p className="text-sm font-medium text-foreground">
+                                          {careTypeLabels[request.care_type]}
+                                          {request.dogs?.name && (
+                                            <span className="text-muted-foreground font-normal"> - {request.dogs.name}</span>
+                                          )}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {request.time_window}
+                                          {!isOwner && isAssignedSitter && " • You were the sitter"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Badge variant="secondary">Completed</Badge>
+                                  </CardContent>
+                                </Card>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Archived Dog Posts - Placeholder for future */}
+                    <div>
+                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                        Archived Dog Posts
+                      </h3>
+                      <p className="text-sm text-muted-foreground italic">No archived dog posts</p>
+                    </div>
+                  </div>
+                )}
+                
                 <Separator />
                 <button
                   className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left text-destructive"
