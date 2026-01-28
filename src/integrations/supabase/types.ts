@@ -65,6 +65,7 @@ export type Database = {
           care_type: Database["public"]["Enums"]["care_type"]
           created_at: string
           dog_id: string
+          dog_ids: string[] | null
           end_time: string | null
           id: string
           location_text: string
@@ -85,6 +86,7 @@ export type Database = {
           care_type: Database["public"]["Enums"]["care_type"]
           created_at?: string
           dog_id: string
+          dog_ids?: string[] | null
           end_time?: string | null
           id?: string
           location_text: string
@@ -105,6 +107,7 @@ export type Database = {
           care_type?: Database["public"]["Enums"]["care_type"]
           created_at?: string
           dog_id?: string
+          dog_ids?: string[] | null
           end_time?: string | null
           id?: string
           location_text?: string

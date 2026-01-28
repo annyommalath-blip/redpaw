@@ -24,6 +24,12 @@ interface LostAlert {
   } | null;
 }
 
+interface DogInfo {
+  name: string;
+  breed: string | null;
+  photo_url: string | null;
+}
+
 interface CareRequest {
   id: string;
   care_type: "walk" | "watch" | "overnight" | "check-in";
@@ -34,11 +40,9 @@ interface CareRequest {
   status: "open" | "closed";
   assigned_sitter_id: string | null;
   created_at: string;
-  dogs: {
-    name: string;
-    breed: string | null;
-    photo_url: string | null;
-  } | null;
+  dog_ids: string[] | null;
+  dogs: DogInfo | null;
+  allDogs?: DogInfo[]; // Populated from dog_ids
 }
 
 export default function CommunityPage() {
@@ -97,7 +101,37 @@ export default function CommunityPage() {
         return !request.assigned_sitter_id;
       });
 
-      setCareRequests(publicRequests as any);
+      // Fetch all dogs for requests with multiple dog_ids
+      const allDogIds = new Set<string>();
+      publicRequests.forEach((req: any) => {
+        if (req.dog_ids && Array.isArray(req.dog_ids)) {
+          req.dog_ids.forEach((id: string) => allDogIds.add(id));
+        }
+      });
+
+      let dogsMap: Record<string, DogInfo> = {};
+      if (allDogIds.size > 0) {
+        const { data: dogsData } = await supabase
+          .from("dogs")
+          .select("id, name, breed, photo_url")
+          .in("id", Array.from(allDogIds));
+        
+        if (dogsData) {
+          dogsData.forEach((dog: any) => {
+            dogsMap[dog.id] = { name: dog.name, breed: dog.breed, photo_url: dog.photo_url };
+          });
+        }
+      }
+
+      // Attach allDogs array to each request
+      const enrichedRequests = publicRequests.map((req: any) => {
+        if (req.dog_ids && Array.isArray(req.dog_ids) && req.dog_ids.length > 0) {
+          req.allDogs = req.dog_ids.map((id: string) => dogsMap[id]).filter(Boolean);
+        }
+        return req;
+      });
+
+      setCareRequests(enrichedRequests as any);
 
       // Fetch user's applications to show "Applied" badge
       if (user) {
@@ -223,6 +257,7 @@ export default function CommunityPage() {
                   isAssigned={!!request.assigned_sitter_id}
                   hasApplied={userApplications.has(request.id)}
                   onClick={() => handleCareRequestClick(request.id)}
+                  dogs={request.allDogs}
                 />
               ))
             ) : (
