@@ -4,69 +4,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { isValidImageType, isHeicFile, processImageFile } from "@/lib/imageUtils";
 
 interface DogPhotoUploaderProps {
   userId: string;
   photos: string[];
   onChange: (photos: string[]) => void;
   maxPhotos?: number;
-}
-
-// Check if file is HEIC/HEIF
-function isHeicFile(file: File): boolean {
-  const name = file.name.toLowerCase();
-  return (
-    name.endsWith(".heic") ||
-    name.endsWith(".heif") ||
-    file.type === "image/heic" ||
-    file.type === "image/heif" ||
-    file.type === "" // iOS sometimes sends empty MIME for HEIC
-  );
-}
-
-// Check if file is a valid image type
-function isValidImageType(file: File): boolean {
-  const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif", ""];
-  const validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".heif"];
-  const name = file.name.toLowerCase();
-  return validTypes.includes(file.type) || validExtensions.some((ext) => name.endsWith(ext));
-}
-
-// Convert HEIC/HEIF to JPEG using heic2any with fallback
-async function convertHeicToJpeg(file: File): Promise<File> {
-  const heic2any = (await import("heic2any")).default;
-
-  const qualitySettings = [0.85, 0.7, 0.5];
-
-  for (const quality of qualitySettings) {
-    try {
-      const blob = await heic2any({
-        blob: file,
-        toType: "image/jpeg",
-        quality,
-      });
-
-      const resultBlob = Array.isArray(blob) ? blob[0] : blob;
-      const newFileName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
-      return new File([resultBlob], newFileName, { type: "image/jpeg" });
-    } catch (error) {
-      console.warn(`HEIC conversion failed with quality ${quality}:`, error);
-    }
-  }
-
-  // Final fallback without quality
-  try {
-    const blob = await heic2any({
-      blob: file,
-      toType: "image/jpeg",
-    });
-    const resultBlob = Array.isArray(blob) ? blob[0] : blob;
-    const newFileName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
-    return new File([resultBlob], newFileName, { type: "image/jpeg" });
-  } catch (error) {
-    console.error("All HEIC conversion attempts failed:", error);
-    throw new Error("Could not convert HEIC file");
-  }
 }
 
 export function DogPhotoUploader({
@@ -78,8 +22,7 @@ export function DogPhotoUploader({
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [convertingHeic, setConvertingHeic] = useState(false);
+  const [statusText, setStatusText] = useState("");
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -97,66 +40,50 @@ export function DogPhotoUploader({
 
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
     setUploading(true);
-    setUploadProgress(0);
 
     const newUrls: string[] = [];
+    let successCount = 0;
 
     for (let i = 0; i < filesToUpload.length; i++) {
-      let file = filesToUpload[i];
+      const file = filesToUpload[i];
+      setStatusText(`Processing ${i + 1}/${filesToUpload.length}...`);
 
       // Validate file type
       if (!isValidImageType(file)) {
         toast({
           variant: "destructive",
           title: "Invalid file type",
-          description: `${file.name} is not a supported image file. Use JPG, PNG, WebP, or HEIC.`,
+          description: `${file.name} is not supported. Use JPG, PNG, WebP, or HEIC.`,
         });
         continue;
       }
 
-      // Validate file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
+      // Validate file size (15MB max for raw files)
+      if (file.size > 15 * 1024 * 1024) {
         toast({
           variant: "destructive",
           title: "File too large",
-          description: `${file.name} exceeds the 10MB limit.`,
+          description: `${file.name} exceeds the 15MB limit.`,
         });
         continue;
       }
 
       try {
-        // Convert HEIC/HEIF to JPEG
-        if (isHeicFile(file)) {
-          setConvertingHeic(true);
-          toast({
-            title: "Converting photo...",
-            description: `Converting ${file.name} to JPEG format.`,
-          });
-          
-          try {
-            file = await convertHeicToJpeg(file);
-            toast({
-              title: "Conversion complete! ✓",
-              description: "Photo converted successfully.",
-            });
-          } catch (convError) {
-            console.error("HEIC conversion error:", convError);
-            // Try uploading as-is as last resort
-            toast({
-              title: "Trying original format...",
-              description: "Uploading without conversion.",
-            });
-            // Continue with original file
-          }
-          setConvertingHeic(false);
-        }
+        // Process the image (convert HEIC if needed, compress)
+        setStatusText(isHeicFile(file) ? "Converting..." : "Uploading...");
+        const processedFile = await processImageFile(file, (status) => {
+          setStatusText(status);
+        });
 
-        const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        setStatusText(`Uploading ${i + 1}/${filesToUpload.length}...`);
+
+        // Generate filename with correct extension
+        const fileExt = processedFile.name.split(".").pop()?.toLowerCase() || "jpg";
         const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("dog-photos")
-          .upload(fileName, file, {
+          .upload(fileName, processedFile, {
             cacheControl: "3600",
             upsert: false,
           });
@@ -168,13 +95,13 @@ export function DogPhotoUploader({
           .getPublicUrl(fileName);
 
         newUrls.push(urlData.publicUrl);
-        setUploadProgress(((i + 1) / filesToUpload.length) * 100);
+        successCount++;
       } catch (error: any) {
         console.error("Upload error:", error);
         toast({
           variant: "destructive",
           title: "Upload failed",
-          description: error.message || `Failed to upload ${file.name}`,
+          description: error.message || `Failed to upload ${file.name}. Try JPG or PNG.`,
         });
       }
     }
@@ -184,12 +111,12 @@ export function DogPhotoUploader({
       onChange(updatedPhotos);
       toast({
         title: "Photos uploaded! 📸",
-        description: `${newUrls.length} photo(s) added successfully.`,
+        description: `${successCount} photo(s) added successfully.`,
       });
     }
 
     setUploading(false);
-    setUploadProgress(0);
+    setStatusText("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -256,12 +183,10 @@ export function DogPhotoUploader({
               uploading && "opacity-50 cursor-not-allowed"
             )}
           >
-            {uploading || convertingHeic ? (
+            {uploading ? (
               <>
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="text-xs">
-                  {convertingHeic ? "Converting..." : `${Math.round(uploadProgress)}%`}
-                </span>
+                <span className="text-xs text-center px-1">{statusText}</span>
               </>
             ) : (
               <>
@@ -278,14 +203,14 @@ export function DogPhotoUploader({
         <div className="text-center py-4 text-muted-foreground">
           <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">Add additional photos of your dog</p>
-          <p className="text-xs">Supports JPG, PNG, WebP, HEIC • Up to {maxPhotos} photos, 10MB each</p>
+          <p className="text-xs">Supports JPG, PNG, WebP, HEIC • Up to {maxPhotos} photos</p>
         </div>
       )}
 
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*,.heic,.heif"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
         multiple
         className="hidden"
         onChange={handleFileSelect}
