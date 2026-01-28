@@ -78,7 +78,10 @@ export default function CommunityPage() {
 
       setLostAlerts((alertsData as any) || []);
 
-      // Fetch care requests
+      // Fetch care requests - filter to show:
+      // 1. Open requests without assigned sitter (public)
+      // 2. Requests owned by current user
+      // 3. Requests where current user is assigned sitter
       const { data: requestsData } = await supabase
         .from("care_requests")
         .select(`
@@ -88,7 +91,19 @@ export default function CommunityPage() {
         .eq("status", "open")
         .order("created_at", { ascending: false });
 
-      setCareRequests((requestsData as any) || []);
+      // Filter client-side to show only relevant requests
+      const filteredRequests = (requestsData || []).filter((request: any) => {
+        // If no assigned sitter, show to everyone (public)
+        if (!request.assigned_sitter_id) return true;
+        // If user is the owner, show it
+        if (user && request.owner_id === user.id) return true;
+        // If user is the assigned sitter, show it
+        if (user && request.assigned_sitter_id === user.id) return true;
+        // Otherwise hide from public view
+        return false;
+      });
+
+      setCareRequests(filteredRequests as any);
 
       // Fetch user's applications to show "Applied" badge
       if (user) {
