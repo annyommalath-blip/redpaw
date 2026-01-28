@@ -150,14 +150,27 @@ export default function CareRequestDetailPage() {
       if (requestData.owner_id === user?.id) {
         const { data: appsData } = await supabase
           .from("care_applications")
-          .select(`
-            *,
-            profiles:applicant_id (display_name)
-          `)
+          .select("*")
           .eq("request_id", requestId)
           .order("created_at", { ascending: false });
 
-        setApplications((appsData as any) || []);
+        // Fetch applicant profiles separately
+        if (appsData && appsData.length > 0) {
+          const applicantIds = appsData.map(app => app.applicant_id);
+          const { data: profilesData } = await supabase
+            .from("profiles")
+            .select("user_id, display_name")
+            .in("user_id", applicantIds);
+
+          // Combine applications with profiles
+          const appsWithProfiles = appsData.map(app => ({
+            ...app,
+            profiles: profilesData?.find(p => p.user_id === app.applicant_id) || null
+          }));
+          setApplications(appsWithProfiles as any);
+        } else {
+          setApplications([]);
+        }
       }
 
       // Fetch my application if not owner
