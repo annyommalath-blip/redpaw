@@ -45,6 +45,7 @@ export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState("care");
   const [lostAlerts, setLostAlerts] = useState<LostAlert[]>([]);
   const [careRequests, setCareRequests] = useState<CareRequest[]>([]);
+  const [userApplications, setUserApplications] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -60,7 +61,7 @@ export default function CommunityPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -88,6 +89,19 @@ export default function CommunityPage() {
         .order("created_at", { ascending: false });
 
       setCareRequests((requestsData as any) || []);
+
+      // Fetch user's applications to show "Applied" badge
+      if (user) {
+        const { data: applicationsData } = await supabase
+          .from("care_applications")
+          .select("request_id")
+          .eq("applicant_id", user.id)
+          .in("status", ["pending", "approved"]);
+
+        if (applicationsData) {
+          setUserApplications(new Set(applicationsData.map(a => a.request_id)));
+        }
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -152,6 +166,7 @@ export default function CommunityPage() {
                   createdAt={new Date(request.created_at)}
                   status={request.status}
                   isAssigned={!!request.assigned_sitter_id}
+                  hasApplied={userApplications.has(request.id)}
                   onClick={() => handleCareRequestClick(request.id)}
                 />
               ))
