@@ -277,16 +277,21 @@ export default function CareRequestDetailPage() {
     }
   };
 
-  const handleChat = async (applicantId: string) => {
+  const handleChat = async (otherUserId: string) => {
+    if (!user) return;
+    
     try {
       // Check for existing conversation with this context
-      const { data: existingConvo } = await supabase
+      const { data: conversations } = await supabase
         .from("conversations")
-        .select("id")
-        .contains("participant_ids", [user?.id, applicantId])
+        .select("id, participant_ids")
         .eq("context_type", "careRequest")
-        .eq("context_id", requestId)
-        .maybeSingle();
+        .eq("context_id", requestId);
+
+      // Find conversation where both users are participants
+      const existingConvo = conversations?.find(c => 
+        c.participant_ids.includes(user.id) && c.participant_ids.includes(otherUserId)
+      );
 
       if (existingConvo) {
         navigate(`/messages/${existingConvo.id}`);
@@ -297,7 +302,7 @@ export default function CareRequestDetailPage() {
       const { data: newConvo, error } = await supabase
         .from("conversations")
         .insert({
-          participant_ids: [user?.id, applicantId],
+          participant_ids: [user.id, otherUserId],
           context_type: "careRequest",
           context_id: requestId,
         })
