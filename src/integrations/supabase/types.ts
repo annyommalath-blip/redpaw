@@ -277,6 +277,59 @@ export type Database = {
           },
         ]
       }
+      med_records: {
+        Row: {
+          created_at: string
+          date_given: string
+          dog_id: string
+          duration_unit: Database["public"]["Enums"]["duration_unit"]
+          duration_value: number
+          expires_on: string
+          id: string
+          name: string
+          notes: string | null
+          owner_id: string
+          record_type: Database["public"]["Enums"]["med_record_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_given: string
+          dog_id: string
+          duration_unit: Database["public"]["Enums"]["duration_unit"]
+          duration_value: number
+          expires_on: string
+          id?: string
+          name: string
+          notes?: string | null
+          owner_id: string
+          record_type: Database["public"]["Enums"]["med_record_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_given?: string
+          dog_id?: string
+          duration_unit?: Database["public"]["Enums"]["duration_unit"]
+          duration_value?: number
+          expires_on?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          owner_id?: string
+          record_type?: Database["public"]["Enums"]["med_record_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "med_records_dog_id_fkey"
+            columns: ["dog_id"]
+            isOneToOne: false
+            referencedRelation: "dogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           conversation_id: string
@@ -433,7 +486,9 @@ export type Database = {
       alert_status: "active" | "resolved"
       application_status: "pending" | "approved" | "declined" | "withdrawn"
       care_type: "walk" | "watch" | "overnight" | "check-in"
+      duration_unit: "days" | "months" | "years"
       log_type: "walk" | "food" | "meds" | "mood" | "symptom"
+      med_record_type: "vaccine" | "medication"
       request_status: "open" | "closed"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
     }
@@ -566,7 +621,9 @@ export const Constants = {
       alert_status: ["active", "resolved"],
       application_status: ["pending", "approved", "declined", "withdrawn"],
       care_type: ["walk", "watch", "overnight", "check-in"],
+      duration_unit: ["days", "months", "years"],
       log_type: ["walk", "food", "meds", "mood", "symptom"],
+      med_record_type: ["vaccine", "medication"],
       request_status: ["open", "closed"],
       sitter_log_type: ["walk", "meal", "potty", "play", "note"],
     },
