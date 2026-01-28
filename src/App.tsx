@@ -14,6 +14,7 @@ import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import AddDog from "./pages/AddDog";
 import EditDog from "./pages/EditDog";
+import DogDetail from "./pages/DogDetail";
 import CareRequestDetail from "./pages/CareRequestDetail";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/add-dog" element={<ProtectedRoute><AddDog /></ProtectedRoute>} />
             <Route path="/profile/edit-dog/:dogId" element={<ProtectedRoute><EditDog /></ProtectedRoute>} />
+            <Route path="/dog/:dogId" element={<ProtectedRoute><DogDetail /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
