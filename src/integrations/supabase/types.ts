@@ -181,6 +181,7 @@ export type Database = {
           date_of_birth: string | null
           id: string
           is_lost: boolean
+          microchip_no: string | null
           name: string
           notes: string | null
           owner_id: string
@@ -197,6 +198,7 @@ export type Database = {
           date_of_birth?: string | null
           id?: string
           is_lost?: boolean
+          microchip_no?: string | null
           name: string
           notes?: string | null
           owner_id: string
@@ -213,6 +215,7 @@ export type Database = {
           date_of_birth?: string | null
           id?: string
           is_lost?: boolean
+          microchip_no?: string | null
           name?: string
           notes?: string | null
           owner_id?: string

@@ -31,6 +31,7 @@ export default function AddDogPage() {
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [weight, setWeight] = useState("");
   const [weightUnit, setWeightUnit] = useState("lbs");
+  const [microchipNo, setMicrochipNo] = useState("");
   const [notes, setNotes] = useState("");
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [additionalPhotos, setAdditionalPhotos] = useState<string[]>([]);
@@ -65,6 +66,7 @@ export default function AddDogPage() {
         age: calculatedAge || null,
         weight: weight.trim() || null,
         weight_unit: weightUnit,
+        microchip_no: microchipNo.trim() || null,
         notes: notes.trim() || null,
         photo_url: profilePhoto,
         photo_urls: additionalPhotos,
@@ -189,6 +191,20 @@ export default function AddDogPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Microchip Number */}
+              <div className="space-y-2">
+                <Label htmlFor="microchip">Microchip No. (optional)</Label>
+                <Input
+                  id="microchip"
+                  placeholder="e.g., 985112000123456"
+                  value={microchipNo}
+                  onChange={(e) => setMicrochipNo(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This info is private and only visible to you.
+                </p>
               </div>
 
               {/* Additional Photos Section */}

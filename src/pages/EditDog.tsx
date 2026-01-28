@@ -29,6 +29,7 @@ interface DogData {
   breed: string | null;
   age: string | null;
   weight: string | null;
+  microchip_no: string | null;
   notes: string | null;
   photo_url: string | null;
 }
@@ -44,6 +45,7 @@ export default function EditDogPage() {
   const [breed, setBreed] = useState("");
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
+  const [microchipNo, setMicrochipNo] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -77,6 +79,7 @@ export default function EditDogPage() {
       setBreed(data.breed || "");
       setAge(data.age || "");
       setWeight(data.weight || "");
+      setMicrochipNo(data.microchip_no || "");
       setNotes(data.notes || "");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -103,6 +106,7 @@ export default function EditDogPage() {
           breed: breed.trim() || null,
           age: age.trim() || null,
           weight: weight.trim() || null,
+          microchip_no: microchipNo.trim() || null,
           notes: notes.trim() || null,
         })
         .eq("id", dogId);
@@ -207,6 +211,20 @@ export default function EditDogPage() {
                     onChange={(e) => setWeight(e.target.value)}
                   />
                 </div>
+              </div>
+
+              {/* Microchip Number */}
+              <div className="space-y-2">
+                <Label htmlFor="microchip">Microchip No. (optional)</Label>
+                <Input
+                  id="microchip"
+                  placeholder="e.g., 985112000123456"
+                  value={microchipNo}
+                  onChange={(e) => setMicrochipNo(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This info is private and only visible to you.
+                </p>
               </div>
 
               <div className="space-y-2">
