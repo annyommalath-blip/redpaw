@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MapPin, Clock, Dog, MessageCircle, Check, Users, FileText, PlusCircle, Banknote } from "lucide-react";
+import { Clock, Dog, MessageCircle, Check, Users, FileText, PlusCircle, Banknote } from "lucide-react";
+import { LocationLink } from "@/components/location/LocationLink";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -449,10 +450,12 @@ export default function CareRequestDetailPage() {
                 <Clock className="h-4 w-4 shrink-0" />
                 <span>{request.time_window}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 shrink-0" />
-                <span>{request.location_text}</span>
-              </div>
+              <LocationLink
+                latitude={(request as any).latitude}
+                longitude={(request as any).longitude}
+                locationLabel={(request as any).location_label || request.location_text}
+                className="text-muted-foreground hover:text-primary"
+              />
               {request.pay_offered && (
                 <div className="flex items-center gap-2 text-sm text-success font-medium">
                   <Banknote className="h-4 w-4 shrink-0" />

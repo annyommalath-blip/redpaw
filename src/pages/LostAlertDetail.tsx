@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  MapPin,
   Clock,
   MessageCircle,
   Eye,
@@ -11,7 +10,9 @@ import {
   CheckCircle,
   Calendar,
   Scale,
+  MapPin,
 } from "lucide-react";
+import { LocationLink } from "@/components/location/LocationLink";
 import { calculateAge } from "@/lib/ageCalculator";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -348,10 +349,12 @@ export default function LostAlertDetailPage() {
 
             {/* Location & Time */}
             <div className="mt-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 shrink-0" />
-                <span>{alert.last_seen_location}</span>
-              </div>
+              <LocationLink
+                latitude={(alert as any).latitude}
+                longitude={(alert as any).longitude}
+                locationLabel={(alert as any).location_label || alert.last_seen_location}
+                className="text-muted-foreground hover:text-primary"
+              />
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 shrink-0" />
                 <span>Posted {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}</span>

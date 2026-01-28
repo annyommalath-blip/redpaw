@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { MapPin, Clock, Dog, Check, ChevronRight, Banknote, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Clock, Dog, Check, ChevronRight, Banknote, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditCareRequestDialog } from "@/components/care/EditCareRequestDialog";
+import { LocationLink } from "@/components/location/LocationLink";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -243,10 +244,12 @@ export function CareRequestCard({
               <Clock className="h-4 w-4 shrink-0" />
               <span>{timeWindow}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span className="truncate">{location}</span>
-            </div>
+            <LocationLink
+              latitude={requestData?.latitude}
+              longitude={requestData?.longitude}
+              locationLabel={requestData?.location_label || location}
+              className="text-muted-foreground hover:text-primary"
+            />
             {payOffered && (
               <div className="flex items-center gap-2 text-sm text-success font-medium">
                 <Banknote className="h-4 w-4 shrink-0" />
