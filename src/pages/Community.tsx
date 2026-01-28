@@ -32,17 +32,24 @@ interface DogInfo {
 
 interface CareRequest {
   id: string;
+  owner_id: string;
   care_type: "walk" | "watch" | "overnight" | "check-in";
   time_window: string;
   location_text: string;
   notes: string | null;
   pay_offered: string | null;
+  pay_amount: number | null;
+  pay_currency: string | null;
+  request_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
   status: "open" | "closed";
   assigned_sitter_id: string | null;
   created_at: string;
+  dog_id: string;
   dog_ids: string[] | null;
   dogs: DogInfo | null;
-  allDogs?: DogInfo[]; // Populated from dog_ids
+  allDogs?: DogInfo[];
 }
 
 export default function CommunityPage() {
@@ -258,6 +265,24 @@ export default function CommunityPage() {
                   hasApplied={userApplications.has(request.id)}
                   onClick={() => handleCareRequestClick(request.id)}
                   dogs={request.allDogs}
+                  isOwner={user?.id === request.owner_id}
+                  requestData={{
+                    id: request.id,
+                    dog_id: request.dog_id,
+                    dog_ids: request.dog_ids,
+                    care_type: request.care_type,
+                    time_window: request.time_window,
+                    location_text: request.location_text,
+                    notes: request.notes,
+                    pay_offered: request.pay_offered,
+                    pay_amount: request.pay_amount,
+                    pay_currency: request.pay_currency,
+                    request_date: request.request_date,
+                    start_time: request.start_time,
+                    end_time: request.end_time,
+                  }}
+                  onDeleted={fetchData}
+                  onUpdated={fetchData}
                 />
               ))
             ) : (
