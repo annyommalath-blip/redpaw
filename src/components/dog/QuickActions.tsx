@@ -3,14 +3,19 @@ import { PlusCircle, AlertTriangle, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface QuickActionsProps {
+  dogId?: string;
   isLost?: boolean;
   onToggleLost?: () => void;
 }
 
-export function QuickActions({ isLost, onToggleLost }: QuickActionsProps) {
+export function QuickActions({ dogId, isLost, onToggleLost }: QuickActionsProps) {
+  // Build URLs with dog_id query param if provided
+  const logUrl = dogId ? `/create?type=log&dog_id=${dogId}` : "/create?type=log";
+  const careUrl = dogId ? `/create?type=care&dog_id=${dogId}` : "/create?type=care";
+
   return (
     <div className="grid grid-cols-3 gap-3">
-      <Link to="/create?type=log">
+      <Link to={logUrl}>
         <Button
           variant="outline"
           className="w-full h-auto flex-col gap-2 py-4 rounded-xl bg-card hover:bg-accent"
@@ -35,7 +40,7 @@ export function QuickActions({ isLost, onToggleLost }: QuickActionsProps) {
         </span>
       </Button>
 
-      <Link to="/create?type=care">
+      <Link to={careUrl}>
         <Button
           variant="outline"
           className="w-full h-auto flex-col gap-2 py-4 rounded-xl bg-card hover:bg-accent"

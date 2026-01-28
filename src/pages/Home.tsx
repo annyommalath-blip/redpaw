@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dog, PlusCircle, Loader2, Syringe, ChevronRight } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { DogSelector } from "@/components/dog/DogSelector";
 import { DogCard } from "@/components/dog/DogCard";
 import { QuickActions } from "@/components/dog/QuickActions";
 import { HealthLogCard } from "@/components/dog/HealthLogCard";
@@ -27,6 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { enrichRecordWithStatus, MedRecordWithStatus } from "@/lib/medRecordUtils";
 
+const ACTIVE_DOG_STORAGE_KEY = "redpaw_active_dog_id";
+
 interface UserDog {
   id: string;
   name: string;
@@ -37,13 +40,27 @@ interface UserDog {
 
 interface HealthLog {
   id: string;
+  dog_id: string;
   log_type: "walk" | "food" | "meds" | "mood" | "symptom";
   value: string | null;
   created_at: string;
 }
 
+interface MedRecordRaw {
+  id: string;
+  dog_id: string;
+  name: string;
+  record_type: "vaccine" | "medication";
+  date_given: string;
+  expires_on: string;
+  duration_value: number;
+  duration_unit: "days" | "months" | "years";
+  notes: string | null;
+}
+
 export default function HomePage() {
   const [dogs, setDogs] = useState<UserDog[]>([]);
+  const [activeDogId, setActiveDogId] = useState<string | null>(null);
   const [logs, setLogs] = useState<HealthLog[]>([]);
   const [medRecords, setMedRecords] = useState<MedRecordWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +75,19 @@ export default function HomePage() {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Get the active dog object
+  const activeDog = dogs.find(d => d.id === activeDogId) || null;
+
+  // Filter logs and med records by active dog
+  const filteredLogs = logs.filter(l => l.dog_id === activeDogId);
+  const filteredMedRecords = medRecords.filter(r => r.dog_id === activeDogId);
+
+  // Handle dog selection with localStorage persistence
+  const handleSelectDog = useCallback((dogId: string) => {
+    setActiveDogId(dogId);
+    localStorage.setItem(ACTIVE_DOG_STORAGE_KEY, dogId);
+  }, []);
+
   useEffect(() => {
     if (user) {
       fetchData();
@@ -68,24 +98,39 @@ export default function HomePage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Fetch dogs
+      // Fetch all dogs
       const { data: dogsData } = await supabase
         .from("dogs")
         .select("id, name, breed, photo_url, is_lost")
         .eq("owner_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
 
-      setDogs(dogsData || []);
+      const fetchedDogs = dogsData || [];
+      setDogs(fetchedDogs);
 
-      // Fetch recent health logs and med records
-      if (dogsData && dogsData.length > 0) {
+      // Determine active dog
+      if (fetchedDogs.length > 0) {
+        const savedDogId = localStorage.getItem(ACTIVE_DOG_STORAGE_KEY);
+        const savedDogExists = fetchedDogs.some(d => d.id === savedDogId);
+        
+        if (savedDogId && savedDogExists) {
+          setActiveDogId(savedDogId);
+        } else {
+          // Default to first dog
+          setActiveDogId(fetchedDogs[0].id);
+          localStorage.setItem(ACTIVE_DOG_STORAGE_KEY, fetchedDogs[0].id);
+        }
+      }
+
+      // Fetch all health logs and med records for the user (we'll filter client-side)
+      if (fetchedDogs.length > 0) {
         const [logsResult, medResult] = await Promise.all([
           supabase
             .from("health_logs")
-            .select("id, log_type, value, created_at")
+            .select("id, dog_id, log_type, value, created_at")
             .eq("owner_id", user.id)
             .order("created_at", { ascending: false })
-            .limit(5),
+            .limit(20),
           supabase
             .from("med_records")
             .select("*")
@@ -93,7 +138,7 @@ export default function HomePage() {
             .order("expires_on", { ascending: true }),
         ]);
 
-        setLogs(logsResult.data || []);
+        setLogs((logsResult.data || []) as HealthLog[]);
         
         const enrichedRecords = (medResult.data || []).map((r) =>
           enrichRecordWithStatus(r as any)
@@ -194,8 +239,6 @@ export default function HomePage() {
     }
   };
 
-  const primaryDog = dogs[0];
-
   if (loading) {
     return (
       <MobileLayout>
@@ -220,35 +263,60 @@ export default function HomePage() {
       />
 
       <div className="p-4 space-y-6">
-        {primaryDog ? (
+        {dogs.length > 0 && activeDog ? (
           <>
-            {/* Expiration Notices */}
-            <ExpirationNotices records={medRecords} />
+            {/* Expiration Notices for active dog */}
+            <ExpirationNotices records={filteredMedRecords} />
 
-            {/* My Dog Card */}
+            {/* My Dogs Section */}
             <section>
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                My Dog
+                {dogs.length > 1 ? "My Dogs" : "My Dog"}
               </h2>
-              <DogCard
-                name={primaryDog.name}
-                breed={primaryDog.breed || "Mixed breed"}
-                photoUrl={primaryDog.photo_url || ""}
-                isLost={primaryDog.is_lost}
-                onLostToggle={(isLost) => handleLostModeToggle(primaryDog.id, primaryDog.is_lost)}
-                onClick={() => navigate(`/dog/${primaryDog.id}`)}
-              />
+              
+              {dogs.length > 1 ? (
+                // Multiple dogs: show horizontal selector
+                <DogSelector
+                  dogs={dogs}
+                  activeDogId={activeDogId!}
+                  onSelectDog={handleSelectDog}
+                />
+              ) : (
+                // Single dog: show full card
+                <DogCard
+                  name={activeDog.name}
+                  breed={activeDog.breed || "Mixed breed"}
+                  photoUrl={activeDog.photo_url || ""}
+                  isLost={activeDog.is_lost}
+                  onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
+                  onClick={() => navigate(`/dog/${activeDog.id}`)}
+                />
+              )}
             </section>
+
+            {/* Active Dog Card (shown when multiple dogs) */}
+            {dogs.length > 1 && (
+              <section>
+                <DogCard
+                  name={activeDog.name}
+                  breed={activeDog.breed || "Mixed breed"}
+                  photoUrl={activeDog.photo_url || ""}
+                  isLost={activeDog.is_lost}
+                  onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
+                  onClick={() => navigate(`/dog/${activeDog.id}`)}
+                />
+              </section>
+            )}
 
             {/* Lost Mode Dialog */}
             <LostModeDialog
               open={lostModeDialogOpen}
               onOpenChange={setLostModeDialogOpen}
               dog={{
-                id: primaryDog.id,
-                name: primaryDog.name,
-                breed: primaryDog.breed,
-                photo_url: primaryDog.photo_url,
+                id: activeDog.id,
+                name: activeDog.name,
+                breed: activeDog.breed,
+                photo_url: activeDog.photo_url,
               }}
               onSuccess={handleLostModeSuccess}
             />
@@ -259,12 +327,13 @@ export default function HomePage() {
                 Quick Actions
               </h2>
               <QuickActions
-                isLost={primaryDog.is_lost}
-                onToggleLost={() => handleLostModeToggle(primaryDog.id, primaryDog.is_lost)}
+                dogId={activeDog.id}
+                isLost={activeDog.is_lost}
+                onToggleLost={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
               />
             </section>
 
-            {/* Medication Records */}
+            {/* Medication Records for active dog */}
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
@@ -281,9 +350,9 @@ export default function HomePage() {
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
-              {medRecords.length > 0 ? (
+              {filteredMedRecords.length > 0 ? (
                 <div className="space-y-3">
-                  {medRecords.map((record) => (
+                  {filteredMedRecords.map((record) => (
                     <MedRecordCardReadOnly
                       key={record.id}
                       record={record}
@@ -299,7 +368,7 @@ export default function HomePage() {
               )}
             </section>
 
-            {/* Recent Logs */}
+            {/* Recent Logs for active dog */}
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -310,9 +379,9 @@ export default function HomePage() {
                   Add
                 </Button>
               </div>
-              {logs.length > 0 ? (
+              {filteredLogs.length > 0 ? (
                 <div className="space-y-3">
-                  {logs.map((log) => (
+                  {filteredLogs.slice(0, 5).map((log) => (
                     <HealthLogCard
                       key={log.id}
                       id={log.id}

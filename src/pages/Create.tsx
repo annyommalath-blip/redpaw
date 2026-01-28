@@ -77,6 +77,17 @@ export default function CreatePage() {
     }
   }, [user]);
 
+  // Pre-select dog from URL query param
+  useEffect(() => {
+    const dogIdFromUrl = searchParams.get("dog_id");
+    if (dogIdFromUrl && dogs.length > 0) {
+      const dogExists = dogs.some(d => d.id === dogIdFromUrl);
+      if (dogExists) {
+        setSelectedDogId(dogIdFromUrl);
+      }
+    }
+  }, [searchParams, dogs]);
+
   const fetchDogs = async () => {
     if (!user) return;
     setLoadingDogs(true);
@@ -88,7 +99,13 @@ export default function CreatePage() {
 
       setDogs(data || []);
       if (data && data.length > 0) {
-        setSelectedDogId(data[0].id);
+        // Check URL for dog_id first
+        const dogIdFromUrl = searchParams.get("dog_id");
+        if (dogIdFromUrl && data.some(d => d.id === dogIdFromUrl)) {
+          setSelectedDogId(dogIdFromUrl);
+        } else {
+          setSelectedDogId(data[0].id);
+        }
       }
     } catch (error) {
       console.error("Error fetching dogs:", error);
