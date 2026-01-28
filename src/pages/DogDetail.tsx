@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Dog, Edit, Calendar, Scale, FileText, Camera, Loader2, ArrowLeft } from "lucide-react";
+import { Dog, Edit, Calendar, Scale, FileText, Camera, Loader2, ArrowLeft, Cpu } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,13 @@ interface DogData {
   age: string | null;
   weight: string | null;
   weight_unit: string | null;
+  microchip_no: string | null;
   notes: string | null;
   photo_url: string | null;
   photo_urls: string[] | null;
   date_of_birth: string | null;
   is_lost: boolean;
+  owner_id: string;
 }
 
 export default function DogDetailPage() {
@@ -175,6 +177,19 @@ export default function DogDetailPage() {
               </div>
             )}
 
+            {/* Microchip - Only visible to owner */}
+            {dog.microchip_no && dog.owner_id === user?.id && (
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Cpu className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Microchip No.</p>
+                  <p className="font-medium text-foreground font-mono">{dog.microchip_no}</p>
+                </div>
+              </div>
+            )}
+
             {dog.notes && (
               <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -187,7 +202,7 @@ export default function DogDetailPage() {
               </div>
             )}
 
-            {!dog.age && !dog.weight && !dog.notes && !dog.date_of_birth && (
+            {!dog.age && !dog.weight && !dog.notes && !dog.date_of_birth && !dog.microchip_no && (
               <p className="text-center text-muted-foreground py-4">
                 No additional details recorded yet.
               </p>
