@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,7 @@ export default function AddDogPage() {
   const [breed, setBreed] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [weight, setWeight] = useState("");
+  const [weightUnit, setWeightUnit] = useState("lbs");
   const [notes, setNotes] = useState("");
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -58,8 +60,9 @@ export default function AddDogPage() {
         name: name.trim(),
         breed: breed.trim() || null,
         date_of_birth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
-        age: calculatedAge || null, // Store calculated age for backwards compatibility
+        age: calculatedAge || null,
         weight: weight.trim() || null,
+        weight_unit: weightUnit,
         notes: notes.trim() || null,
         photo_url: photoUrls[0] || null, // First photo as cover
         photo_urls: photoUrls,
@@ -149,15 +152,29 @@ export default function AddDogPage() {
                 </div>
               </div>
 
-              {/* Weight */}
+              {/* Weight + Unit */}
               <div className="space-y-2">
                 <Label htmlFor="weight">Weight</Label>
-                <Input
-                  id="weight"
-                  placeholder="e.g., 65 lbs"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="weight"
+                    placeholder="e.g., 65"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Select value={weightUnit} onValueChange={setWeightUnit}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue placeholder="Unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lbs">lbs</SelectItem>
+                      <SelectItem value="kg">kg</SelectItem>
+                      <SelectItem value="g">g</SelectItem>
+                      <SelectItem value="other">other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Photos Section */}
