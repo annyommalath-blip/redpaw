@@ -41,6 +41,7 @@ export default function ChatPage() {
     if (conversationId && user) {
       fetchConversation();
       fetchMessages();
+      markAsRead();
 
       // Subscribe to new messages
       const channel = supabase
@@ -60,6 +61,8 @@ export default function ChatPage() {
               if (prev.some(m => m.id === newMsg.id)) return prev;
               return [...prev, newMsg];
             });
+            // Mark as read when new message arrives while viewing
+            markAsRead();
           }
         )
         .subscribe();
@@ -69,6 +72,26 @@ export default function ChatPage() {
       };
     }
   }, [conversationId, user]);
+
+  const markAsRead = async () => {
+    if (!conversationId || !user) return;
+
+    try {
+      // Upsert the read status
+      await supabase
+        .from("conversation_reads")
+        .upsert(
+          {
+            conversation_id: conversationId,
+            user_id: user.id,
+            last_read_at: new Date().toISOString(),
+          },
+          { onConflict: "conversation_id,user_id" }
+        );
+    } catch (error) {
+      console.error("Error marking conversation as read:", error);
+    }
+  };
 
   useEffect(() => {
     // Scroll to bottom when messages change
