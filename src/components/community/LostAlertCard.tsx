@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { calculateAge } from "@/lib/ageCalculator";
 import { LocationLink } from "@/components/location/LocationLink";
+import { getDistanceLabel } from "@/lib/distanceUtils";
 
 interface LostAlertCardProps {
   id: string;
@@ -20,6 +21,8 @@ interface LostAlertCardProps {
   locationLabel?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  viewerLatitude?: number | null;
+  viewerLongitude?: number | null;
   createdAt: Date;
   status: "active" | "resolved";
   onContact: () => void;
@@ -39,12 +42,22 @@ export function LostAlertCard({
   locationLabel,
   latitude,
   longitude,
+  viewerLatitude,
+  viewerLongitude,
   createdAt,
   status,
   onContact,
 }: LostAlertCardProps) {
   const isActive = status === "active";
   const navigate = useNavigate();
+  
+  // Calculate distance from viewer
+  const distanceLabel = getDistanceLabel(
+    viewerLatitude ?? null,
+    viewerLongitude ?? null,
+    latitude,
+    longitude
+  );
 
   const handleViewDetails = () => {
     navigate(`/lost-alert/${id}`);
@@ -115,13 +128,18 @@ export function LostAlertCard({
           </div>
 
           {/* Location - clickable link to Google Maps */}
-          <div className="mt-3">
+          <div className="mt-3 flex items-center gap-2">
             <LocationLink
               latitude={latitude}
               longitude={longitude}
               locationLabel={locationLabel || lastSeenLocation}
               className="text-muted-foreground hover:text-primary"
             />
+            {distanceLabel && (
+              <span className="text-xs text-muted-foreground shrink-0">
+                • {distanceLabel} away
+              </span>
+            )}
           </div>
 
           {/* Actions */}

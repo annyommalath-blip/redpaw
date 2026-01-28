@@ -10,6 +10,7 @@ import { LocationLink } from "@/components/location/LocationLink";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getDistanceLabel } from "@/lib/distanceUtils";
 
 type CareType = "walk" | "watch" | "overnight" | "check-in";
 
@@ -55,6 +56,8 @@ interface CareRequestCardProps {
     location_label?: string | null;
     location_source?: string | null;
   };
+  viewerLatitude?: number | null;
+  viewerLongitude?: number | null;
   onDeleted?: () => void;
   onUpdated?: () => void;
 }
@@ -84,6 +87,8 @@ export function CareRequestCard({
   dogs,
   isOwner,
   requestData,
+  viewerLatitude,
+  viewerLongitude,
   onDeleted,
   onUpdated,
 }: CareRequestCardProps) {
@@ -93,6 +98,14 @@ export function CareRequestCard({
   const [deleting, setDeleting] = useState(false);
 
   const config = careTypeConfig[careType];
+  
+  // Calculate distance from viewer
+  const distanceLabel = getDistanceLabel(
+    viewerLatitude ?? null,
+    viewerLongitude ?? null,
+    requestData?.latitude,
+    requestData?.longitude
+  );
 
   const displayDogs = dogs && dogs.length > 0 
     ? dogs 
@@ -244,12 +257,19 @@ export function CareRequestCard({
               <Clock className="h-4 w-4 shrink-0" />
               <span>{timeWindow}</span>
             </div>
-            <LocationLink
-              latitude={requestData?.latitude}
-              longitude={requestData?.longitude}
-              locationLabel={requestData?.location_label || location}
-              className="text-muted-foreground hover:text-primary"
-            />
+            <div className="flex items-center gap-2">
+              <LocationLink
+                latitude={requestData?.latitude}
+                longitude={requestData?.longitude}
+                locationLabel={requestData?.location_label || location}
+                className="text-muted-foreground hover:text-primary"
+              />
+              {distanceLabel && (
+                <span className="text-xs text-muted-foreground shrink-0">
+                  • {distanceLabel} away
+                </span>
+              )}
+            </div>
             {payOffered && (
               <div className="flex items-center gap-2 text-sm text-success font-medium">
                 <Banknote className="h-4 w-4 shrink-0" />
