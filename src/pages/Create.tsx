@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { PlusCircle, AlertTriangle, HandHeart, Clock, MapPin, FileText, Loader2, Pill, CalendarIcon, Syringe } from "lucide-react";
+import { PlusCircle, AlertTriangle, HandHeart, MapPin, FileText, Loader2, Pill, CalendarIcon, Syringe } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { calculateExpirationDate } from "@/lib/medRecordUtils";
+import { DateTimeRangePicker, formatTimeWindow, validateDateTimeRange } from "@/components/care/DateTimeRangePicker";
 
 type CreateType = "log" | "lost" | "care" | "meds" | null;
 
@@ -59,7 +60,11 @@ export default function CreatePage() {
 
   // Care request form state
   const [careType, setCareType] = useState<string>("");
-  const [timeWindow, setTimeWindow] = useState("");
+  const [careStartDate, setCareStartDate] = useState<Date | undefined>();
+  const [careStartTime, setCareStartTime] = useState<string>("");
+  const [careEndDate, setCareEndDate] = useState<Date | undefined>();
+  const [careEndTime, setCareEndTime] = useState<string>("");
+  const [careTimeError, setCareTimeError] = useState<string>("");
   const [careLocation, setCareLocation] = useState("");
   const [careNotes, setCareNotes] = useState("");
   const [payOffered, setPayOffered] = useState("");
@@ -190,10 +195,21 @@ export default function CreatePage() {
   };
 
   const handleCreateCareRequest = async () => {
-    if (!careType || !timeWindow || !careLocation || !selectedDogId) {
+    // Validate datetime range
+    const timeError = validateDateTimeRange(careStartDate, careStartTime, careEndDate, careEndTime);
+    if (timeError) {
+      setCareTimeError(timeError);
+      toast({ variant: "destructive", title: timeError });
+      return;
+    }
+    setCareTimeError("");
+
+    if (!careType || !careLocation || !selectedDogId) {
       toast({ variant: "destructive", title: "Please fill in all required fields" });
       return;
     }
+
+    const timeWindow = formatTimeWindow(careStartDate!, careStartTime, careEndDate!, careEndTime);
 
     setSubmitting(true);
     try {
@@ -208,8 +224,8 @@ export default function CreatePage() {
       });
 
       if (error) throw error;
-      toast({ title: "Care request posted! 🐕", description: "Check messages for responses." });
-      navigate("/community");
+      toast({ title: "Care request posted! 🐕", description: "Check Community for responses." });
+      navigate("/community?tab=care");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
     } finally {
@@ -560,17 +576,17 @@ export default function CreatePage() {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>
-                      <Clock className="h-4 w-4 inline mr-1" />
-                      Time Window
-                    </Label>
-                    <Input
-                      placeholder="e.g., Today 2-4 PM, or Jan 30 - Feb 2"
-                      value={timeWindow}
-                      onChange={(e) => setTimeWindow(e.target.value)}
-                    />
-                  </div>
+                  <DateTimeRangePicker
+                    startDate={careStartDate}
+                    startTime={careStartTime}
+                    endDate={careEndDate}
+                    endTime={careEndTime}
+                    onStartDateChange={setCareStartDate}
+                    onStartTimeChange={setCareStartTime}
+                    onEndDateChange={setCareEndDate}
+                    onEndTimeChange={setCareEndTime}
+                    error={careTimeError}
+                  />
 
                   <div className="space-y-2">
                     <Label>
@@ -605,7 +621,11 @@ export default function CreatePage() {
                     />
                   </div>
 
-                  <Button className="w-full" onClick={handleCreateCareRequest} disabled={submitting}>
+                  <Button 
+                    className="w-full" 
+                    onClick={handleCreateCareRequest} 
+                    disabled={submitting || !careType || !careStartDate || !careStartTime || !careEndDate || !careEndTime || !careLocation}
+                  >
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <HandHeart className="h-4 w-4 mr-2" />}
                     Post Request
                   </Button>
