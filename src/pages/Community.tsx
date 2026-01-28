@@ -66,7 +66,7 @@ export default function CommunityPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch lost alerts
+      // Fetch lost alerts with owner_id
       const { data: alertsData } = await supabase
         .from("lost_alerts")
         .select(`
@@ -109,8 +109,54 @@ export default function CommunityPage() {
     }
   };
 
-  const handleContactOwner = (alertId: string) => {
-    navigate(`/messages`);
+  const handleContactOwner = async (alertId: string) => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    
+    // Find the alert to get owner_id
+    const alert = lostAlerts.find(a => a.id === alertId);
+    if (!alert) return;
+    
+    // Don't message yourself
+    if (user.id === (alert as any).owner_id) return;
+    
+    try {
+      // Check for existing conversation for this lost alert
+      const { data: conversations } = await supabase
+        .from("conversations")
+        .select("id, participant_ids")
+        .eq("context_type", "lostAlert")
+        .eq("context_id", alertId);
+      
+      const ownerId = (alert as any).owner_id;
+      
+      // Find existing conversation between these two users
+      const existingConvo = conversations?.find(c => 
+        c.participant_ids.includes(user.id) && c.participant_ids.includes(ownerId)
+      );
+      
+      if (existingConvo) {
+        navigate(`/chat/${existingConvo.id}`);
+      } else {
+        // Create new conversation
+        const { data: newConvo, error } = await supabase
+          .from("conversations")
+          .insert({
+            participant_ids: [user.id, ownerId],
+            context_type: "lostAlert",
+            context_id: alertId,
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        navigate(`/chat/${newConvo.id}`);
+      }
+    } catch (error) {
+      console.error("Error starting conversation:", error);
+    }
   };
 
   const handleReportSighting = (alertId: string) => {
