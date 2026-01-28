@@ -138,7 +138,7 @@ export default function CommunityPage() {
       );
       
       if (existingConvo) {
-        navigate(`/chat/${existingConvo.id}`);
+        navigate(`/messages/${existingConvo.id}`);
       } else {
         // Create new conversation
         const { data: newConvo, error } = await supabase
@@ -152,7 +152,7 @@ export default function CommunityPage() {
           .single();
         
         if (error) throw error;
-        navigate(`/chat/${newConvo.id}`);
+        navigate(`/messages/${newConvo.id}`);
       }
     } catch (error) {
       console.error("Error starting conversation:", error);
