@@ -35,6 +35,7 @@ export const currencies: Currency[] = [
   { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
   { code: "SAR", symbol: "﷼", name: "Saudi Riyal" },
   { code: "ILS", symbol: "₪", name: "Israeli Shekel" },
+  { code: "LAK", symbol: "₭", name: "Lao Kip" },
 ];
 
 export function getCurrencyByCode(code: string): Currency | undefined {
