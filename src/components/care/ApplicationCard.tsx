@@ -1,14 +1,19 @@
 import { useState } from "react";
-import { Check, X, MessageCircle, Clock, Undo2 } from "lucide-react";
+import { Check, X, MessageCircle, Clock, Undo2, MapPin, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 
 interface ApplicationCardProps {
   id: string;
   applicantName: string;
+  applicantFirstName?: string | null;
+  applicantLastName?: string | null;
+  applicantCity?: string | null;
+  applicantPostalCode?: string | null;
+  applicantAvatarUrl?: string | null;
   availabilityText: string;
   message: string;
   rateOffered?: string | null;
@@ -32,6 +37,11 @@ const statusConfig = {
 export function ApplicationCard({
   id,
   applicantName,
+  applicantFirstName,
+  applicantLastName,
+  applicantCity,
+  applicantPostalCode,
+  applicantAvatarUrl,
   message,
   status,
   createdAt,
@@ -44,6 +54,13 @@ export function ApplicationCard({
 }: ApplicationCardProps) {
   const [loading, setLoading] = useState<"approve" | "decline" | "withdraw" | null>(null);
   const config = statusConfig[status];
+
+  // Format full name
+  const fullName = [applicantFirstName, applicantLastName].filter(Boolean).join(" ");
+  const displayName = fullName || applicantName;
+  
+  // Format location
+  const location = [applicantCity, applicantPostalCode].filter(Boolean).join(", ");
 
   const handleApprove = async () => {
     setLoading("approve");
@@ -69,13 +86,21 @@ export function ApplicationCard({
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={applicantAvatarUrl || ""} />
               <AvatarFallback className="bg-primary/10 text-primary">
-                {applicantName.charAt(0).toUpperCase()}
+                {displayName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h4 className="font-semibold text-foreground">{applicantName}</h4>
+              <h4 className="font-semibold text-foreground">{displayName}</h4>
+              {/* Show location for owner view */}
+              {isOwner && location && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="h-3 w-3" />
+                  <span>{location}</span>
+                </div>
+              )}
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
               </span>

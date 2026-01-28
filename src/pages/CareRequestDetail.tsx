@@ -58,6 +58,11 @@ interface Application {
   created_at: string;
   profiles?: {
     display_name: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    city: string | null;
+    postal_code: string | null;
+    avatar_url: string | null;
   };
 }
 
@@ -159,7 +164,7 @@ export default function CareRequestDetailPage() {
           const applicantIds = appsData.map(app => app.applicant_id);
           const { data: profilesData } = await supabase
             .from("profiles")
-            .select("user_id, display_name")
+            .select("user_id, display_name, first_name, last_name, city, postal_code, avatar_url")
             .in("user_id", applicantIds);
 
           // Combine applications with profiles
@@ -432,6 +437,11 @@ export default function CareRequestDetailPage() {
                       key={app.id}
                       id={app.id}
                       applicantName={app.profiles?.display_name || "Applicant"}
+                      applicantFirstName={app.profiles?.first_name}
+                      applicantLastName={app.profiles?.last_name}
+                      applicantCity={app.profiles?.city}
+                      applicantPostalCode={app.profiles?.postal_code}
+                      applicantAvatarUrl={app.profiles?.avatar_url}
                       availabilityText={app.availability_text}
                       message={app.message}
                       rateOffered={app.rate_offered}
