@@ -250,9 +250,12 @@ export default function CreatePage() {
 
     setSubmitting(true);
     try {
-      // Create one care request per selected dog
-      const requests = selectedDogIds.map(dogId => ({
-        dog_id: dogId,
+      // Create a single care request with all selected dogs
+      // dog_id is set to the first dog for backward compatibility
+      // dog_ids contains all selected dogs
+      const { error } = await supabase.from("care_requests").insert({
+        dog_id: selectedDogIds[0], // Primary dog for backward compatibility
+        dog_ids: selectedDogIds,   // All selected dogs
         owner_id: user!.id,
         care_type: careType as any,
         time_window: timeWindow,
@@ -264,17 +267,15 @@ export default function CreatePage() {
         end_time: convertTimeToDbFormat(careEndTime),
         pay_amount: payAmountNum,
         pay_currency: payAmountNum ? payCurrency : null,
-      }));
-
-      const { error } = await supabase.from("care_requests").insert(requests);
+      });
 
       if (error) throw error;
       
       const dogCount = selectedDogIds.length;
       toast({ 
-        title: `Care request${dogCount > 1 ? 's' : ''} posted! 🐕`, 
+        title: "Care request posted! 🐕", 
         description: dogCount > 1 
-          ? `Posted ${dogCount} care requests. Check Community for responses.`
+          ? `Posted care request for ${dogCount} dogs. Check Community for responses.`
           : "Check Community for responses." 
       });
       navigate("/community?tab=care");

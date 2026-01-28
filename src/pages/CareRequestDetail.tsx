@@ -26,10 +26,18 @@ const careTypeConfig: Record<CareType, { icon: string; label: string }> = {
   "check-in": { icon: "👋", label: "Check-in" },
 };
 
+interface DogInfo {
+  id?: string;
+  name: string;
+  breed: string | null;
+  photo_url: string | null;
+}
+
 interface CareRequest {
   id: string;
   owner_id: string;
   dog_id: string;
+  dog_ids: string[] | null;
   care_type: CareType;
   time_window: string;
   location_text: string;
@@ -38,11 +46,8 @@ interface CareRequest {
   status: "open" | "closed";
   assigned_sitter_id: string | null;
   created_at: string;
-  dogs?: {
-    name: string;
-    breed: string | null;
-    photo_url: string | null;
-  };
+  dogs?: DogInfo;
+  allDogs?: DogInfo[]; // All dogs from dog_ids
   profiles?: {
     display_name: string | null;
   };
@@ -143,10 +148,24 @@ export default function CareRequestDetailPage() {
         .eq("user_id", requestData.owner_id)
         .maybeSingle();
 
+      // Fetch all dogs if dog_ids is present
+      let allDogs: DogInfo[] = [];
+      if (requestData.dog_ids && Array.isArray(requestData.dog_ids) && requestData.dog_ids.length > 0) {
+        const { data: dogsData } = await supabase
+          .from("dogs")
+          .select("id, name, breed, photo_url")
+          .in("id", requestData.dog_ids);
+        
+        if (dogsData) {
+          allDogs = dogsData as DogInfo[];
+        }
+      }
+
       // Combine the data
       const combinedRequest = {
         ...requestData,
-        profiles: ownerProfile
+        profiles: ownerProfile,
+        allDogs: allDogs.length > 0 ? allDogs : undefined
       };
 
       setRequest(combinedRequest as any);
@@ -357,28 +376,68 @@ export default function CareRequestDetailPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
-              <Badge className="bg-primary text-primary-foreground">
-                {config.icon} {config.label}
-              </Badge>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className="bg-primary text-primary-foreground">
+                  {config.icon} {config.label}
+                </Badge>
+                {request.allDogs && request.allDogs.length > 1 && (
+                  <Badge variant="outline" className="border-primary text-primary">
+                    🐾 {request.allDogs.length} Dogs
+                  </Badge>
+                )}
+              </div>
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
               </span>
             </div>
 
-            <div className="flex gap-3 mb-4">
-              <div className="h-16 w-16 rounded-xl overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                {request.dogs?.photo_url ? (
-                  <img src={request.dogs.photo_url} alt={request.dogs.name} className="h-full w-full object-cover" />
-                ) : (
-                  <Dog className="h-8 w-8 text-muted-foreground" />
-                )}
-              </div>
-              <div>
-                <h3 className="font-bold text-foreground">{request.dogs?.name || "Unknown"}</h3>
-                <p className="text-sm text-muted-foreground">{request.dogs?.breed}</p>
+            {/* Multiple Dogs Display */}
+            {request.allDogs && request.allDogs.length > 1 ? (
+              <div className="mb-4">
+                <div className="flex -space-x-3 mb-2">
+                  {request.allDogs.slice(0, 5).map((dog, index) => (
+                    <div 
+                      key={dog.id || index}
+                      className="h-14 w-14 rounded-full overflow-hidden bg-muted flex items-center justify-center border-2 border-background"
+                      style={{ zIndex: request.allDogs!.length - index }}
+                    >
+                      {dog.photo_url ? (
+                        <img src={dog.photo_url} alt={dog.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <Dog className="h-6 w-6 text-muted-foreground" />
+                      )}
+                    </div>
+                  ))}
+                  {request.allDogs.length > 5 && (
+                    <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center border-2 border-background text-sm font-medium text-muted-foreground">
+                      +{request.allDogs.length - 5}
+                    </div>
+                  )}
+                </div>
+                <h3 className="font-bold text-foreground">
+                  {request.allDogs.map(d => d.name).join(", ")}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {request.allDogs.length} dogs need care together
+                </p>
                 <p className="text-xs text-muted-foreground">by {request.profiles?.display_name || "Owner"}</p>
               </div>
-            </div>
+            ) : (
+              <div className="flex gap-3 mb-4">
+                <div className="h-16 w-16 rounded-xl overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                  {request.dogs?.photo_url ? (
+                    <img src={request.dogs.photo_url} alt={request.dogs.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <Dog className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">{request.dogs?.name || "Unknown"}</h3>
+                  <p className="text-sm text-muted-foreground">{request.dogs?.breed}</p>
+                  <p className="text-xs text-muted-foreground">by {request.profiles?.display_name || "Owner"}</p>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
