@@ -40,6 +40,7 @@ interface Sighting {
   id: string;
   message: string;
   location_text: string | null;
+  media_urls: string[] | null;
   created_at: string;
   reporter_id: string;
   profiles: {
@@ -274,10 +275,10 @@ export default function LostAlertDetailPage() {
 
             {/* Actions */}
             {isActive && (
-              <div className="flex gap-2 mt-4">
+              <div className="grid grid-cols-2 gap-2 mt-4">
                 {isOwner ? (
                   <Button
-                    className="flex-1 bg-success hover:bg-success/90"
+                    className="col-span-2 bg-success hover:bg-success/90"
                     onClick={handleMarkAsFound}
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
@@ -287,13 +288,12 @@ export default function LostAlertDetailPage() {
                   <>
                     <Button
                       variant="outline"
-                      className="flex-1"
                       onClick={() => setReportDialogOpen(true)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Report Sighting
                     </Button>
-                    <Button className="flex-1" onClick={handleContact}>
+                    <Button onClick={handleContact}>
                       <MessageCircle className="h-4 w-4 mr-2" />
                       Contact Owner
                     </Button>
@@ -317,7 +317,7 @@ export default function LostAlertDetailPage() {
                 <Card key={sighting.id}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-10 w-10 shrink-0">
                         <AvatarImage src={sighting.profiles?.avatar_url || undefined} />
                         <AvatarFallback>
                           {sighting.profiles?.display_name?.[0]?.toUpperCase() || "U"}
@@ -328,11 +328,36 @@ export default function LostAlertDetailPage() {
                           <span className="font-medium text-sm">
                             {sighting.profiles?.display_name || "Anonymous"}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground shrink-0">
                             {formatDistanceToNow(new Date(sighting.created_at), { addSuffix: true })}
                           </span>
                         </div>
                         <p className="text-sm text-foreground mt-1">{sighting.message}</p>
+                        
+                        {/* Media Grid */}
+                        {sighting.media_urls && sighting.media_urls.length > 0 && (
+                          <div className="grid grid-cols-3 gap-2 mt-2">
+                            {sighting.media_urls.map((url, index) => (
+                              <div key={index} className="aspect-square rounded-lg overflow-hidden bg-muted">
+                                {url.includes(".mp4") || url.includes(".mov") || url.includes(".webm") ? (
+                                  <video
+                                    src={url}
+                                    controls
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <img
+                                    src={url}
+                                    alt={`Sighting ${index + 1}`}
+                                    className="h-full w-full object-cover cursor-pointer"
+                                    onClick={() => window.open(url, "_blank")}
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
                         {sighting.location_text && (
                           <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
                             <MapPin className="h-3 w-3" />
