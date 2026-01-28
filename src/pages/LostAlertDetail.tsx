@@ -63,6 +63,40 @@ export default function LostAlertDetailPage() {
   useEffect(() => {
     if (id) {
       fetchData();
+      
+      // Subscribe to realtime sighting updates
+      const channel = supabase
+        .channel(`sightings-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'sightings',
+            filter: `alert_id=eq.${id}`,
+          },
+          async (payload) => {
+            console.log('New sighting received:', payload);
+            // Fetch the profile data for the new sighting
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('display_name, avatar_url')
+              .eq('user_id', payload.new.reporter_id)
+              .maybeSingle();
+            
+            const newSighting = {
+              ...payload.new,
+              profiles: profileData,
+            } as Sighting;
+            
+            setSightings((prev) => [newSighting, ...prev]);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [id]);
 
@@ -82,19 +116,37 @@ export default function LostAlertDetailPage() {
       if (alertError) throw alertError;
       setAlert(alertData as any);
 
-      // Fetch sightings
+      // Fetch sightings with manual profile lookup
       if (alertData) {
         const { data: sightingsData, error: sightingsError } = await supabase
           .from("sightings")
-          .select(`
-            *,
-            profiles:reporter_id (display_name, avatar_url)
-          `)
+          .select("*")
           .eq("alert_id", id)
           .order("created_at", { ascending: false });
 
         if (sightingsError) throw sightingsError;
-        setSightings((sightingsData as any) || []);
+        
+        // Fetch profiles for all reporters
+        if (sightingsData && sightingsData.length > 0) {
+          const reporterIds = [...new Set(sightingsData.map(s => s.reporter_id))];
+          const { data: profilesData } = await supabase
+            .from("profiles")
+            .select("user_id, display_name, avatar_url")
+            .in("user_id", reporterIds);
+          
+          const profilesMap = new Map(
+            (profilesData || []).map(p => [p.user_id, p])
+          );
+          
+          const sightingsWithProfiles = sightingsData.map(s => ({
+            ...s,
+            profiles: profilesMap.get(s.reporter_id) || null,
+          }));
+          
+          setSightings(sightingsWithProfiles as Sighting[]);
+        } else {
+          setSightings([]);
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
