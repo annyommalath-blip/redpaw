@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 // Temporary mock data until database is set up
 const mockDog = {
@@ -29,27 +30,9 @@ const mockLogs = [
 export default function HomePage() {
   const [dog, setDog] = useState(mockDog);
   const [logs] = useState(mockLogs);
-  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) {
-        navigate("/auth");
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) {
-        navigate("/auth");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  const { user } = useAuth();
 
   const handleLostToggle = (isLost: boolean) => {
     setDog((prev) => ({ ...prev, isLost }));
@@ -68,10 +51,6 @@ export default function HomePage() {
   };
 
   const hasDog = true; // Will be replaced with real data check
-
-  if (!user) {
-    return null; // Will redirect
-  }
 
   return (
     <MobileLayout>

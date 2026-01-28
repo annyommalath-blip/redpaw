@@ -93,11 +93,7 @@ export default function CareRequestDetailPage() {
   const hasApproved = applications.some(a => a.status === "approved");
 
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    if (requestId) {
+    if (requestId && user) {
       fetchData();
     }
   }, [requestId, user]);

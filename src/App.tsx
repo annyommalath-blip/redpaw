@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Community from "./pages/Community";
@@ -23,20 +25,22 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/care-request/:requestId" element={<CareRequestDetail />} />
-          <Route path="/create" element={<Create />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/messages/:conversationId" element={<Chat />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/add-dog" element={<AddDog />} />
-          <Route path="/profile/edit-dog/:dogId" element={<EditDog />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+            <Route path="/care-request/:requestId" element={<ProtectedRoute><CareRequestDetail /></ProtectedRoute>} />
+            <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/messages/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/profile/add-dog" element={<ProtectedRoute><AddDog /></ProtectedRoute>} />
+            <Route path="/profile/edit-dog/:dogId" element={<ProtectedRoute><EditDog /></ProtectedRoute>} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

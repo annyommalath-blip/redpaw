@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dog, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -16,6 +17,15 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { session, loading: authLoading } = useAuthContext();
+
+  // Redirect to home if already authenticated
+  useEffect(() => {
+    if (!authLoading && session) {
+      console.log("[Auth] Already authenticated, redirecting to /");
+      navigate("/", { replace: true });
+    }
+  }, [session, authLoading, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +47,7 @@ export default function AuthPage() {
         title: "Welcome back! 🐕",
         description: "Successfully signed in",
       });
-      navigate("/");
+      navigate("/", { replace: true });
     }
 
     setLoading(false);
@@ -68,11 +78,25 @@ export default function AuthPage() {
         title: "Welcome to RedPaw! 🐾",
         description: "Account created successfully",
       });
-      navigate("/");
+      navigate("/", { replace: true });
     }
 
     setLoading(false);
   };
+
+  // Show loading while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center animate-pulse">
+            <Dog className="h-10 w-10 text-primary-foreground" />
+          </div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">

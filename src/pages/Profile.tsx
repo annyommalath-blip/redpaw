@@ -33,7 +33,7 @@ interface MyCareRequest {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
   const [dogs, setDogs] = useState<UserDog[]>([]);
   const [myCareRequests, setMyCareRequests] = useState<MyCareRequest[]>([]);
@@ -42,11 +42,9 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
+    if (user) {
+      fetchData();
     }
-    fetchData();
   }, [user]);
 
   const fetchData = async () => {
@@ -88,23 +86,13 @@ export default function ProfilePage() {
   };
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error signing out",
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: "Signed out",
-        description: "See you soon! 🐾",
-      });
-      navigate("/auth");
-    }
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "See you soon! 🐾",
+    });
+    navigate("/auth");
   };
-
-  if (!user) return null;
 
   const careTypeLabels: Record<string, string> = {
     walk: "🚶 Walk",
@@ -144,9 +132,9 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold text-foreground">
-                    {profile?.display_name || user.email?.split("@")[0] || "Dog Lover"}
+                    {profile?.display_name || user?.email?.split("@")[0] || "Dog Lover"}
                   </h2>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
                 </div>
                 <Button variant="ghost" size="icon">
                   <Edit className="h-4 w-4" />
