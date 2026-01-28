@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, HandHeart, Dog, Loader2 } from "lucide-react";
+import { AlertTriangle, HandHeart, Dog, Loader2, MapPin, RefreshCw } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LostAlertCard } from "@/components/community/LostAlertCard";
 import { CareRequestCard } from "@/components/community/CareRequestCard";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useViewerLocation } from "@/hooks/useViewerLocation";
 
 interface LostAlert {
   id: string;
@@ -67,6 +69,7 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const viewerLocation = useViewerLocation();
 
   // Check for tab parameter in URL
   useEffect(() => {
@@ -240,6 +243,40 @@ export default function CommunityPage() {
       <PageHeader title="Community" subtitle="Help fellow dog owners" />
 
       <div className="p-4">
+        {/* Location permission banner */}
+        {viewerLocation.permissionDenied && (
+          <div className="mb-4 p-3 bg-muted rounded-lg flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin className="h-4 w-4" />
+              <span>Enable location to see distance</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={viewerLocation.requestLocation}
+              className="text-primary"
+            >
+              Enable
+            </Button>
+          </div>
+        )}
+        
+        {/* Refresh location button (only show if has location) */}
+        {viewerLocation.hasLocation && (
+          <div className="mb-3 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={viewerLocation.refreshLocation}
+              disabled={viewerLocation.loading}
+              className="text-xs text-muted-foreground"
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${viewerLocation.loading ? 'animate-spin' : ''}`} />
+              Update location
+            </Button>
+          </div>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="care" className="gap-2">
@@ -292,6 +329,8 @@ export default function CommunityPage() {
                     location_label: request.location_label,
                     location_source: request.location_source,
                   }}
+                  viewerLatitude={viewerLocation.latitude}
+                  viewerLongitude={viewerLocation.longitude}
                   onDeleted={fetchData}
                   onUpdated={fetchData}
                 />
@@ -322,6 +361,8 @@ export default function CommunityPage() {
                   locationLabel={alert.location_label}
                   latitude={alert.latitude}
                   longitude={alert.longitude}
+                  viewerLatitude={viewerLocation.latitude}
+                  viewerLongitude={viewerLocation.longitude}
                   createdAt={new Date(alert.created_at)}
                   status={alert.status}
                   onContact={() => handleContactOwner(alert.id)}
