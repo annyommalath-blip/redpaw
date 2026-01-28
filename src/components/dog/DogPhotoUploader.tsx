@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import heic2any from "heic2any";
 
 interface DogPhotoUploaderProps {
   userId: string;
@@ -13,37 +12,61 @@ interface DogPhotoUploaderProps {
   maxPhotos?: number;
 }
 
-// Convert HEIC/HEIF to JPEG
-async function convertHeicToJpeg(file: File): Promise<File> {
-  const blob = await heic2any({
-    blob: file,
-    toType: "image/jpeg",
-    quality: 0.85,
-  });
-  
-  // heic2any can return a single blob or an array
-  const resultBlob = Array.isArray(blob) ? blob[0] : blob;
-  
-  // Create a new file with .jpg extension
-  const newFileName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
-  return new File([resultBlob], newFileName, { type: "image/jpeg" });
-}
-
 // Check if file is HEIC/HEIF
 function isHeicFile(file: File): boolean {
   const name = file.name.toLowerCase();
-  return name.endsWith('.heic') || name.endsWith('.heif') || 
-         file.type === 'image/heic' || file.type === 'image/heif';
+  return (
+    name.endsWith(".heic") ||
+    name.endsWith(".heif") ||
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    file.type === "" // iOS sometimes sends empty MIME for HEIC
+  );
 }
 
 // Check if file is a valid image type
 function isValidImageType(file: File): boolean {
-  const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
-  const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.heic', '.heif'];
+  const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif", ""];
+  const validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".heif"];
   const name = file.name.toLowerCase();
-  
-  return validTypes.includes(file.type) || 
-         validExtensions.some(ext => name.endsWith(ext));
+  return validTypes.includes(file.type) || validExtensions.some((ext) => name.endsWith(ext));
+}
+
+// Convert HEIC/HEIF to JPEG using heic2any with fallback
+async function convertHeicToJpeg(file: File): Promise<File> {
+  const heic2any = (await import("heic2any")).default;
+
+  const qualitySettings = [0.85, 0.7, 0.5];
+
+  for (const quality of qualitySettings) {
+    try {
+      const blob = await heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality,
+      });
+
+      const resultBlob = Array.isArray(blob) ? blob[0] : blob;
+      const newFileName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+      return new File([resultBlob], newFileName, { type: "image/jpeg" });
+    } catch (error) {
+      console.warn(`HEIC conversion failed with quality ${quality}:`, error);
+    }
+  }
+
+  // Final fallback without quality
+  try {
+    const blob = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+    });
+    const resultBlob = Array.isArray(blob) ? blob[0] : blob;
+    const newFileName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+    return new File([resultBlob], newFileName, { type: "image/jpeg" });
+  } catch (error) {
+    console.error("All HEIC conversion attempts failed:", error);
+    throw new Error("Could not convert HEIC file");
+  }
 }
 
 export function DogPhotoUploader({
@@ -112,20 +135,23 @@ export function DogPhotoUploader({
           
           try {
             file = await convertHeicToJpeg(file);
+            toast({
+              title: "Conversion complete! ✓",
+              description: "Photo converted successfully.",
+            });
           } catch (convError) {
             console.error("HEIC conversion error:", convError);
+            // Try uploading as-is as last resort
             toast({
-              variant: "destructive",
-              title: "Conversion failed",
-              description: `Could not convert ${file.name}. Please convert to JPG/PNG manually.`,
+              title: "Trying original format...",
+              description: "Uploading without conversion.",
             });
-            setConvertingHeic(false);
-            continue;
+            // Continue with original file
           }
           setConvertingHeic(false);
         }
 
-        const fileExt = file.name.split(".").pop() || "jpg";
+        const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
         const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
@@ -259,7 +285,7 @@ export function DogPhotoUploader({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif"
+        accept="image/*,.heic,.heif"
         multiple
         className="hidden"
         onChange={handleFileSelect}
