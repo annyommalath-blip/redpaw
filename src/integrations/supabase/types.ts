@@ -20,8 +20,10 @@ export type Database = {
           availability_text: string
           created_at: string
           id: string
+          last_applied_at: string
           message: string
           rate_offered: string | null
+          reapplied_count: number
           request_id: string
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
@@ -31,8 +33,10 @@ export type Database = {
           availability_text: string
           created_at?: string
           id?: string
+          last_applied_at?: string
           message: string
           rate_offered?: string | null
+          reapplied_count?: number
           request_id: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
@@ -42,8 +46,10 @@ export type Database = {
           availability_text?: string
           created_at?: string
           id?: string
+          last_applied_at?: string
           message?: string
           rate_offered?: string | null
+          reapplied_count?: number
           request_id?: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
@@ -638,6 +644,7 @@ export type Database = {
         | "sighting_reported"
         | "new_application"
         | "application_withdrawn"
+        | "care_reapply"
       request_status: "open" | "closed"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
     }
@@ -782,6 +789,7 @@ export const Constants = {
         "sighting_reported",
         "new_application",
         "application_withdrawn",
+        "care_reapply",
       ],
       request_status: ["open", "closed"],
       sitter_log_type: ["walk", "meal", "potty", "play", "note"],

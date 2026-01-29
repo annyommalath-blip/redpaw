@@ -24,6 +24,7 @@ interface NotificationItemProps {
 const typeIcons: Record<string, typeof Bell> = {
   new_application: UserPlus,
   application_withdrawn: UserMinus,
+  care_reapply: UserPlus,
   assigned_job_owner: UserCheck,
   assigned_job_sitter: UserCheck,
   lost_dog_nearby: AlertTriangle,
@@ -35,6 +36,7 @@ const typeIcons: Record<string, typeof Bell> = {
 const typeColors: Record<string, string> = {
   new_application: "text-blue-600 bg-blue-100",
   application_withdrawn: "text-amber-600 bg-amber-100",
+  care_reapply: "text-indigo-600 bg-indigo-100",
   assigned_job_owner: "text-green-600 bg-green-100",
   assigned_job_sitter: "text-green-600 bg-green-100",
   lost_dog_nearby: "text-red-600 bg-red-100",
