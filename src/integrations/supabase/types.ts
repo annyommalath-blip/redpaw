@@ -445,6 +445,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_read: boolean
+          link_id: string | null
+          link_type: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link_id?: string | null
+          link_type?: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link_id?: string | null
+          link_type?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -593,6 +629,13 @@ export type Database = {
       duration_unit: "days" | "months" | "years"
       log_type: "walk" | "food" | "meds" | "mood" | "symptom"
       med_record_type: "vaccine" | "medication"
+      notification_type:
+        | "assigned_job_owner"
+        | "assigned_job_sitter"
+        | "lost_dog_nearby"
+        | "care_request_nearby"
+        | "medication_expiring"
+        | "sighting_reported"
       request_status: "open" | "closed"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
     }
@@ -728,6 +771,14 @@ export const Constants = {
       duration_unit: ["days", "months", "years"],
       log_type: ["walk", "food", "meds", "mood", "symptom"],
       med_record_type: ["vaccine", "medication"],
+      notification_type: [
+        "assigned_job_owner",
+        "assigned_job_sitter",
+        "lost_dog_nearby",
+        "care_request_nearby",
+        "medication_expiring",
+        "sighting_reported",
+      ],
       request_status: ["open", "closed"],
       sitter_log_type: ["walk", "meal", "potty", "play", "note"],
     },
