@@ -24,6 +24,7 @@ import { DogMultiSelector } from "@/components/dog/DogMultiSelector";
 import { LocationPicker } from "@/components/location/LocationPicker";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { FoundDogPhotoUploader } from "@/components/community/FoundDogPhotoUploader";
+import { FoundDogForm } from "@/components/community/FoundDogForm";
 
 type CreateType = "log" | "lost" | "care" | "meds" | "found" | null;
 
@@ -304,6 +305,54 @@ export default function CreatePage() {
     }
   };
 
+  const handleCreateFoundDog = async () => {
+    // Validate required fields
+    if (foundPhotoUrls.length === 0) {
+      toast({ variant: "destructive", title: "Please upload at least one photo" });
+      return;
+    }
+    if (!foundLocation.locationLabel) {
+      toast({ variant: "destructive", title: "Please set the found location" });
+      return;
+    }
+    if (!foundDate || !foundTime) {
+      toast({ variant: "destructive", title: "Please set when you found the dog" });
+      return;
+    }
+
+    // Combine date and time into timestamp
+    const [hours, minutes] = foundTime.split(":").map(Number);
+    const foundAt = new Date(foundDate);
+    foundAt.setHours(hours, minutes, 0, 0);
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("found_dogs").insert({
+        reporter_id: user!.id,
+        photo_urls: foundPhotoUrls,
+        description: foundDescription.trim() || null,
+        location_label: foundLocation.locationLabel,
+        latitude: foundLocation.latitude,
+        longitude: foundLocation.longitude,
+        location_source: foundLocation.locationSource,
+        found_at: foundAt.toISOString(),
+        status: "active",
+      });
+
+      if (error) throw error;
+      
+      toast({ 
+        title: "Found dog reported! 🐕", 
+        description: "Thank you for helping! The owner may contact you via messages." 
+      });
+      navigate("/community?tab=lost");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (!createType) {
     return (
       <MobileLayout>
@@ -371,12 +420,12 @@ export default function CreatePage() {
           </Card>
 
           <Card
-            className="cursor-pointer hover:border-emerald-500 transition-colors"
+            className="cursor-pointer hover:border-success transition-colors"
             onClick={() => setCreateType("found")}
           >
             <CardContent className="flex items-center gap-4 p-4">
-              <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Dog className="h-6 w-6 text-emerald-600" />
+              <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
+                <Dog className="h-6 w-6 text-success" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">Report Found Dog</h3>
@@ -407,7 +456,22 @@ export default function CreatePage() {
       />
 
       <div className="p-4">
-        {loadingDogs ? (
+        {/* Found Dog form doesn't require user's dogs - show it directly */}
+        {createType === "found" ? (
+          <FoundDogForm
+            photoUrls={foundPhotoUrls}
+            onPhotosChange={setFoundPhotoUrls}
+            description={foundDescription}
+            onDescriptionChange={setFoundDescription}
+            location={foundLocation}
+            date={foundDate}
+            onDateChange={setFoundDate}
+            time={foundTime}
+            onTimeChange={setFoundTime}
+            submitting={submitting}
+            onSubmit={handleCreateFoundDog}
+          />
+        ) : loadingDogs ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
@@ -422,8 +486,8 @@ export default function CreatePage() {
           </Card>
         ) : (
           <>
-            {/* Dog Selector (if multiple dogs) */}
-            {dogs.length > 1 && (
+            {/* Dog Selector (if multiple dogs) - NOT shown for care requests which have their own multi-selector */}
+            {dogs.length > 1 && createType !== "care" && (
               <Card className="mb-4">
                 <CardContent className="p-4">
                   <Label>Select Dog</Label>

@@ -324,7 +324,7 @@ export default function FoundDogDetailPage() {
               isReunited
                 ? "bg-success/10 text-success border-success"
                 : isActive
-                ? "bg-emerald-100 text-emerald-700 border-emerald-500"
+                ? "bg-success/10 text-success border-success"
                 : "bg-muted text-muted-foreground"
             }
           >
@@ -333,9 +333,9 @@ export default function FoundDogDetailPage() {
         </div>
 
         {/* Main Card */}
-        <Card className={isReunited ? "border-success" : isActive ? "border-emerald-500" : ""}>
-          <div className={`px-4 py-2 ${isReunited ? "bg-success" : isActive ? "bg-emerald-600" : "bg-muted"}`}>
-            <span className="text-sm font-semibold text-white">
+        <Card className={isReunited ? "border-success" : isActive ? "border-success" : ""}>
+          <div className={`px-4 py-2 ${isReunited ? "bg-success" : isActive ? "bg-success" : "bg-muted"}`}>
+            <span className="text-sm font-semibold text-success-foreground">
               {isReunited ? "✅ REUNITED" : "🐕 FOUND DOG"}
             </span>
           </div>
