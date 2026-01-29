@@ -67,6 +67,8 @@ interface Application {
   rate_offered: string | null;
   status: "pending" | "approved" | "declined" | "withdrawn";
   created_at: string;
+  last_applied_at: string;
+  reapplied_count: number;
   profiles?: {
     display_name: string | null;
     first_name: string | null;
@@ -179,13 +181,13 @@ export default function CareRequestDetailPage() {
 
       setRequest(combinedRequest as any);
 
-      // Fetch applications if owner
+      // Fetch applications if owner (order by last_applied_at for proper queue)
       if (requestData.owner_id === user?.id) {
         const { data: appsData } = await supabase
           .from("care_applications")
           .select("*")
           .eq("request_id", requestId)
-          .order("created_at", { ascending: false });
+          .order("last_applied_at", { ascending: false });
 
         // Fetch applicant profiles separately (excluding location for security)
         if (appsData && appsData.length > 0) {
@@ -314,6 +316,35 @@ export default function CareRequestDetailPage() {
 
       if (error) throw error;
       toast({ title: "Application withdrawn" });
+      fetchData();
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    }
+  };
+
+  const handleReapply = async () => {
+    if (!myApplication) return;
+    if (myApplication.status !== "withdrawn") {
+      toast({ variant: "destructive", title: "Cannot reapply", description: "Only withdrawn applications can be reapplied." });
+      return;
+    }
+    if (request?.status !== "open") {
+      toast({ variant: "destructive", title: "Cannot reapply", description: "This request is no longer open." });
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from("care_applications")
+        .update({ 
+          status: "pending",
+          last_applied_at: new Date().toISOString(),
+          reapplied_count: (myApplication.reapplied_count || 0) + 1
+        })
+        .eq("id", myApplication.id);
+
+      if (error) throw error;
+      toast({ title: "Application resubmitted! 🐾", description: "The owner will review your application." });
       fetchData();
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -537,8 +568,11 @@ export default function CareRequestDetailPage() {
                       rateOffered={app.rate_offered}
                       status={app.status}
                       createdAt={app.created_at}
+                      lastAppliedAt={app.last_applied_at}
+                      reappliedCount={app.reapplied_count}
                       isOwner={true}
                       canApprove={!hasApproved}
+                      requestStatus={request?.status}
                       onApprove={() => handleApprove(app.id, app.applicant_id)}
                       onDecline={() => handleDecline(app.id)}
                       onChat={() => handleChat(app.applicant_id)}
@@ -604,9 +638,13 @@ export default function CareRequestDetailPage() {
                 rateOffered={myApplication.rate_offered}
                 status={myApplication.status}
                 createdAt={myApplication.created_at}
+                lastAppliedAt={myApplication.last_applied_at}
+                reappliedCount={myApplication.reapplied_count}
                 isOwner={false}
                 canApprove={false}
+                requestStatus={request?.status}
                 onWithdraw={myApplication.status === "pending" ? handleWithdraw : undefined}
+                onReapply={myApplication.status === "withdrawn" && request?.status === "open" ? handleReapply : undefined}
               />
             ) : showApplyForm ? (
               <ApplicationForm

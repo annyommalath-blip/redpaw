@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, X, MessageCircle, Clock, Undo2, MapPin, User } from "lucide-react";
+import { Check, X, MessageCircle, Clock, Undo2, MapPin, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,12 +19,16 @@ interface ApplicationCardProps {
   rateOffered?: string | null;
   status: "pending" | "approved" | "declined" | "withdrawn";
   createdAt: string;
+  lastAppliedAt?: string | null;
+  reappliedCount?: number;
   isOwner: boolean;
   canApprove: boolean;
+  requestStatus?: "open" | "closed";
   onApprove?: () => void;
   onDecline?: () => void;
   onChat?: () => void;
   onWithdraw?: () => void;
+  onReapply?: () => void;
 }
 
 const statusConfig = {
@@ -45,14 +49,18 @@ export function ApplicationCard({
   message,
   status,
   createdAt,
+  lastAppliedAt,
+  reappliedCount = 0,
   isOwner,
   canApprove,
+  requestStatus = "open",
   onApprove,
   onDecline,
   onChat,
   onWithdraw,
+  onReapply,
 }: ApplicationCardProps) {
-  const [loading, setLoading] = useState<"approve" | "decline" | "withdraw" | null>(null);
+  const [loading, setLoading] = useState<"approve" | "decline" | "withdraw" | "reapply" | null>(null);
   const config = statusConfig[status];
 
   // Format full name
@@ -61,6 +69,9 @@ export function ApplicationCard({
   
   // Format location
   const location = [applicantCity, applicantPostalCode].filter(Boolean).join(", ");
+
+  // Can reapply only if withdrawn and request is open
+  const canReapply = status === "withdrawn" && requestStatus === "open" && onReapply;
 
   const handleApprove = async () => {
     setLoading("approve");
@@ -77,6 +88,12 @@ export function ApplicationCard({
   const handleWithdraw = async () => {
     setLoading("withdraw");
     await onWithdraw?.();
+    setLoading(null);
+  };
+
+  const handleReapply = async () => {
+    setLoading("reapply");
+    await onReapply?.();
     setLoading(null);
   };
 
@@ -106,10 +123,18 @@ export function ApplicationCard({
               </span>
             </div>
           </div>
-          <Badge className={config.className}>
-            {status === "approved" && <Check className="h-3 w-3 mr-1" />}
-            {config.label}
-          </Badge>
+          <div className="flex flex-col items-end gap-1">
+            {isOwner && reappliedCount > 0 && (
+              <Badge variant="outline" className="text-xs border-primary/30 text-primary bg-primary/5">
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Reapplied
+              </Badge>
+            )}
+            <Badge className={config.className}>
+              {status === "approved" && <Check className="h-3 w-3 mr-1" />}
+              {config.label}
+            </Badge>
+          </div>
         </div>
 
         {/* Message */}
@@ -194,8 +219,20 @@ export function ApplicationCard({
         )}
 
         {!isOwner && status === "withdrawn" && (
-          <div className="text-sm text-muted-foreground">
-            You withdrew this application.
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              You withdrew this application.
+            </div>
+            {canReapply && (
+              <Button
+                size="sm"
+                onClick={handleReapply}
+                disabled={loading !== null}
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                {loading === "reapply" ? "..." : "Reapply"}
+              </Button>
+            )}
           </div>
         )}
       </CardContent>

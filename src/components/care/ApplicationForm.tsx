@@ -41,6 +41,7 @@ export function ApplicationForm({ requestId, onSuccess, onCancel }: ApplicationF
         applicant_id: user.id,
         availability_text: "Available", // Default value since we simplified
         message: message.trim(),
+        last_applied_at: new Date().toISOString(),
       });
 
       if (error) {
