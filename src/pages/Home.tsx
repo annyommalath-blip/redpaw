@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog, PlusCircle, Loader2, Syringe, ChevronRight } from "lucide-react";
+import { Dog, PlusCircle, Loader2, Syringe, ChevronRight, Bell } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DogSelector } from "@/components/dog/DogSelector";
@@ -9,6 +9,7 @@ import { QuickActions } from "@/components/dog/QuickActions";
 import { HealthLogCard } from "@/components/dog/HealthLogCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { MedRecordCardReadOnly } from "@/components/med/MedRecordCardReadOnly";
 import { ExpirationNotices } from "@/components/med/ExpirationNotices";
 import { LostModeDialog } from "@/components/dog/LostModeDialog";
@@ -26,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import { enrichRecordWithStatus, MedRecordWithStatus } from "@/lib/medRecordUtils";
 
 const ACTIVE_DOG_STORAGE_KEY = "redpaw_active_dog_id";
@@ -74,6 +76,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { unreadCount: notificationCount } = useNotifications();
 
   // Get the active dog object
   const activeDog = dogs.find(d => d.id === activeDogId) || null;
@@ -256,9 +259,22 @@ export default function HomePage() {
         title="RedPaw 🐾"
         subtitle="Welcome back!"
         action={
-          <Button size="icon" variant="ghost" onClick={() => navigate("/profile")}>
-            <Dog className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative">
+              <Bell className="h-5 w-5" />
+              {notificationCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs"
+                >
+                  {notificationCount > 9 ? "9+" : notificationCount}
+                </Badge>
+              )}
+            </Button>
+            <Button size="icon" variant="ghost" onClick={() => navigate("/profile")}>
+              <Dog className="h-5 w-5" />
+            </Button>
+          </div>
         }
       />
 
