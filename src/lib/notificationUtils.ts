@@ -1,23 +1,37 @@
 import { supabase } from "@/integrations/supabase/client";
 
+const MED_NOTIFICATION_CHECK_KEY = "redpaw_med_notification_check";
+
 /**
  * Check for expiring/expired medications and create notifications if not already notified.
  * This runs on app open to catch any medications that need attention.
+ * Only runs once per day to avoid spamming.
  */
 export async function checkMedicationNotifications(userId: string): Promise<void> {
+  // Check if we already ran today
+  const lastCheck = localStorage.getItem(MED_NOTIFICATION_CHECK_KEY);
+  const today = new Date().toDateString();
+  
+  if (lastCheck === today) {
+    return; // Already checked today
+  }
+
   try {
-    const today = new Date();
-    const thirtyDaysFromNow = new Date(today);
+    const todayDate = new Date();
+    const thirtyDaysFromNow = new Date(todayDate);
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-    // Get all med records for this user
+    // Get all med records for this user with dog names
     const { data: records, error: recordsError } = await supabase
       .from("med_records")
       .select("id, dog_id, name, expires_on, dogs(name)")
       .eq("owner_id", userId);
 
     if (recordsError) throw recordsError;
-    if (!records || records.length === 0) return;
+    if (!records || records.length === 0) {
+      localStorage.setItem(MED_NOTIFICATION_CHECK_KEY, today);
+      return;
+    }
 
     // Get existing medication notifications for this user (to avoid duplicates)
     const { data: existingNotifs, error: notifsError } = await supabase
@@ -31,15 +45,6 @@ export async function checkMedicationNotifications(userId: string): Promise<void
     const notifiedRecordIds = new Set((existingNotifs || []).map(n => n.link_id));
 
     // Check each record
-    const notificationsToCreate: Array<{
-      user_id: string;
-      type: string;
-      title: string;
-      body: string;
-      link_type: string;
-      link_id: string;
-    }> = [];
-
     for (const record of records) {
       // Skip if already notified
       if (notifiedRecordIds.has(record.id)) continue;
@@ -47,44 +52,53 @@ export async function checkMedicationNotifications(userId: string): Promise<void
       const expiresOn = new Date(record.expires_on);
       const dogName = (record.dogs as any)?.name || "your dog";
 
+      let notification: {
+        user_id: string;
+        type: "medication_expiring";
+        title: string;
+        body: string;
+        link_type: string;
+        link_id: string;
+      } | null = null;
+
       // Check if expired
-      if (expiresOn < today) {
-        notificationsToCreate.push({
+      if (expiresOn < todayDate) {
+        notification = {
           user_id: userId,
           type: "medication_expiring",
           title: "Medication Expired",
           body: `${record.name} for ${dogName} has expired.`,
           link_type: "dog",
           link_id: record.dog_id,
-        });
+        };
       }
       // Check if expiring within 30 days
       else if (expiresOn <= thirtyDaysFromNow) {
-        const daysUntil = Math.ceil((expiresOn.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        notificationsToCreate.push({
+        const daysUntil = Math.ceil((expiresOn.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+        notification = {
           user_id: userId,
           type: "medication_expiring",
           title: "Medication Expiring Soon",
           body: `${record.name} for ${dogName} expires in ${daysUntil} day${daysUntil === 1 ? "" : "s"}.`,
           link_type: "dog",
           link_id: record.dog_id,
-        });
+        };
+      }
+
+      // Insert notification
+      if (notification) {
+        const { error: insertError } = await supabase
+          .from("notifications")
+          .insert(notification);
+
+        if (insertError) {
+          console.error("Error creating medication notification:", insertError);
+        }
       }
     }
 
-    // Insert notifications using a direct insert (RLS allows via trigger functions context)
-    // We need to use a different approach since direct inserts are blocked
-    // For now, we'll skip client-side creation and rely on a scheduled edge function instead
-    
-    // Note: For medication notifications to work properly, we would need either:
-    // 1. A scheduled edge function that runs daily
-    // 2. An RLS policy that allows authenticated users to insert their own notifications
-    
-    // For MVP, let's add a permissive insert policy for user's own notifications
-    if (notificationsToCreate.length > 0) {
-      console.log("Medication notifications to create:", notificationsToCreate.length);
-      // These will be handled by a future scheduled function
-    }
+    // Mark as checked today
+    localStorage.setItem(MED_NOTIFICATION_CHECK_KEY, today);
   } catch (error) {
     console.error("Error checking medication notifications:", error);
   }
