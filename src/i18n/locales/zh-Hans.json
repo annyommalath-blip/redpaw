@@ -19,7 +19,25 @@
     "retry": "重试",
     "viewAll": "查看全部",
     "seeMore": "查看更多",
-    "nearby": "附近"
+    "nearby": "附近",
+    "add": "添加",
+    "post": "发布",
+    "apply": "申请",
+    "withdraw": "撤回",
+    "approve": "批准",
+    "decline": "拒绝",
+    "message": "消息",
+    "reply": "回复",
+    "active": "活跃",
+    "resolved": "已解决",
+    "pending": "待处理",
+    "all": "全部",
+    "open": "开放",
+    "closed": "已关闭",
+    "enable": "启用",
+    "updateLocation": "更新位置",
+    "enableLocationToSeeDistance": "启用位置以查看距离",
+    "mixedBreed": "混血"
   },
   "nav": {
     "home": "首页",
@@ -36,16 +54,30 @@
     "password": "密码",
     "forgotPassword": "忘记密码？",
     "noAccount": "没有账户？",
-    "hasAccount": "已有账户？"
+    "hasAccount": "已有账户？",
+    "seeYouSoon": "下次再见！🐾"
   },
   "home": {
-    "title": "首页",
-    "subtitle": "欢迎回来",
+    "title": "RedPaw 🐾",
+    "subtitle": "欢迎回来！",
+    "myDog": "我的狗狗",
     "myDogs": "我的狗狗",
     "quickActions": "快捷操作",
-    "upcomingMeds": "即将到期的药物",
-    "noDogs": "还没有狗狗",
-    "addFirstDog": "添加您的第一只狗狗开始使用"
+    "medicationRecords": "药物记录",
+    "recentLogs": "最近记录",
+    "noDogProfile": "还没有狗狗档案",
+    "addFurryFriend": "添加您的毛茸茸的朋友，开始追踪它们的健康并确保安全！",
+    "addMyDog": "添加我的狗狗",
+    "noMedRecordsYet": "还没有药物记录。开始追踪！",
+    "noHealthLogsYet": "还没有健康记录。开始追踪！",
+    "lostModeDeactivated": "✅ 走失模式已关闭",
+    "gladPupSafe": "很高兴您的狗狗安全了！警报已解除。",
+    "deleteRecord": "删除记录？",
+    "deleteRecordConfirm": "您确定要删除「{{name}}」吗？此操作无法撤销。",
+    "deleteLog": "删除记录？",
+    "deleteLogConfirm": "您确定要删除这条健康记录吗？此操作无法撤销。",
+    "recordDeleted": "记录已删除",
+    "logDeleted": "记录已删除"
   },
   "profile": {
     "title": "个人资料",
@@ -71,7 +103,11 @@
     "ownerOf": "主人",
     "archive": "归档",
     "archivedAlerts": "已归档的走失提醒",
-    "noArchivedAlerts": "没有已归档的提醒"
+    "noArchivedAlerts": "没有已归档的提醒",
+    "profileUpdated": "资料已更新",
+    "profileSaved": "您的资料已保存！🐾",
+    "archived": "📦 已归档",
+    "careRequestArchived": "照看请求已移至归档。"
   },
   "settings": {
     "title": "设置",
@@ -125,27 +161,40 @@
     "open": "开放",
     "closed": "已关闭",
     "assigned": "已分配",
-    "sitterLogs": "看护日志"
+    "sitterLogs": "看护日志",
+    "postCareRequest": "发布照看请求",
+    "careRequestPosted": "照看请求已发布！🐕",
+    "checkCommunity": "查看社区获取回复。",
+    "postedForDogs": "已为{{count}}只狗狗发布照看请求。查看社区获取回复。",
+    "applied": "已申请",
+    "noCareRequestsArea": "您所在地区目前没有开放的照看请求。"
   },
   "community": {
     "title": "社区",
-    "subtitle": "本地宠物社区",
+    "subtitle": "帮助其他狗狗主人",
     "careRequests": "照看请求",
+    "lostAndFound": "走失与找到",
     "lostDogs": "走失的狗狗",
     "foundDogs": "找到的狗狗",
     "noPostsYet": "还没有帖子",
-    "beFirstToPost": "成为第一个发帖的人！"
+    "beFirstToPost": "成为第一个发帖的人！",
+    "lost": "🚨 走失",
+    "found": "🐕 找到"
   },
   "lost": {
     "title": "狗狗走失提醒",
     "reportLost": "报告走失的狗狗",
+    "postLostAlert": "发布走失提醒",
     "lastSeenLocation": "最后出现地点",
     "description": "描述",
     "sightings": "目击报告",
     "reportSighting": "报告目击",
     "noSightings": "还没有目击报告",
     "resolved": "已解决",
-    "active": "活跃"
+    "active": "活跃",
+    "lostAlertPosted": "走失提醒已发布！🚨",
+    "communityWillHelp": "社区将帮助找到您的狗狗。",
+    "alertCommunity": "提醒社区您的狗狗走失了"
   },
   "found": {
     "title": "找到的狗狗",
@@ -156,16 +205,24 @@
     "addReply": "添加回复",
     "noReplies": "还没有回复",
     "reunited": "已团聚",
-    "active": "活跃"
+    "active": "活跃",
+    "foundDogReported": "找到的狗狗已报告！🐕",
+    "thankYouHelping": "感谢您的帮助！主人可能会通过消息联系您。",
+    "helpLostDogFindOwner": "帮助走失的狗狗找到主人",
+    "uploadAtLeastOnePhoto": "请上传至少一张照片",
+    "setFoundLocation": "请设置发现地点",
+    "setWhenFound": "请设置发现狗狗的时间"
   },
   "messages": {
     "title": "消息",
     "subtitle": "您的对话",
-    "noConversations": "还没有对话",
-    "startConversation": "开始对话",
+    "noConversations": "还没有其他消息",
+    "conversationsAppearHere": "当您发送关于照看请求或走失狗狗提醒的消息时，您的对话将显示在这里。",
     "typeMessage": "输入消息...",
     "send": "发送",
-    "aiAssistant": "AI助手"
+    "aiAssistant": "RedPaw AI",
+    "askMeAnything": "问我任何关于狗狗的问题！🐕",
+    "noMessagesYet": "还没有消息"
   },
   "notifications": {
     "title": "通知",
@@ -175,7 +232,7 @@
     "markAllRead": "全部标记为已读"
   },
   "medications": {
-    "title": "药物",
+    "title": "药物记录",
     "addRecord": "添加记录",
     "vaccine": "疫苗",
     "medication": "药物",
@@ -187,7 +244,21 @@
     "years": "年",
     "expired": "已过期",
     "expiringSoon": "即将过期",
-    "current": "当前"
+    "current": "当前",
+    "recordAdded": "药物记录已添加！💊",
+    "logMedsTreatments": "记录药物和治疗"
+  },
+  "healthLog": {
+    "addHealthLog": "添加健康记录",
+    "logType": "记录类型",
+    "trackWalksFoodMood": "追踪散步、食物、心情等",
+    "healthLogAdded": "健康记录已添加！🐾",
+    "selectLogTypeAndDog": "请选择记录类型和狗狗",
+    "walk": "散步",
+    "food": "食物",
+    "meds": "药物",
+    "mood": "心情",
+    "symptom": "症状"
   },
   "create": {
     "title": "创建",
@@ -199,7 +270,14 @@
     "lostAlert": "狗狗走失提醒",
     "lostAlertDesc": "报告走失的狗狗",
     "foundDog": "找到的狗狗",
-    "foundDogDesc": "报告找到的狗狗"
+    "foundDogDesc": "报告找到的狗狗",
+    "healthLog": "添加健康记录",
+    "healthLogDesc": "追踪散步、食物、心情等",
+    "medRecord": "药物记录",
+    "medRecordDesc": "记录药物和治疗",
+    "findHelpForWalks": "寻找遛狗、看护等帮助",
+    "fillAllFields": "请填写所有必填字段",
+    "durationPositive": "持续时间必须是正数"
   },
   "time": {
     "today": "今天",
@@ -208,5 +286,15 @@
     "hoursAgo": "{{count}}小时前",
     "minutesAgo": "{{count}}分钟前",
     "justNow": "刚刚"
+  },
+  "form": {
+    "required": "必填",
+    "optional": "选填",
+    "selectDog": "选择狗狗",
+    "selectDate": "选择日期",
+    "selectTime": "选择时间",
+    "enterDescription": "输入描述",
+    "addNotes": "添加备注（选填）",
+    "uploadPhotos": "上传照片"
   }
 }
