@@ -223,7 +223,10 @@ export function CareRequestCard({
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-foreground">
-                  {displayDogs.map(d => d.name).join(", ")}
+                  {displayDogs.length <= 3 
+                    ? displayDogs.map(d => d.name).join(", ")
+                    : `${displayDogs.slice(0, 3).map(d => d.name).join(", ")} +${displayDogs.length - 3} more`
+                  }
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {displayDogs.length} dogs need care together
