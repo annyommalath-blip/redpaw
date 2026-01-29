@@ -415,11 +415,11 @@ export default function FoundDogDetailPage() {
                   <>
                     <Button variant="outline" onClick={handleClaimClick}>
                       <Dog className="h-4 w-4 mr-2" />
-                      This is my dog
+                      Reply
                     </Button>
                     <Button onClick={handleContact}>
                       <MessageCircle className="h-4 w-4 mr-2" />
-                      Message Reporter
+                      Message
                     </Button>
                   </>
                 )}
