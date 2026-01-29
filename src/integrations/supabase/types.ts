@@ -636,6 +636,7 @@ export type Database = {
         | "care_request_nearby"
         | "medication_expiring"
         | "sighting_reported"
+        | "new_application"
       request_status: "open" | "closed"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
     }
@@ -778,6 +779,7 @@ export const Constants = {
         "care_request_nearby",
         "medication_expiring",
         "sighting_reported",
+        "new_application",
       ],
       request_status: ["open", "closed"],
       sitter_log_type: ["walk", "meal", "potty", "play", "note"],
