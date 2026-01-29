@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Loader2 } from "lucide-react";
+import { MessageCircle, Loader2, Bot, Sparkles } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ConversationItem } from "@/components/messages/ConversationItem";
@@ -121,6 +121,10 @@ export default function MessagesPage() {
     navigate(`/messages/${conversationId}`);
   };
 
+  const handleOpenAIChat = () => {
+    navigate("/messages/ai");
+  };
+
   return (
     <MobileLayout>
       <PageHeader title="Messages" subtitle="Your conversations" />
@@ -131,6 +135,31 @@ export default function MessagesPage() {
         </div>
       ) : (
         <div className="flex flex-col">
+          {/* AI Assistant - Always First */}
+          <div
+            onClick={handleOpenAIChat}
+            className="flex items-center gap-3 px-4 py-3 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors bg-primary/5"
+          >
+            <div className="relative">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Bot className="h-6 w-6 text-primary" />
+              </div>
+              <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                <Sparkles className="h-3 w-3 text-primary-foreground" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground">RedPaw Assistant</span>
+                <span className="text-xs text-primary font-medium">AI</span>
+              </div>
+              <p className="text-sm text-muted-foreground truncate">
+                Ask me anything about dogs! 🐕
+              </p>
+            </div>
+          </div>
+
+          {/* Regular Conversations */}
           {conversations.length > 0 ? (
             conversations.map((conversation) => {
               const unreadCount = getUnreadCount(conversation.id);
@@ -149,11 +178,13 @@ export default function MessagesPage() {
               );
             })
           ) : (
-            <EmptyState
-              icon={<MessageCircle className="h-10 w-10 text-muted-foreground" />}
-              title="No messages yet"
-              description="When you message about care requests or lost dog alerts, your conversations will appear here."
-            />
+            <div className="p-4">
+              <EmptyState
+                icon={<MessageCircle className="h-10 w-10 text-muted-foreground" />}
+                title="No other messages yet"
+                description="When you message about care requests or lost dog alerts, your conversations will appear here."
+              />
+            </div>
           )}
         </div>
       )}
