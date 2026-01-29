@@ -58,7 +58,7 @@ export function SitterLogForm({
   };
 
   const uploadFiles = async (): Promise<string[]> => {
-    const urls: string[] = [];
+    const paths: string[] = [];
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
@@ -73,15 +73,12 @@ export function SitterLogForm({
 
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("sitter-logs")
-        .getPublicUrl(data.path);
-
-      urls.push(publicUrl);
+      // Store the file path (not public URL) since bucket is now private
+      paths.push(data.path);
       setUploadProgress(((i + 1) / files.length) * 100);
     }
 
-    return urls;
+    return paths;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
