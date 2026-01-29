@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Send, ArrowLeft, Loader2, Bot, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChatBubble } from "@/components/messages/ChatBubble";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 
 interface Message {
@@ -19,12 +20,13 @@ const AI_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assist
 export default function AIChatPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       role: "assistant",
-      content: "Hi there! 🐕 I'm RedPaw AI. I can help you with:\n\n• Dog care questions (health, training, nutrition)\n• Using app features (lost alerts, care requests)\n• General pet advice\n\nHow can I help you today?",
+      content: "Hi there! 🐕 I'm RedPaw AI. I can help you with:\n\n• **Your dogs & health records** - vaccines, medications, expiration alerts\n• **Care requests** - sitter jobs, scheduling\n• **Lost & Found** - alerts, sightings\n• **General pet advice**\n\nTry asking me: \"When is my dog's rabies vaccine due?\" or \"Show my dogs\"",
       timestamp: new Date(),
     }
   ]);
@@ -39,11 +41,18 @@ export default function AIChatPage() {
   }, [messages]);
 
   const streamChat = async (userMessages: { role: string; content: string }[]) => {
+    // Get the current session token
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+
     const resp = await fetch(AI_CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        // Use user's auth token if logged in, otherwise use anon key
+        Authorization: accessToken 
+          ? `Bearer ${accessToken}` 
+          : `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
       body: JSON.stringify({ messages: userMessages }),
     });
@@ -173,6 +182,22 @@ export default function AIChatPage() {
     }
   };
 
+  // Custom link renderer for deep links
+  const renderLink = ({ href, children }: { href?: string; children?: React.ReactNode }) => {
+    if (href?.startsWith("/")) {
+      return (
+        <Link to={href} className="text-primary underline hover:text-primary/80">
+          {children}
+        </Link>
+      );
+    }
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+        {children}
+      </a>
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
@@ -189,10 +214,21 @@ export default function AIChatPage() {
               RedPaw AI
               <Sparkles className="h-4 w-4 text-primary" />
             </h1>
-            <p className="text-xs text-muted-foreground">AI-powered help for dog owners</p>
+            <p className="text-xs text-muted-foreground">
+              {user ? "Personal assistant with access to your data" : "AI-powered help for dog owners"}
+            </p>
           </div>
         </div>
       </header>
+
+      {/* Auth reminder for non-logged in users */}
+      {!user && (
+        <div className="bg-muted/50 border-b border-border px-4 py-2">
+          <p className="text-xs text-muted-foreground text-center">
+            <Link to="/auth" className="text-primary underline">Sign in</Link> to get personalized answers about your dogs
+          </p>
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -214,7 +250,13 @@ export default function AIChatPage() {
                     components={{
                       p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                       ul: ({ children }) => <ul className="mb-2 ml-4 list-disc">{children}</ul>,
+                      ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal">{children}</ol>,
                       li: ({ children }) => <li className="mb-1">{children}</li>,
+                      strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                      a: renderLink,
+                      code: ({ children }) => (
+                        <code className="bg-background/50 px-1 py-0.5 rounded text-xs">{children}</code>
+                      ),
                     }}
                   >
                     {message.content || "..."}
@@ -240,7 +282,7 @@ export default function AIChatPage() {
       <div className="border-t border-border bg-card p-4 safe-area-bottom">
         <div className="flex gap-2">
           <Input
-            placeholder="Ask me anything about dogs..."
+            placeholder={user ? "Ask about your dogs, meds, care requests..." : "Ask me anything about dogs..."}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
