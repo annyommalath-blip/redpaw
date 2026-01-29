@@ -1,18 +1,27 @@
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Loader2, CheckCheck } from "lucide-react";
+import { Bell, Loader2 } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
 import { useNotifications, Notification } from "@/hooks/useNotifications";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
+  const hasAutoMarkedRef = useRef(false);
+
+  // Auto-mark all notifications as read when the screen opens
+  useEffect(() => {
+    if (!loading && unreadCount > 0 && !hasAutoMarkedRef.current) {
+      hasAutoMarkedRef.current = true;
+      markAllAsRead();
+    }
+  }, [loading, unreadCount, markAllAsRead]);
 
   const handleNotificationClick = async (notification: Notification) => {
-    // Mark as read
+    // Mark as read (will be quick since likely already marked by auto-mark)
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
@@ -50,19 +59,6 @@ export default function NotificationsPage() {
       <PageHeader 
         title="Notifications" 
         subtitle="Stay updated"
-        action={
-          unreadCount > 0 ? (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={markAllAsRead}
-              className="text-muted-foreground"
-            >
-              <CheckCheck className="h-4 w-4 mr-1" />
-              Mark all read
-            </Button>
-          ) : undefined
-        }
       />
 
       {loading ? (
