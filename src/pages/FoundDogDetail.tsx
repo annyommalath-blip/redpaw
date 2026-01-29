@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Clock,
@@ -7,7 +7,6 @@ import {
   Dog,
   Loader2,
   CheckCircle,
-  MapPin,
 } from "lucide-react";
 import { LocationLink } from "@/components/location/LocationLink";
 import { MobileLayout } from "@/components/layout/MobileLayout";
@@ -33,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format, formatDistanceToNow } from "date-fns";
+import { FoundDogReplies } from "@/components/community/FoundDogReplies";
 
 interface FoundDog {
   id: string;
@@ -64,6 +64,7 @@ interface UserDog {
 export default function FoundDogDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -74,6 +75,9 @@ export default function FoundDogDetailPage() {
   const [userDogs, setUserDogs] = useState<UserDog[]>([]);
   const [selectedDogId, setSelectedDogId] = useState<string>("");
   const [claiming, setClaiming] = useState(false);
+
+  // Check if we should auto-focus the reply input
+  const shouldFocusReply = searchParams.get("reply") === "true";
 
   useEffect(() => {
     if (id) {
@@ -415,7 +419,7 @@ export default function FoundDogDetailPage() {
                   <>
                     <Button variant="outline" onClick={handleClaimClick}>
                       <Dog className="h-4 w-4 mr-2" />
-                      Reply
+                      This is my dog
                     </Button>
                     <Button onClick={handleContact}>
                       <MessageCircle className="h-4 w-4 mr-2" />
@@ -432,6 +436,13 @@ export default function FoundDogDetailPage() {
                 <span>This dog has been reunited with their owner!</span>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Replies Section */}
+        <Card>
+          <CardContent className="p-4">
+            <FoundDogReplies postId={foundDog.id} autoFocus={shouldFocusReply} />
           </CardContent>
         </Card>
       </div>
