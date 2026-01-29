@@ -150,7 +150,7 @@ export default function MessagesPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-foreground">RedPaw Assistant</span>
+                <span className="font-semibold text-foreground">RedPaw AI</span>
                 <span className="text-xs text-primary font-medium">AI</span>
               </div>
               <p className="text-sm text-muted-foreground truncate">
