@@ -7,7 +7,8 @@ import {
   Eye,
   UserCheck,
   UserPlus,
-  UserMinus
+  UserMinus,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,7 @@ const typeIcons: Record<string, typeof Bell> = {
   care_request_nearby: Calendar,
   medication_expiring: Syringe,
   sighting_reported: Eye,
+  found_dog_reply: MessageSquare,
 };
 
 const typeColors: Record<string, string> = {
@@ -43,6 +45,7 @@ const typeColors: Record<string, string> = {
   care_request_nearby: "text-blue-600 bg-blue-100",
   medication_expiring: "text-orange-600 bg-orange-100",
   sighting_reported: "text-purple-600 bg-purple-100",
+  found_dog_reply: "text-teal-600 bg-teal-100",
 };
 
 export function NotificationItem({

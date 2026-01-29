@@ -742,6 +742,7 @@ export type Database = {
         | "new_application"
         | "application_withdrawn"
         | "care_reapply"
+        | "found_dog_reply"
       request_status: "open" | "closed"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
     }
@@ -888,6 +889,7 @@ export const Constants = {
         "new_application",
         "application_withdrawn",
         "care_reapply",
+        "found_dog_reply",
       ],
       request_status: ["open", "closed"],
       sitter_log_type: ["walk", "meal", "potty", "play", "note"],
