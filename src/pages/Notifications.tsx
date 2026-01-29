@@ -34,6 +34,11 @@ export default function NotificationsPage() {
           navigate(`/dog/${notification.link_id}`);
         }
         break;
+      case "found_dog":
+        if (notification.link_id) {
+          navigate(`/found-dog/${notification.link_id}`);
+        }
+        break;
       default:
         // Stay on notifications page
         break;
