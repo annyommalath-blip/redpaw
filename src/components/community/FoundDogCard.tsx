@@ -52,6 +52,12 @@ export function FoundDogCard({
     navigate(`/found-dog/${id}`);
   };
 
+  const handleReplyClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Navigate to detail page with reply=true to auto-focus the reply input
+    navigate(`/found-dog/${id}?reply=true`);
+  };
+
   const handleContact = (e: React.MouseEvent) => {
     e.stopPropagation();
     onContact();
@@ -140,9 +146,9 @@ export function FoundDogCard({
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={handleViewDetails}
+                onClick={handleReplyClick}
               >
-                <Dog className="h-4 w-4 mr-2" />
+                <MessageCircle className="h-4 w-4 mr-2" />
                 Reply
               </Button>
               <Button className="flex-1 bg-primary" onClick={handleContact}>

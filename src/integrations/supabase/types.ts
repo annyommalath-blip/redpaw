@@ -266,6 +266,38 @@ export type Database = {
         }
         Relationships: []
       }
+      found_dog_replies: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "found_dog_replies_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "found_dogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       found_dogs: {
         Row: {
           created_at: string
