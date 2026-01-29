@@ -600,7 +600,10 @@ export default function ProfilePage() {
             </h2>
             <Card>
               <CardContent className="p-0">
-                <button className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left">
+                <button 
+                  className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left"
+                  onClick={() => navigate("/settings")}
+                >
                   <Settings className="h-5 w-5 text-muted-foreground" />
                   <span className="text-foreground">App Settings</span>
                 </button>

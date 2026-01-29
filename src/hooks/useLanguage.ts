@@ -15,12 +15,12 @@ export function useLanguage() {
       if (!user) return;
 
       try {
-        // Try to get from profile
+        // Try to get from profile (cast to any since types may not be updated yet)
         const { data: profile } = await supabase
           .from("profiles")
           .select("preferred_language")
           .eq("user_id", user.id)
-          .maybeSingle();
+          .maybeSingle() as { data: { preferred_language?: string } | null };
 
         if (profile?.preferred_language) {
           const langCode = profile.preferred_language as LanguageCode;
@@ -47,11 +47,11 @@ export function useLanguage() {
         // Save to localStorage
         localStorage.setItem("preferred_language", langCode);
 
-        // Save to profile if user is logged in
+        // Save to profile if user is logged in (cast to any for type compatibility)
         if (user) {
           await supabase
             .from("profiles")
-            .update({ preferred_language: langCode })
+            .update({ preferred_language: langCode } as any)
             .eq("user_id", user.id);
         }
       } catch (error) {
