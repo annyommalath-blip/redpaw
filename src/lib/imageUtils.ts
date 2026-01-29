@@ -369,3 +369,56 @@ export async function uploadProcessedImage(
   
   return urlData.publicUrl;
 }
+
+/**
+ * Simple image processing for generic uploads (without supabase dependency)
+ * Handles HEIC conversion and compression, returns a File ready for upload
+ */
+export async function processImageFile(
+  file: File,
+  options: {
+    onProgress?: ProgressCallback;
+    targetSize?: number;
+  } = {}
+): Promise<File> {
+  const { onProgress, targetSize = TARGET_FILE_SIZE } = options;
+  
+  console.log(`[imageUtils] Processing file: ${file.name}, type: ${file.type}, size: ${file.size}`);
+  
+  let processedBlob: Blob | null = null;
+  let filename = file.name;
+  
+  // Handle HEIC/HEIF files
+  if (isHeicFile(file)) {
+    onProgress?.("Converting photo format...");
+    console.log("[imageUtils] Detected HEIC file, attempting conversion...");
+    
+    // Try client-side conversion
+    processedBlob = await convertHeicWithLibrary(file);
+    
+    if (!processedBlob) {
+      throw new Error("Could not convert HEIC file. Please try a JPG or PNG image.");
+    }
+    
+    // Update filename to .jpg
+    filename = filename.replace(/\.(heic|heif)$/i, ".jpg");
+  } else {
+    processedBlob = file;
+  }
+  
+  // Compress to target size
+  onProgress?.("Optimizing photo...");
+  const compressedBlob = await compressToTarget(processedBlob, targetSize, onProgress);
+  
+  // Ensure filename has .jpg extension
+  if (!filename.toLowerCase().endsWith(".jpg") && !filename.toLowerCase().endsWith(".jpeg")) {
+    filename = filename.replace(/\.[^.]+$/, ".jpg");
+  }
+  
+  // Create a new File from the blob
+  const processedFile = new File([compressedBlob], filename, { type: "image/jpeg" });
+  
+  console.log(`[imageUtils] Processed file: ${processedFile.name}, size: ${processedFile.size}`);
+  
+  return processedFile;
+}

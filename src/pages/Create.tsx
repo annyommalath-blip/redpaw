@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe } from "lucide-react";
+import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe, Dog, Clock } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,10 +23,11 @@ import { formatPayAmount } from "@/data/currencies";
 import { DogMultiSelector } from "@/components/dog/DogMultiSelector";
 import { LocationPicker } from "@/components/location/LocationPicker";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { FoundDogPhotoUploader } from "@/components/community/FoundDogPhotoUploader";
 
-type CreateType = "log" | "lost" | "care" | "meds" | null;
+type CreateType = "log" | "lost" | "care" | "meds" | "found" | null;
 
-interface Dog {
+interface DogData {
   id: string;
   name: string;
   photo_url?: string | null;
@@ -42,7 +43,7 @@ export default function CreatePage() {
   const { user } = useAuth();
 
   // Dogs state
-  const [dogs, setDogs] = useState<Dog[]>([]);
+  const [dogs, setDogs] = useState<DogData[]>([]);
   const [selectedDogId, setSelectedDogId] = useState<string>("");
   const [selectedDogIds, setSelectedDogIds] = useState<string[]>([]); // For care requests (multi-select)
   const [loadingDogs, setLoadingDogs] = useState(true);
@@ -75,6 +76,13 @@ export default function CreatePage() {
   const [careNotes, setCareNotes] = useState("");
   const [payAmount, setPayAmount] = useState("");
   const [payCurrency, setPayCurrency] = useState("USD");
+
+  // Found dog form state
+  const [foundPhotoUrls, setFoundPhotoUrls] = useState<string[]>([]);
+  const [foundDescription, setFoundDescription] = useState("");
+  const foundLocation = useGeolocation();
+  const [foundDate, setFoundDate] = useState<Date | undefined>();
+  const [foundTime, setFoundTime] = useState<string>("");
 
   useEffect(() => {
     if (user) {
@@ -361,6 +369,21 @@ export default function CreatePage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card
+            className="cursor-pointer hover:border-emerald-500 transition-colors"
+            onClick={() => setCreateType("found")}
+          >
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Dog className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Report Found Dog</h3>
+                <p className="text-sm text-muted-foreground">Help a lost dog find their owner</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </MobileLayout>
     );
@@ -376,6 +399,8 @@ export default function CreatePage() {
             ? "Medication Records"
             : createType === "lost"
             ? "Post Lost Alert"
+            : createType === "found"
+            ? "Report Found Dog"
             : "Post Care Request"
         }
         showBack
