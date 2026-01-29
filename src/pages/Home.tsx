@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { enrichRecordWithStatus, MedRecordWithStatus } from "@/lib/medRecordUtils";
+import { checkMedicationNotifications } from "@/lib/notificationUtils";
 
 const ACTIVE_DOG_STORAGE_KEY = "redpaw_active_dog_id";
 
@@ -94,6 +95,8 @@ export default function HomePage() {
   useEffect(() => {
     if (user) {
       fetchData();
+      // Check for medication notifications on app open
+      checkMedicationNotifications(user.id);
     }
   }, [user]);
 
