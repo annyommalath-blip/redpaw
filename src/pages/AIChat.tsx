@@ -24,7 +24,7 @@ export default function AIChatPage() {
     {
       id: "welcome",
       role: "assistant",
-      content: "Hi there! 🐕 I'm your RedPaw Assistant. I can help you with:\n\n• Dog care questions (health, training, nutrition)\n• Using app features (lost alerts, care requests)\n• General pet advice\n\nHow can I help you today?",
+      content: "Hi there! 🐕 I'm RedPaw AI. I can help you with:\n\n• Dog care questions (health, training, nutrition)\n• Using app features (lost alerts, care requests)\n• General pet advice\n\nHow can I help you today?",
       timestamp: new Date(),
     }
   ]);
@@ -186,7 +186,7 @@ export default function AIChatPage() {
           </div>
           <div className="flex-1">
             <h1 className="font-semibold text-foreground flex items-center gap-2">
-              RedPaw Assistant
+              RedPaw AI
               <Sparkles className="h-4 w-4 text-primary" />
             </h1>
             <p className="text-xs text-muted-foreground">AI-powered help for dog owners</p>
