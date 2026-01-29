@@ -94,10 +94,10 @@ export default function FoundDogDetailPage() {
       if (foundError) throw foundError;
       setFoundDog(foundData as FoundDog);
 
-      // Fetch reporter profile
+      // Fetch reporter profile using public view (no sensitive data)
       if (foundData) {
         const { data: profileData } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("display_name, avatar_url, first_name, last_name")
           .eq("user_id", foundData.reporter_id)
           .maybeSingle();
