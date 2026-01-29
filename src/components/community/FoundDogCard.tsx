@@ -75,18 +75,18 @@ export function FoundDogCard({
   return (
     <Card 
       className={`overflow-hidden cursor-pointer transition-shadow hover:shadow-md ${
-        isReunited ? "border-success" : isActive ? "border-emerald-500" : "border-muted"
+        isReunited ? "border-success" : isActive ? "border-success" : "border-muted"
       }`}
       onClick={handleViewDetails}
     >
       <CardContent className="p-0">
         {/* Header with status */}
-        <div className={`px-4 py-2 ${isReunited ? "bg-success" : isActive ? "bg-emerald-600" : "bg-muted"}`}>
+        <div className={`px-4 py-2 ${isReunited ? "bg-success" : isActive ? "bg-success" : "bg-muted"}`}>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-white">
+            <span className="text-sm font-semibold text-success-foreground">
               {isReunited ? "✅ REUNITED" : "🐕 FOUND DOG"}
             </span>
-            <Badge variant="outline" className="bg-white/20 text-white border-white/30">
+            <Badge variant="outline" className="bg-background/20 text-success-foreground border-background/30">
               {formatDistanceToNow(createdAt, { addSuffix: true })}
             </Badge>
           </div>
