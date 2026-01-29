@@ -7,6 +7,7 @@ import { ConversationItem } from "@/components/messages/ConversationItem";
 import { EmptyState } from "@/components/ui/empty-state";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface Conversation {
   id: string;
@@ -27,6 +28,7 @@ export default function MessagesPage() {
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<ConversationWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getUnreadCount } = useUnreadMessages();
 
   useEffect(() => {
     if (user) {
@@ -41,6 +43,17 @@ export default function MessagesPage() {
             event: '*',
             schema: 'public',
             table: 'conversations',
+          },
+          () => {
+            fetchConversations();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
           },
           () => {
             fetchConversations();
@@ -119,18 +132,22 @@ export default function MessagesPage() {
       ) : (
         <div className="flex flex-col">
           {conversations.length > 0 ? (
-            conversations.map((conversation) => (
-              <ConversationItem
-                key={conversation.id}
-                id={conversation.id}
-                participantName={conversation.otherParticipantName}
-                participantAvatar={conversation.otherParticipantAvatar || ""}
-                lastMessage={conversation.last_message || "No messages yet"}
-                updatedAt={new Date(conversation.updated_at)}
-                unread={false}
-                onClick={() => handleOpenConversation(conversation.id)}
-              />
-            ))
+            conversations.map((conversation) => {
+              const unreadCount = getUnreadCount(conversation.id);
+              return (
+                <ConversationItem
+                  key={conversation.id}
+                  id={conversation.id}
+                  participantName={conversation.otherParticipantName}
+                  participantAvatar={conversation.otherParticipantAvatar || ""}
+                  lastMessage={conversation.last_message || "No messages yet"}
+                  updatedAt={new Date(conversation.updated_at)}
+                  unread={unreadCount > 0}
+                  unreadCount={unreadCount}
+                  onClick={() => handleOpenConversation(conversation.id)}
+                />
+              );
+            })
           ) : (
             <EmptyState
               icon={<MessageCircle className="h-10 w-10 text-muted-foreground" />}

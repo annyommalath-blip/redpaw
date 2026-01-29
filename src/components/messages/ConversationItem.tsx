@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from "date-fns";
 import { User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ConversationItemProps {
   id: string;
@@ -8,6 +9,7 @@ interface ConversationItemProps {
   lastMessage: string;
   updatedAt: Date;
   unread?: boolean;
+  unreadCount?: number;
   onClick: () => void;
 }
 
@@ -17,6 +19,7 @@ export function ConversationItem({
   lastMessage,
   updatedAt,
   unread = false,
+  unreadCount = 0,
   onClick,
 }: ConversationItemProps) {
   return (
@@ -43,14 +46,19 @@ export function ConversationItem({
             {formatDistanceToNow(updatedAt, { addSuffix: true })}
           </span>
         </div>
-        <p className={`text-sm truncate ${unread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+        <p className={`text-sm truncate ${unread ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
           {lastMessage}
         </p>
       </div>
 
-      {/* Unread indicator */}
-      {unread && (
-        <div className="h-3 w-3 rounded-full bg-primary shrink-0" />
+      {/* Unread count badge */}
+      {unreadCount > 0 && (
+        <Badge 
+          variant="destructive" 
+          className="h-6 min-w-6 flex items-center justify-center p-0 px-1.5 text-xs shrink-0"
+        >
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </Badge>
       )}
     </button>
   );
