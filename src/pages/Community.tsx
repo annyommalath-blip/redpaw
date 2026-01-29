@@ -6,8 +6,10 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LostAlertCard } from "@/components/community/LostAlertCard";
 import { CareRequestCard } from "@/components/community/CareRequestCard";
+import { FoundDogCard } from "@/components/community/FoundDogCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useViewerLocation } from "@/hooks/useViewerLocation";
@@ -23,10 +25,24 @@ interface LostAlert {
   latitude: number | null;
   longitude: number | null;
   location_label: string | null;
+  owner_id: string;
   dogs: {
     name: string;
     breed: string | null;
   } | null;
+}
+
+interface FoundDog {
+  id: string;
+  reporter_id: string;
+  photo_urls: string[];
+  description: string | null;
+  location_label: string;
+  latitude: number | null;
+  longitude: number | null;
+  found_at: string;
+  status: "active" | "reunited" | "closed";
+  created_at: string;
 }
 
 interface DogInfo {
@@ -64,6 +80,8 @@ interface CareRequest {
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState("care");
   const [lostAlerts, setLostAlerts] = useState<LostAlert[]>([]);
+  const [foundDogs, setFoundDogs] = useState<FoundDog[]>([]);
+  const [lostFoundFilter, setLostFoundFilter] = useState<string>("all");
   const [careRequests, setCareRequests] = useState<CareRequest[]>([]);
   const [userApplications, setUserApplications] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -98,6 +116,15 @@ export default function CommunityPage() {
         .order("created_at", { ascending: false });
 
       setLostAlerts((alertsData as any) || []);
+
+      // Fetch found dogs
+      const { data: foundData } = await supabase
+        .from("found_dogs")
+        .select("*")
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+
+      setFoundDogs((foundData as FoundDog[]) || []);
 
       // Fetch care requests - filter to show:
       // 1. Open requests without assigned sitter (public)
@@ -180,7 +207,7 @@ export default function CommunityPage() {
     if (!alert) return;
     
     // Don't message yourself
-    if (user.id === (alert as any).owner_id) return;
+    if (user.id === alert.owner_id) return;
     
     try {
       // Check for existing conversation for this lost alert
@@ -190,7 +217,7 @@ export default function CommunityPage() {
         .eq("context_type", "lostAlert")
         .eq("context_id", alertId);
       
-      const ownerId = (alert as any).owner_id;
+      const ownerId = alert.owner_id;
       
       // Find existing conversation between these two users
       const existingConvo = conversations?.find(c => 
@@ -219,9 +246,63 @@ export default function CommunityPage() {
     }
   };
 
+  const handleContactFoundDogReporter = async (foundDogId: string) => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    
+    const foundDog = foundDogs.find(f => f.id === foundDogId);
+    if (!foundDog) return;
+    
+    // Don't message yourself
+    if (user.id === foundDog.reporter_id) return;
+    
+    try {
+      const { data: conversations } = await supabase
+        .from("conversations")
+        .select("id, participant_ids")
+        .eq("context_type", "foundDog")
+        .eq("context_id", foundDogId);
+      
+      const existingConvo = conversations?.find(c => 
+        c.participant_ids.includes(user.id) && c.participant_ids.includes(foundDog.reporter_id)
+      );
+      
+      if (existingConvo) {
+        navigate(`/messages/${existingConvo.id}`);
+      } else {
+        const { data: newConvo, error } = await supabase
+          .from("conversations")
+          .insert({
+            participant_ids: [user.id, foundDog.reporter_id],
+            context_type: "foundDog",
+            context_id: foundDogId,
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        navigate(`/messages/${newConvo.id}`);
+      }
+    } catch (error) {
+      console.error("Error starting conversation:", error);
+    }
+  };
+
   const handleReportSighting = (alertId: string) => {
     console.log("Report sighting for", alertId);
   };
+
+  // Filter lost/found posts based on filter selection
+  const filteredLostAlerts = lostFoundFilter === "found" ? [] : lostAlerts;
+  const filteredFoundDogs = lostFoundFilter === "lost" ? [] : foundDogs;
+  
+  // Combined and sorted feed for lost & found
+  const combinedFeed = [
+    ...filteredLostAlerts.map(alert => ({ type: "lost" as const, data: alert, createdAt: new Date(alert.created_at) })),
+    ...filteredFoundDogs.map(found => ({ type: "found" as const, data: found, createdAt: new Date(found.created_at) })),
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   const handleCareRequestClick = (requestId: string) => {
     navigate(`/care-request/${requestId}`);
@@ -285,7 +366,7 @@ export default function CommunityPage() {
             </TabsTrigger>
             <TabsTrigger value="lost" className="gap-2">
               <AlertTriangle className="h-4 w-4" />
-              Lost Dogs
+              Lost & Found
             </TabsTrigger>
           </TabsList>
 
@@ -345,34 +426,70 @@ export default function CommunityPage() {
           </TabsContent>
 
           <TabsContent value="lost" className="space-y-4 mt-0">
-            {lostAlerts.length > 0 ? (
-              lostAlerts.map((alert) => (
-                <LostAlertCard
-                  key={alert.id}
-                  id={alert.id}
-                  dogName={alert.dogs?.name || "Unknown"}
-                  breed={alert.dogs?.breed || ""}
-                  photoUrl={alert.photo_url || (alert.dogs as any)?.photo_url || undefined}
-                  age={(alert.dogs as any)?.date_of_birth || (alert.dogs as any)?.age || undefined}
-                  weight={(alert.dogs as any)?.weight || undefined}
-                  weightUnit={(alert.dogs as any)?.weight_unit || undefined}
-                  description={alert.description}
-                  lastSeenLocation={alert.last_seen_location}
-                  locationLabel={alert.location_label}
-                  latitude={alert.latitude}
-                  longitude={alert.longitude}
-                  viewerLatitude={viewerLocation.latitude}
-                  viewerLongitude={viewerLocation.longitude}
-                  createdAt={new Date(alert.created_at)}
-                  status={alert.status}
-                  onContact={() => handleContactOwner(alert.id)}
-                  onReportSighting={() => handleReportSighting(alert.id)}
-                />
-              ))
+            {/* Filter chips */}
+            <ToggleGroup 
+              type="single" 
+              value={lostFoundFilter}
+              onValueChange={(val) => val && setLostFoundFilter(val)}
+              className="justify-start"
+            >
+              <ToggleGroupItem value="all" size="sm" className="text-xs px-3">
+                All
+              </ToggleGroupItem>
+              <ToggleGroupItem value="lost" size="sm" className="text-xs px-3">
+                🚨 Lost
+              </ToggleGroupItem>
+              <ToggleGroupItem value="found" size="sm" className="text-xs px-3">
+                🐕 Found
+              </ToggleGroupItem>
+            </ToggleGroup>
+
+            {combinedFeed.length > 0 ? (
+              combinedFeed.map((item) => 
+                item.type === "lost" ? (
+                  <LostAlertCard
+                    key={`lost-${item.data.id}`}
+                    id={item.data.id}
+                    dogName={(item.data as LostAlert).dogs?.name || "Unknown"}
+                    breed={(item.data as LostAlert).dogs?.breed || ""}
+                    photoUrl={(item.data as LostAlert).photo_url || ((item.data as LostAlert).dogs as any)?.photo_url || undefined}
+                    age={((item.data as LostAlert).dogs as any)?.date_of_birth || ((item.data as LostAlert).dogs as any)?.age || undefined}
+                    weight={((item.data as LostAlert).dogs as any)?.weight || undefined}
+                    weightUnit={((item.data as LostAlert).dogs as any)?.weight_unit || undefined}
+                    description={(item.data as LostAlert).description}
+                    lastSeenLocation={(item.data as LostAlert).last_seen_location}
+                    locationLabel={(item.data as LostAlert).location_label}
+                    latitude={(item.data as LostAlert).latitude}
+                    longitude={(item.data as LostAlert).longitude}
+                    viewerLatitude={viewerLocation.latitude}
+                    viewerLongitude={viewerLocation.longitude}
+                    createdAt={new Date((item.data as LostAlert).created_at)}
+                    status={(item.data as LostAlert).status}
+                    onContact={() => handleContactOwner(item.data.id)}
+                    onReportSighting={() => handleReportSighting(item.data.id)}
+                  />
+                ) : (
+                  <FoundDogCard
+                    key={`found-${item.data.id}`}
+                    id={item.data.id}
+                    photoUrls={(item.data as FoundDog).photo_urls}
+                    description={(item.data as FoundDog).description}
+                    locationLabel={(item.data as FoundDog).location_label}
+                    latitude={(item.data as FoundDog).latitude}
+                    longitude={(item.data as FoundDog).longitude}
+                    viewerLatitude={viewerLocation.latitude}
+                    viewerLongitude={viewerLocation.longitude}
+                    foundAt={new Date((item.data as FoundDog).found_at)}
+                    status={(item.data as FoundDog).status}
+                    createdAt={new Date((item.data as FoundDog).created_at)}
+                    onContact={() => handleContactFoundDogReporter(item.data.id)}
+                  />
+                )
+              )
             ) : (
               <EmptyState
                 icon={<Dog className="h-10 w-10 text-muted-foreground" />}
-                title="No lost dogs"
+                title="No lost or found dogs"
                 description="Great news! There are no lost dogs in your area right now."
               />
             )}

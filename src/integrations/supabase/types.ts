@@ -266,6 +266,51 @@ export type Database = {
         }
         Relationships: []
       }
+      found_dogs: {
+        Row: {
+          created_at: string
+          description: string | null
+          found_at: string
+          id: string
+          latitude: number | null
+          location_label: string
+          location_source: string | null
+          longitude: number | null
+          photo_urls: string[]
+          reporter_id: string
+          status: Database["public"]["Enums"]["found_dog_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          found_at: string
+          id?: string
+          latitude?: number | null
+          location_label: string
+          location_source?: string | null
+          longitude?: number | null
+          photo_urls?: string[]
+          reporter_id: string
+          status?: Database["public"]["Enums"]["found_dog_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          found_at?: string
+          id?: string
+          latitude?: number | null
+          location_label?: string
+          location_source?: string | null
+          longitude?: number | null
+          photo_urls?: string[]
+          reporter_id?: string
+          status?: Database["public"]["Enums"]["found_dog_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       health_logs: {
         Row: {
           created_at: string
@@ -633,6 +678,7 @@ export type Database = {
       application_status: "pending" | "approved" | "declined" | "withdrawn"
       care_type: "walk" | "watch" | "overnight" | "check-in"
       duration_unit: "days" | "months" | "years"
+      found_dog_status: "active" | "reunited" | "closed"
       log_type: "walk" | "food" | "meds" | "mood" | "symptom"
       med_record_type: "vaccine" | "medication"
       notification_type:
@@ -778,6 +824,7 @@ export const Constants = {
       application_status: ["pending", "approved", "declined", "withdrawn"],
       care_type: ["walk", "watch", "overnight", "check-in"],
       duration_unit: ["days", "months", "years"],
+      found_dog_status: ["active", "reunited", "closed"],
       log_type: ["walk", "food", "meds", "mood", "symptom"],
       med_record_type: ["vaccine", "medication"],
       notification_type: [
