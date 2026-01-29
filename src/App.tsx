@@ -11,6 +11,7 @@ import Community from "./pages/Community";
 import Create from "./pages/Create";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
+import AIChat from "./pages/AIChat";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import AddDog from "./pages/AddDog";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/found-dog/:id" element={<ProtectedRoute><FoundDogDetail /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/messages/ai" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
             <Route path="/messages/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/add-dog" element={<ProtectedRoute><AddDog /></ProtectedRoute>} />

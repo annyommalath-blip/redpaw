@@ -1,1 +1,7 @@
 project_id = "reirhahleudishympnya"
+
+[functions.convert-heic]
+verify_jwt = false
+
+[functions.ai-assistant]
+verify_jwt = false
