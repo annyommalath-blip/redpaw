@@ -574,6 +574,7 @@ export type Database = {
           id: string
           last_name: string | null
           postal_code: string | null
+          preferred_language: string | null
           updated_at: string
           user_id: string
         }
@@ -586,6 +587,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           postal_code?: string | null
+          preferred_language?: string | null
           updated_at?: string
           user_id: string
         }
@@ -598,6 +600,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           postal_code?: string | null
+          preferred_language?: string | null
           updated_at?: string
           user_id?: string
         }
