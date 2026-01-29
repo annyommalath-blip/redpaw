@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dog, PlusCircle, Loader2, Syringe, ChevronRight, Bell } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DogSelector } from "@/components/dog/DogSelector";
@@ -62,6 +63,7 @@ interface MedRecordRaw {
 }
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [dogs, setDogs] = useState<UserDog[]>([]);
   const [activeDogId, setActiveDogId] = useState<string | null>(null);
   const [logs, setLogs] = useState<HealthLog[]>([]);
@@ -248,7 +250,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <MobileLayout>
-        <PageHeader title="RedPaw 🐾" subtitle="Welcome back!" />
+        <PageHeader title={t("home.title")} subtitle={t("home.subtitle")} />
         <div className="p-4 flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -259,8 +261,8 @@ export default function HomePage() {
   return (
     <MobileLayout>
       <PageHeader
-        title="RedPaw 🐾"
-        subtitle="Welcome back!"
+        title={t("home.title")}
+        subtitle={t("home.subtitle")}
         action={
           <div className="flex items-center gap-1">
             <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative">
@@ -290,7 +292,7 @@ export default function HomePage() {
             {/* My Dogs Section */}
             <section>
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                {dogs.length > 1 ? "My Dogs" : "My Dog"}
+                {dogs.length > 1 ? t("home.myDogs") : t("home.myDog")}
               </h2>
               
               {dogs.length > 1 ? (
@@ -343,7 +345,7 @@ export default function HomePage() {
             {/* Quick Actions */}
             <section>
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Quick Actions
+                {t("home.quickActions")}
               </h2>
               <QuickActions
                 dogId={activeDog.id}
@@ -357,7 +359,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <Syringe className="h-4 w-4" />
-                  Medication Records
+                  {t("home.medicationRecords")}
                 </h2>
                 <Button 
                   variant="ghost" 
@@ -365,7 +367,7 @@ export default function HomePage() {
                   onClick={() => navigate("/create?type=meds")}
                   className="text-muted-foreground"
                 >
-                  Add
+                  {t("common.add")}
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -382,7 +384,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No medication records yet. Start tracking!
+                  {t("home.noMedRecordsYet")}
                 </p>
               )}
             </section>
@@ -391,11 +393,11 @@ export default function HomePage() {
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Recent Logs
+                  {t("home.recentLogs")}
                 </h2>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=log")}>
                   <PlusCircle className="h-4 w-4 mr-1" />
-                  Add
+                  {t("common.add")}
                 </Button>
               </div>
               {filteredLogs.length > 0 ? (
@@ -413,7 +415,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No health logs yet. Start tracking!
+                  {t("home.noHealthLogsYet")}
                 </p>
               )}
             </section>
@@ -443,15 +445,15 @@ export default function HomePage() {
       <AlertDialog open={!!deletingMedRecord} onOpenChange={(open) => !open && setDeletingMedRecord(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Record?</AlertDialogTitle>
+            <AlertDialogTitle>{t("home.deleteRecord")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingMedRecord?.name}"? This action cannot be undone.
+              {t("home.deleteRecordConfirm", { name: deletingMedRecord?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteMedRecord} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -461,15 +463,15 @@ export default function HomePage() {
       <AlertDialog open={!!deletingLogId} onOpenChange={(open) => !open && setDeletingLogId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Log?</AlertDialogTitle>
+            <AlertDialogTitle>{t("home.deleteLog")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this health log? This action cannot be undone.
+              {t("home.deleteLogConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

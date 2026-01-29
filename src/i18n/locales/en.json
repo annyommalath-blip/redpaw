@@ -19,7 +19,25 @@
     "retry": "Retry",
     "viewAll": "View all",
     "seeMore": "See more",
-    "nearby": "Nearby"
+    "nearby": "Nearby",
+    "add": "Add",
+    "post": "Post",
+    "apply": "Apply",
+    "withdraw": "Withdraw",
+    "approve": "Approve",
+    "decline": "Decline",
+    "message": "Message",
+    "reply": "Reply",
+    "active": "Active",
+    "resolved": "Resolved",
+    "pending": "Pending",
+    "all": "All",
+    "open": "Open",
+    "closed": "Closed",
+    "enable": "Enable",
+    "updateLocation": "Update location",
+    "enableLocationToSeeDistance": "Enable location to see distance",
+    "mixedBreed": "Mixed breed"
   },
   "nav": {
     "home": "Home",
@@ -36,16 +54,30 @@
     "password": "Password",
     "forgotPassword": "Forgot Password?",
     "noAccount": "Don't have an account?",
-    "hasAccount": "Already have an account?"
+    "hasAccount": "Already have an account?",
+    "seeYouSoon": "See you soon! 🐾"
   },
   "home": {
-    "title": "Home",
-    "subtitle": "Welcome back",
+    "title": "RedPaw 🐾",
+    "subtitle": "Welcome back!",
+    "myDog": "My Dog",
     "myDogs": "My Dogs",
     "quickActions": "Quick Actions",
-    "upcomingMeds": "Upcoming Medications",
-    "noDogs": "No dogs yet",
-    "addFirstDog": "Add your first dog to get started"
+    "medicationRecords": "Medication Records",
+    "recentLogs": "Recent Logs",
+    "noDogProfile": "No dog profile yet",
+    "addFurryFriend": "Add your furry friend to start tracking their health and keep them safe!",
+    "addMyDog": "Add My Dog",
+    "noMedRecordsYet": "No medication records yet. Start tracking!",
+    "noHealthLogsYet": "No health logs yet. Start tracking!",
+    "lostModeDeactivated": "✅ Lost Mode Deactivated",
+    "gladPupSafe": "Glad your pup is safe! The alert has been resolved.",
+    "deleteRecord": "Delete Record?",
+    "deleteRecordConfirm": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "deleteLog": "Delete Log?",
+    "deleteLogConfirm": "Are you sure you want to delete this health log? This action cannot be undone.",
+    "recordDeleted": "Record deleted",
+    "logDeleted": "Log deleted"
   },
   "profile": {
     "title": "Profile",
@@ -71,7 +103,11 @@
     "ownerOf": "Owner of",
     "archive": "Archive",
     "archivedAlerts": "Archived Lost Alerts",
-    "noArchivedAlerts": "No archived alerts"
+    "noArchivedAlerts": "No archived alerts",
+    "profileUpdated": "Profile updated",
+    "profileSaved": "Your profile has been saved! 🐾",
+    "archived": "📦 Archived",
+    "careRequestArchived": "Care request moved to archive."
   },
   "settings": {
     "title": "Settings",
@@ -125,27 +161,40 @@
     "open": "Open",
     "closed": "Closed",
     "assigned": "Assigned",
-    "sitterLogs": "Sitter Logs"
+    "sitterLogs": "Sitter Logs",
+    "postCareRequest": "Post Care Request",
+    "careRequestPosted": "Care request posted! 🐕",
+    "checkCommunity": "Check Community for responses.",
+    "postedForDogs": "Posted care request for {{count}} dogs. Check Community for responses.",
+    "applied": "Applied",
+    "noCareRequestsArea": "There are no open care requests in your area right now."
   },
   "community": {
     "title": "Community",
-    "subtitle": "Local pet community",
+    "subtitle": "Help fellow dog owners",
     "careRequests": "Care Requests",
+    "lostAndFound": "Lost & Found",
     "lostDogs": "Lost Dogs",
     "foundDogs": "Found Dogs",
     "noPostsYet": "No posts yet",
-    "beFirstToPost": "Be the first to post!"
+    "beFirstToPost": "Be the first to post!",
+    "lost": "🚨 Lost",
+    "found": "🐕 Found"
   },
   "lost": {
     "title": "Lost Dog Alert",
     "reportLost": "Report Lost Dog",
+    "postLostAlert": "Post Lost Alert",
     "lastSeenLocation": "Last Seen Location",
     "description": "Description",
     "sightings": "Sightings",
     "reportSighting": "Report Sighting",
     "noSightings": "No sightings reported yet",
     "resolved": "Resolved",
-    "active": "Active"
+    "active": "Active",
+    "lostAlertPosted": "Lost alert posted! 🚨",
+    "communityWillHelp": "The community will help find your pup.",
+    "alertCommunity": "Alert the community about your lost dog"
   },
   "found": {
     "title": "Found Dog",
@@ -156,16 +205,24 @@
     "addReply": "Add Reply",
     "noReplies": "No replies yet",
     "reunited": "Reunited",
-    "active": "Active"
+    "active": "Active",
+    "foundDogReported": "Found dog reported! 🐕",
+    "thankYouHelping": "Thank you for helping! The owner may contact you via messages.",
+    "helpLostDogFindOwner": "Help a lost dog find their owner",
+    "uploadAtLeastOnePhoto": "Please upload at least one photo",
+    "setFoundLocation": "Please set the found location",
+    "setWhenFound": "Please set when you found the dog"
   },
   "messages": {
     "title": "Messages",
     "subtitle": "Your conversations",
-    "noConversations": "No conversations yet",
-    "startConversation": "Start a conversation",
+    "noConversations": "No other messages yet",
+    "conversationsAppearHere": "When you message about care requests or lost dog alerts, your conversations will appear here.",
     "typeMessage": "Type a message...",
     "send": "Send",
-    "aiAssistant": "AI Assistant"
+    "aiAssistant": "RedPaw AI",
+    "askMeAnything": "Ask me anything about dogs! 🐕",
+    "noMessagesYet": "No messages yet"
   },
   "notifications": {
     "title": "Notifications",
@@ -175,7 +232,7 @@
     "markAllRead": "Mark all read"
   },
   "medications": {
-    "title": "Medications",
+    "title": "Medication Records",
     "addRecord": "Add Record",
     "vaccine": "Vaccine",
     "medication": "Medication",
@@ -187,7 +244,21 @@
     "years": "years",
     "expired": "Expired",
     "expiringSoon": "Expiring Soon",
-    "current": "Current"
+    "current": "Current",
+    "recordAdded": "Medication record added! 💊",
+    "logMedsTreatments": "Log medications & treatments"
+  },
+  "healthLog": {
+    "addHealthLog": "Add Health Log",
+    "logType": "Log Type",
+    "trackWalksFoodMood": "Track walks, food, mood & more",
+    "healthLogAdded": "Health log added! 🐾",
+    "selectLogTypeAndDog": "Please select a log type and dog",
+    "walk": "Walk",
+    "food": "Food",
+    "meds": "Meds",
+    "mood": "Mood",
+    "symptom": "Symptom"
   },
   "create": {
     "title": "Create",
@@ -199,7 +270,14 @@
     "lostAlert": "Lost Dog Alert",
     "lostAlertDesc": "Report a missing dog",
     "foundDog": "Found Dog",
-    "foundDogDesc": "Report a found dog"
+    "foundDogDesc": "Report a found dog",
+    "healthLog": "Add Health Log",
+    "healthLogDesc": "Track walks, food, mood & more",
+    "medRecord": "Medication Records",
+    "medRecordDesc": "Log medications & treatments",
+    "findHelpForWalks": "Find help for walks, watching & more",
+    "fillAllFields": "Please fill in all required fields",
+    "durationPositive": "Duration must be a positive number"
   },
   "time": {
     "today": "Today",
@@ -208,5 +286,15 @@
     "hoursAgo": "{{count}} hours ago",
     "minutesAgo": "{{count}} minutes ago",
     "justNow": "Just now"
+  },
+  "form": {
+    "required": "Required",
+    "optional": "Optional",
+    "selectDog": "Select dog",
+    "selectDate": "Select date",
+    "selectTime": "Select time",
+    "enterDescription": "Enter description",
+    "addNotes": "Add notes (optional)",
+    "uploadPhotos": "Upload Photos"
   }
 }

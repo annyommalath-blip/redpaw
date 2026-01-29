@@ -2,17 +2,19 @@ import { Home, Users, PlusCircle, MessageCircle, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Badge } from "@/components/ui/badge";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-
-const navItems = [
-  { to: "/", icon: Home, label: "Home" },
-  { to: "/community", icon: Users, label: "Community" },
-  { to: "/create", icon: PlusCircle, label: "Create" },
-  { to: "/messages", icon: MessageCircle, label: "Messages" },
-  { to: "/profile", icon: User, label: "Profile" },
-];
+import { useTranslation } from "react-i18next";
 
 export function BottomNav() {
   const { totalUnread } = useUnreadMessages();
+  const { t } = useTranslation();
+
+  const navItems = [
+    { to: "/", icon: Home, label: t("nav.home") },
+    { to: "/community", icon: Users, label: t("nav.community") },
+    { to: "/create", icon: PlusCircle, label: t("nav.create") },
+    { to: "/messages", icon: MessageCircle, label: t("nav.messages") },
+    { to: "/profile", icon: User, label: t("nav.profile") },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card safe-area-bottom">

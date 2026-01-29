@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, Loader2, Bot, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ConversationItem } from "@/components/messages/ConversationItem";
@@ -26,6 +27,7 @@ interface ConversationWithProfile extends Conversation {
 export default function MessagesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState<ConversationWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const { getUnreadCount } = useUnreadMessages();
@@ -127,7 +129,7 @@ export default function MessagesPage() {
 
   return (
     <MobileLayout>
-      <PageHeader title="Messages" subtitle="Your conversations" />
+      <PageHeader title={t("messages.title")} subtitle={t("messages.subtitle")} />
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
@@ -150,11 +152,11 @@ export default function MessagesPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-foreground">RedPaw AI</span>
+                <span className="font-semibold text-foreground">{t("messages.aiAssistant")}</span>
                 <span className="text-xs text-primary font-medium">AI</span>
               </div>
               <p className="text-sm text-muted-foreground truncate">
-                Ask me anything about dogs! 🐕
+                {t("messages.askMeAnything")}
               </p>
             </div>
           </div>
@@ -181,8 +183,8 @@ export default function MessagesPage() {
             <div className="p-4">
               <EmptyState
                 icon={<MessageCircle className="h-10 w-10 text-muted-foreground" />}
-                title="No other messages yet"
-                description="When you message about care requests or lost dog alerts, your conversations will appear here."
+                title={t("messages.noConversations")}
+                description={t("messages.conversationsAppearHere")}
               />
             </div>
           )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, HandHeart, Dog, Loader2, MapPin, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -78,6 +79,7 @@ interface CareRequest {
 }
 
 export default function CommunityPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("care");
   const [lostAlerts, setLostAlerts] = useState<LostAlert[]>([]);
   const [foundDogs, setFoundDogs] = useState<FoundDog[]>([]);
@@ -311,7 +313,7 @@ export default function CommunityPage() {
   if (loading) {
     return (
       <MobileLayout>
-        <PageHeader title="Community" subtitle="Help fellow dog owners" />
+        <PageHeader title={t("community.title")} subtitle={t("community.subtitle")} />
         <div className="p-4 flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -321,7 +323,7 @@ export default function CommunityPage() {
 
   return (
     <MobileLayout>
-      <PageHeader title="Community" subtitle="Help fellow dog owners" />
+      <PageHeader title={t("community.title")} subtitle={t("community.subtitle")} />
 
       <div className="p-4">
         {/* Location permission banner */}
@@ -329,7 +331,7 @@ export default function CommunityPage() {
           <div className="mb-4 p-3 bg-muted rounded-lg flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
-              <span>Enable location to see distance</span>
+              <span>{t("common.enableLocationToSeeDistance")}</span>
             </div>
             <Button
               variant="ghost"
@@ -337,7 +339,7 @@ export default function CommunityPage() {
               onClick={viewerLocation.requestLocation}
               className="text-primary"
             >
-              Enable
+              {t("common.enable")}
             </Button>
           </div>
         )}
@@ -353,7 +355,7 @@ export default function CommunityPage() {
               className="text-xs text-muted-foreground"
             >
               <RefreshCw className={`h-3 w-3 mr-1 ${viewerLocation.loading ? 'animate-spin' : ''}`} />
-              Update location
+              {t("common.updateLocation")}
             </Button>
           </div>
         )}
@@ -362,11 +364,11 @@ export default function CommunityPage() {
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="care" className="gap-2">
               <HandHeart className="h-4 w-4" />
-              Care Requests
+              {t("community.careRequests")}
             </TabsTrigger>
             <TabsTrigger value="lost" className="gap-2">
               <AlertTriangle className="h-4 w-4" />
-              Lost & Found
+              {t("community.lostAndFound")}
             </TabsTrigger>
           </TabsList>
 
@@ -419,8 +421,8 @@ export default function CommunityPage() {
             ) : (
               <EmptyState
                 icon={<HandHeart className="h-10 w-10 text-muted-foreground" />}
-                title="No care requests"
-                description="There are no open care requests in your area right now."
+                title={t("care.noCareRequestsArea")}
+                description=""
               />
             )}
           </TabsContent>
@@ -434,13 +436,13 @@ export default function CommunityPage() {
               className="justify-start"
             >
               <ToggleGroupItem value="all" size="sm" className="text-xs px-3">
-                All
+                {t("common.all")}
               </ToggleGroupItem>
               <ToggleGroupItem value="lost" size="sm" className="text-xs px-3">
-                🚨 Lost
+                {t("community.lost")}
               </ToggleGroupItem>
               <ToggleGroupItem value="found" size="sm" className="text-xs px-3">
-                🐕 Found
+                {t("community.found")}
               </ToggleGroupItem>
             </ToggleGroup>
 
