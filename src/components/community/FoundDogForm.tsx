@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { CalendarIcon, Clock, Dog, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -71,6 +72,7 @@ export function FoundDogForm({
   submitting,
   onSubmit,
 }: FoundDogFormProps) {
+  const { t } = useTranslation();
   const isValid = photoUrls.length > 0 && location.locationLabel && date && time;
 
   return (
@@ -78,18 +80,18 @@ export function FoundDogForm({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-success">
           <Dog className="h-5 w-5" />
-          Report Found Dog
+          {t("found.reportFound")}
         </CardTitle>
         <CardDescription>
-          Help a lost dog find their owner. Upload a photo and provide details about where and when you found them.
+          {t("found.helpLostDogFindOwner")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Photo Upload - Required */}
         <div className="space-y-2">
-          <Label>Photo(s) *</Label>
+          <Label>{t("found.photos")} *</Label>
           <p className="text-xs text-muted-foreground">
-            Upload at least one photo of the found dog. The first photo will be the cover image.
+            {t("found.photosHint")}
           </p>
           <FoundDogPhotoUploader
             photoUrls={photoUrls}
@@ -112,15 +114,15 @@ export function FoundDogForm({
           onLocationTextChange={location.setLocationFromText}
           onSearchAddress={location.searchAddress}
           required
-          placeholder="Where did you find the dog?"
-          description="This helps owners locate their pet."
+          placeholder={t("found.whereFoundPlaceholder")}
+          description={t("found.whereFoundHint")}
         />
 
         {/* Found Date/Time - Required */}
         <div className="space-y-2">
           <Label className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
-            When did you find the dog? *
+            {t("found.whenFound")} *
           </Label>
           <div className="grid grid-cols-2 gap-2">
             <Popover>
@@ -133,7 +135,7 @@ export function FoundDogForm({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "MMM d, yyyy") : "Date"}
+                  {date ? format(date, "MMM d, yyyy") : t("found.date")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 z-50" align="start">
@@ -150,7 +152,7 @@ export function FoundDogForm({
 
             <Select value={time} onValueChange={onTimeChange}>
               <SelectTrigger className={cn(!time && "text-muted-foreground")}>
-                <SelectValue placeholder="Time" />
+                <SelectValue placeholder={t("found.time")} />
               </SelectTrigger>
               <SelectContent className="max-h-60">
                 {timeOptions.map((opt) => (
@@ -165,9 +167,9 @@ export function FoundDogForm({
 
         {/* Description - Optional */}
         <div className="space-y-2">
-          <Label>Description (optional)</Label>
+          <Label>{t("found.descriptionOptional")}</Label>
           <Textarea
-            placeholder="Breed guess, size, collar color, behavior, any identifying features..."
+            placeholder={t("found.descriptionPlaceholder")}
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
             rows={3}
@@ -176,7 +178,7 @@ export function FoundDogForm({
 
         {/* Contact note */}
         <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-          📱 Contact will be through in-app messages only. Your phone number and personal info won't be shown publicly.
+          {t("found.contactNote")}
         </p>
 
         {/* Submit */}
@@ -190,7 +192,7 @@ export function FoundDogForm({
           ) : (
             <Dog className="h-4 w-4 mr-2" />
           )}
-          Report Found Dog
+          {t("found.reportFound")}
         </Button>
       </CardContent>
     </Card>
