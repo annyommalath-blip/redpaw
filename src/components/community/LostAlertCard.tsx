@@ -137,10 +137,9 @@ export function LostAlertCard({
               locationLabel={locationLabel || lastSeenLocation}
               className="text-muted-foreground hover:text-primary"
             />
-            {distanceLabel && (
-              <span className="text-xs text-muted-foreground shrink-0">• {distanceLabel} {t("common.away")}</span>
-            )}
-          </div>
+          {distanceLabel && (
+            <span className="text-xs text-muted-foreground shrink-0">• {distanceLabel} {t("common.away")}</span>
+          )}
           </div>
 
           {isActive && (
