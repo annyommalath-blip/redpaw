@@ -352,6 +352,9 @@
     "days": "Days",
     "months": "Months",
     "years": "Years",
+    "day": "day",
+    "month": "month",
+    "year": "year",
     "expired": "Expired",
     "expiringSoon": "Expiring Soon",
     "current": "Current",
@@ -362,7 +365,11 @@
     "namePlaceholder": "e.g., Rabies, Heartworm, Flea treatment...",
     "notesPlaceholder": "Dosage, vet info, side effects...",
     "given": "Given",
-    "expires": "Expires"
+    "expires": "Expires",
+    "expiresToday": "Expires today",
+    "expiresIn": "Expires in",
+    "expiredAgo": "Expired",
+    "ago": "ago"
   },
   "healthLog": {
     "title": "Add Health Log",

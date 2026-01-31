@@ -352,6 +352,9 @@
     "days": "天",
     "months": "月",
     "years": "年",
+    "day": "天",
+    "month": "月",
+    "year": "年",
     "expired": "已过期",
     "expiringSoon": "即将过期",
     "current": "当前",
@@ -362,7 +365,11 @@
     "namePlaceholder": "例如：狂犬病、心丝虫、跳蚤治疗...",
     "notesPlaceholder": "剂量、兽医信息、副作用...",
     "given": "给药",
-    "expires": "过期"
+    "expires": "过期",
+    "expiresToday": "今天过期",
+    "expiresIn": "将在以下时间后过期",
+    "expiredAgo": "已过期",
+    "ago": "前"
   },
   "healthLog": {
     "title": "添加健康记录",
