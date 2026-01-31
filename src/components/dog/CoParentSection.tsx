@@ -40,7 +40,7 @@ export function CoParentSection({ dogId, dogName, ownerId }: CoParentSectionProp
   const { user } = useAuth();
   const { members, loading, inviteMember, removeMember } = useDogMembers(dogId);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
-  const [inviteUsername, setInviteUsername] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
   const [removingMember, setRemovingMember] = useState<DogMember | null>(null);
 
@@ -57,11 +57,11 @@ export function CoParentSection({ dogId, dogName, ownerId }: CoParentSectionProp
   };
 
   const handleInvite = async () => {
-    if (!inviteUsername.trim()) return;
+    if (!inviteEmail.trim()) return;
     setInviting(true);
-    const success = await inviteMember(inviteUsername.trim());
+    const success = await inviteMember(inviteEmail.trim());
     if (success) {
-      setInviteUsername("");
+      setInviteEmail("");
       setInviteDialogOpen(false);
     }
     setInviting(false);
@@ -185,15 +185,16 @@ export function CoParentSection({ dogId, dogName, ownerId }: CoParentSectionProp
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username">{t("coParent.usernameOrEmail")}</Label>
+                    <Label htmlFor="email">{t("coParent.emailAddress")}</Label>
                     <Input
-                      id="username"
-                      placeholder={t("coParent.usernamePlaceholder")}
-                      value={inviteUsername}
-                      onChange={(e) => setInviteUsername(e.target.value)}
+                      id="email"
+                      type="email"
+                      placeholder={t("coParent.emailPlaceholder")}
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t("coParent.inviteHint")}
+                      {t("coParent.inviteHintEmail")}
                     </p>
                   </div>
                 </div>
@@ -201,7 +202,7 @@ export function CoParentSection({ dogId, dogName, ownerId }: CoParentSectionProp
                   <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
                     {t("common.cancel")}
                   </Button>
-                  <Button onClick={handleInvite} disabled={!inviteUsername.trim() || inviting}>
+                  <Button onClick={handleInvite} disabled={!inviteEmail.trim() || inviting}>
                     {inviting ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : null}
