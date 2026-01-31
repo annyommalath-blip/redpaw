@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { format, isAfter, isBefore, setHours, setMinutes } from "date-fns";
 import { CalendarIcon, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -42,13 +43,15 @@ export function DateTimeRangePicker({
   onEndTimeChange,
   error,
 }: DateTimeRangePickerProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-4">
       {/* Start Date/Time */}
       <div className="space-y-2">
         <Label className="flex items-center gap-1">
           <Clock className="h-4 w-4" />
-          Start *
+          {t("care.start")} *
         </Label>
         <div className="flex gap-2">
           <Popover>
@@ -61,7 +64,7 @@ export function DateTimeRangePicker({
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {startDate ? format(startDate, "MMM d, yyyy") : "Select date"}
+                {startDate ? format(startDate, "MMM d, yyyy") : t("care.selectDate")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 z-50" align="start">
@@ -77,7 +80,7 @@ export function DateTimeRangePicker({
           </Popover>
           <Select value={startTime} onValueChange={onStartTimeChange}>
             <SelectTrigger className="w-28">
-              <SelectValue placeholder="Time" />
+              <SelectValue placeholder={t("care.time")} />
             </SelectTrigger>
             <SelectContent className="max-h-60 bg-background border shadow-lg z-50">
               {timeOptions.map((time) => (
@@ -94,7 +97,7 @@ export function DateTimeRangePicker({
       <div className="space-y-2">
         <Label className="flex items-center gap-1">
           <Clock className="h-4 w-4" />
-          End *
+          {t("care.end")} *
         </Label>
         <div className="flex gap-2">
           <Popover>
@@ -107,7 +110,7 @@ export function DateTimeRangePicker({
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {endDate ? format(endDate, "MMM d, yyyy") : "Select date"}
+                {endDate ? format(endDate, "MMM d, yyyy") : t("care.selectDate")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 z-50" align="start">
@@ -126,7 +129,7 @@ export function DateTimeRangePicker({
           </Popover>
           <Select value={endTime} onValueChange={onEndTimeChange}>
             <SelectTrigger className="w-28">
-              <SelectValue placeholder="Time" />
+              <SelectValue placeholder={t("care.time")} />
             </SelectTrigger>
             <SelectContent className="max-h-60 bg-background border shadow-lg z-50">
               {timeOptions.map((time) => (

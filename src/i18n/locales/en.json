@@ -233,7 +233,10 @@
     "timeSlot": "Time Slot",
     "startTime": "Start time",
     "endTime": "End time",
-    "to": "to"
+    "to": "to",
+    "start": "Start",
+    "end": "End",
+    "time": "Time"
   },
   "community": {
     "title": "Community",

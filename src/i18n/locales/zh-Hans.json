@@ -233,7 +233,10 @@
     "timeSlot": "时间段",
     "startTime": "开始时间",
     "endTime": "结束时间",
-    "to": "至"
+    "to": "至",
+    "start": "开始",
+    "end": "结束",
+    "time": "时间"
   },
   "community": {
     "title": "社区",

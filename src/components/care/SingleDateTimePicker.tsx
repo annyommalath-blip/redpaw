@@ -1,5 +1,6 @@
 import { format, isBefore } from "date-fns";
 import { CalendarIcon, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -37,13 +38,15 @@ export function SingleDateTimePicker({
   onEndTimeChange,
   error,
 }: SingleDateTimePickerProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-4">
       {/* Date Picker */}
       <div className="space-y-2">
         <Label className="flex items-center gap-1">
           <CalendarIcon className="h-4 w-4" />
-          Date *
+          {t("care.date")} *
         </Label>
         <Popover>
           <PopoverTrigger asChild>
@@ -55,7 +58,7 @@ export function SingleDateTimePicker({
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "EEEE, MMMM d, yyyy") : "Select date"}
+              {date ? format(date, "EEEE, MMMM d, yyyy") : t("care.selectDate")}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 z-50" align="start">
@@ -75,12 +78,12 @@ export function SingleDateTimePicker({
       <div className="space-y-2">
         <Label className="flex items-center gap-1">
           <Clock className="h-4 w-4" />
-          Time Slot *
+          {t("care.timeSlot")} *
         </Label>
         <div className="flex items-center gap-2">
           <Select value={startTime} onValueChange={onStartTimeChange}>
             <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Start time" />
+              <SelectValue placeholder={t("care.startTime")} />
             </SelectTrigger>
             <SelectContent className="max-h-60 bg-background border shadow-lg z-50">
               {timeOptions.map((time) => (
@@ -90,10 +93,10 @@ export function SingleDateTimePicker({
               ))}
             </SelectContent>
           </Select>
-          <span className="text-muted-foreground">to</span>
+          <span className="text-muted-foreground">{t("care.to")}</span>
           <Select value={endTime} onValueChange={onEndTimeChange}>
             <SelectTrigger className="flex-1">
-              <SelectValue placeholder="End time" />
+              <SelectValue placeholder={t("care.endTime")} />
             </SelectTrigger>
             <SelectContent className="max-h-60 bg-background border shadow-lg z-50">
               {timeOptions.map((time) => (
