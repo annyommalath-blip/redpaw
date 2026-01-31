@@ -349,7 +349,10 @@
       "care_request_nearby": "ຄຳຂໍເບິ່ງແຍງໃກ້ຄຽງ",
       "medication_expiring": "ແຈ້ງເຕືອນຢາ",
       "sighting_reported": "ລາຍງານການພົບເຫັນ",
-      "found_dog_reply": "ຕອບກັບໃໝ່"
+      "found_dog_reply": "ຕອບກັບໃໝ່",
+      "dog_invite": "ຄຳເຊີນຜູ້ຮ່ວມດູແລ",
+      "dog_invite_accepted": "ຮັບຄຳເຊີນແລ້ວ",
+      "dog_invite_declined": "ປະຕິເສດຄຳເຊີນແລ້ວ"
     },
     "bodies": {
       "new_application": "{{applicantName}} ສະໝັກເບິ່ງແຍງ {{dogName}}",
@@ -360,7 +363,10 @@
       "sighting_reported": "ມີຄົນລາຍງານການພົບເຫັນ {{dogName}}!",
       "found_dog_reply": "{{replierName}} ຕອບກັບໂພສໝາທີ່ພົບຂອງທ່ານ",
       "medication_expired": "{{medName}} ສຳລັບ {{dogName}} ໝົດອາຍຸແລ້ວ",
-      "medication_expiring_days": "{{medName}} ສຳລັບ {{dogName}} ຈະໝົດອາຍຸໃນ {{days}} ມື້"
+      "medication_expiring_days": "{{medName}} ສຳລັບ {{dogName}} ຈະໝົດອາຍຸໃນ {{days}} ມື້",
+      "dog_invite": "{{inviterName}} ເຊີນທ່ານມາເປັນຜູ້ຮ່ວມດູແລ {{dogName}}",
+      "dog_invite_accepted": "{{inviteeName}} ຮັບຄຳເຊີນເປັນຜູ້ຮ່ວມດູແລ {{dogName}}",
+      "dog_invite_declined": "{{inviteeName}} ປະຕິເສດຄຳເຊີນເປັນຜູ້ຮ່ວມດູແລ {{dogName}}"
     },
     "careTypes": {
       "walk": "ພາຍ່າງ",
@@ -484,5 +490,28 @@
     "play": "ເວລາຫຼິ້ນ",
     "note": "ບັນທຶກ",
     "by": "ໂດຍ"
+  },
+  "coParent": {
+    "title": "ຜູ້ຮ່ວມດູແລ",
+    "owner": "ເຈົ້າຂອງ",
+    "primaryOwner": "ເຈົ້າຂອງຫຼັກ",
+    "coParent": "ຜູ້ຮ່ວມດູແລ",
+    "you": "ທ່ານ",
+    "unknownUser": "ຜູ້ໃຊ້ບໍ່ຮູ້ຈັກ",
+    "inviteCoParent": "ເຊີນຜູ້ຮ່ວມດູແລ",
+    "inviteDescription": "ເຊີນຄົນມາຊ່ວຍຈັດການ {{dogName}} ພວກເຂົາຈະສາມາດເບິ່ງ ແລະ ແກ້ໄຂໂປຣໄຟລ໌ໝາ, ບັນທຶກສຸຂະພາບ, ແລະ ບັນທຶກຢາ",
+    "usernameOrEmail": "ຊື່ຜູ້ໃຊ້",
+    "usernamePlaceholder": "ໃສ່ຊື່ຜູ້ໃຊ້ຂອງເຂົາ",
+    "inviteHint": "ບຸກຄົນນີ້ຕ້ອງມີບັນຊີ RedPaw ໃສ່ຊື່ຜູ້ໃຊ້ (ຊື່ທີ່ສະແດງ)",
+    "sendInvite": "ສົ່ງຄຳເຊີນ",
+    "pendingInvite": "ລໍຖ້າຄຳເຊີນ",
+    "pendingInvites": "ຄຳເຊີນທີ່ລໍຖ້າ",
+    "invitedBy": "ເຊີນໂດຍ {{name}}",
+    "cancelInvite": "ຍົກເລີກຄຳເຊີນ",
+    "cancelInviteDesc": "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການຍົກເລີກຄຳເຊີນສຳລັບ {{name}}?",
+    "removeCoParent": "ລຶບຜູ້ຮ່ວມດູແລ",
+    "removeCoParentDesc": "{{name}} ຈະບໍ່ສາມາດເຂົ້າເຖິງຂໍ້ມູນໝານີ້ໄດ້ອີກຕໍ່ໄປ ການກະທຳນີ້ບໍ່ສາມາດຍົກເລີກໄດ້",
+    "leaveCoParent": "ອອກຈາກການດູແລ",
+    "leaveCoParentDesc": "ທ່ານຈະບໍ່ສາມາດເຂົ້າເຖິງຂໍ້ມູນໝານີ້ໄດ້ອີກຕໍ່ໄປ ທ່ານຈະຕ້ອງໄດ້ຮັບຄຳເຊີນໃໝ່ເພື່ອກັບມາຮ່ວມດູແລ"
   }
 }

@@ -50,6 +50,10 @@ export default function NotificationsPage() {
           navigate(`/found-dog/${notification.link_id}`);
         }
         break;
+      case "dog_invite":
+        // Navigate to home where pending invites are shown
+        navigate("/");
+        break;
       default:
         // Stay on notifications page
         break;

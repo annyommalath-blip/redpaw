@@ -349,7 +349,10 @@
       "care_request_nearby": "Care Request Nearby",
       "medication_expiring": "Medication Alert",
       "sighting_reported": "Sighting Reported",
-      "found_dog_reply": "New Reply"
+      "found_dog_reply": "New Reply",
+      "dog_invite": "Co-Parent Invitation",
+      "dog_invite_accepted": "Invitation Accepted",
+      "dog_invite_declined": "Invitation Declined"
     },
     "bodies": {
       "new_application": "{{applicantName}} applied to care for {{dogName}}",
@@ -360,7 +363,10 @@
       "sighting_reported": "Someone reported a sighting of {{dogName}}!",
       "found_dog_reply": "{{replierName}} replied to your found dog post",
       "medication_expired": "{{medName}} for {{dogName}} has expired.",
-      "medication_expiring_days": "{{medName}} for {{dogName}} expires in {{days}} day(s)."
+      "medication_expiring_days": "{{medName}} for {{dogName}} expires in {{days}} day(s).",
+      "dog_invite": "{{inviterName}} invited you to co-parent {{dogName}}",
+      "dog_invite_accepted": "{{inviteeName}} accepted your invitation to co-parent {{dogName}}",
+      "dog_invite_declined": "{{inviteeName}} declined your invitation to co-parent {{dogName}}"
     },
     "careTypes": {
       "walk": "walk",
@@ -484,5 +490,28 @@
     "play": "Play Time",
     "note": "Note",
     "by": "by"
+  },
+  "coParent": {
+    "title": "Co-Pet Parents",
+    "owner": "Owner",
+    "primaryOwner": "Primary Owner",
+    "coParent": "Co-Parent",
+    "you": "You",
+    "unknownUser": "Unknown User",
+    "inviteCoParent": "Invite Co-Parent",
+    "inviteDescription": "Invite someone to help manage {{dogName}}. They'll be able to view and edit the dog's profile, health logs, and medication records.",
+    "usernameOrEmail": "Username",
+    "usernamePlaceholder": "Enter their username",
+    "inviteHint": "The person must have a RedPaw account. Enter their username (display name).",
+    "sendInvite": "Send Invite",
+    "pendingInvite": "Pending invite",
+    "pendingInvites": "Pending Invites",
+    "invitedBy": "Invited by {{name}}",
+    "cancelInvite": "Cancel Invite",
+    "cancelInviteDesc": "Are you sure you want to cancel the invitation for {{name}}?",
+    "removeCoParent": "Remove Co-Parent",
+    "removeCoParentDesc": "{{name}} will no longer have access to this dog's information. This action cannot be undone.",
+    "leaveCoParent": "Leave",
+    "leaveCoParentDesc": "You will no longer have access to this dog's information. You'll need a new invite to rejoin."
   }
 }

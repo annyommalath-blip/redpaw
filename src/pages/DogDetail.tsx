@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { CoParentSection } from "@/components/dog/CoParentSection";
 
 interface DogData {
   id: string;
@@ -46,11 +47,11 @@ export default function DogDetailPage() {
     if (!dogId || !user) return;
     setLoading(true);
     try {
+      // Fetch dog - RLS now allows access for co-parents too
       const { data, error } = await supabase
         .from("dogs")
         .select("*")
         .eq("id", dogId)
-        .eq("owner_id", user.id)
         .maybeSingle();
 
       if (error) throw error;
@@ -95,6 +96,8 @@ export default function DogDetailPage() {
     ...(dog.photo_urls || []),
   ];
 
+  const isOwner = user?.id === dog.owner_id;
+
   return (
     <MobileLayout>
       {/* Header with back button */}
@@ -104,9 +107,13 @@ export default function DogDetailPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">{dog.name}</h1>
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/profile/edit-dog/${dog.id}`)}>
-            <Edit className="h-5 w-5" />
-          </Button>
+          {isOwner ? (
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/profile/edit-dog/${dog.id}`)}>
+              <Edit className="h-5 w-5" />
+            </Button>
+          ) : (
+            <div className="w-10" /> 
+          )}
         </div>
       </div>
 
@@ -238,14 +245,19 @@ export default function DogDetailPage() {
           </section>
         )}
 
-        {/* Edit Button */}
-        <Button
-          className="w-full"
-          onClick={() => navigate(`/profile/edit-dog/${dog.id}`)}
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          {t("dogDetail.editProfile")}
-        </Button>
+        {/* Co-Pet Parents Section */}
+        <CoParentSection dogId={dog.id} dogName={dog.name} ownerId={dog.owner_id} />
+
+        {/* Edit Button - Only for Owner */}
+        {isOwner && (
+          <Button
+            className="w-full"
+            onClick={() => navigate(`/profile/edit-dog/${dog.id}`)}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            {t("dogDetail.editProfile")}
+          </Button>
+        )}
       </div>
     </MobileLayout>
   );

@@ -349,7 +349,10 @@
       "care_request_nearby": "คำขอดูแลใกล้เคียง",
       "medication_expiring": "แจ้งเตือนยา",
       "sighting_reported": "รายงานการพบเห็น",
-      "found_dog_reply": "ตอบกลับใหม่"
+      "found_dog_reply": "ตอบกลับใหม่",
+      "dog_invite": "คำเชิญผู้ดูแลร่วม",
+      "dog_invite_accepted": "ยอมรับคำเชิญแล้ว",
+      "dog_invite_declined": "ปฏิเสธคำเชิญแล้ว"
     },
     "bodies": {
       "new_application": "{{applicantName}} สมัครดูแล {{dogName}}",
@@ -360,7 +363,10 @@
       "sighting_reported": "มีคนรายงานการพบเห็น {{dogName}}!",
       "found_dog_reply": "{{replierName}} ตอบกลับโพสต์สุนัขที่พบของคุณ",
       "medication_expired": "{{medName}} สำหรับ {{dogName}} หมดอายุแล้ว",
-      "medication_expiring_days": "{{medName}} สำหรับ {{dogName}} จะหมดอายุใน {{days}} วัน"
+      "medication_expiring_days": "{{medName}} สำหรับ {{dogName}} จะหมดอายุใน {{days}} วัน",
+      "dog_invite": "{{inviterName}} เชิญคุณมาเป็นผู้ดูแลร่วมของ {{dogName}}",
+      "dog_invite_accepted": "{{inviteeName}} ยอมรับคำเชิญเป็นผู้ดูแลร่วมของ {{dogName}}",
+      "dog_invite_declined": "{{inviteeName}} ปฏิเสธคำเชิญเป็นผู้ดูแลร่วมของ {{dogName}}"
     },
     "careTypes": {
       "walk": "พาเดิน",
@@ -484,5 +490,28 @@
     "play": "เวลาเล่น",
     "note": "บันทึก",
     "by": "โดย"
+  },
+  "coParent": {
+    "title": "ผู้ดูแลร่วม",
+    "owner": "เจ้าของ",
+    "primaryOwner": "เจ้าของหลัก",
+    "coParent": "ผู้ดูแลร่วม",
+    "you": "คุณ",
+    "unknownUser": "ผู้ใช้ไม่ทราบชื่อ",
+    "inviteCoParent": "เชิญผู้ดูแลร่วม",
+    "inviteDescription": "เชิญคนมาช่วยดูแล {{dogName}} พวกเขาจะสามารถดูและแก้ไขโปรไฟล์สุนัข บันทึกสุขภาพ และข้อมูลยา",
+    "usernameOrEmail": "ชื่อผู้ใช้",
+    "usernamePlaceholder": "ใส่ชื่อผู้ใช้ของพวกเขา",
+    "inviteHint": "บุคคลนี้ต้องมีบัญชี RedPaw ใส่ชื่อผู้ใช้ (ชื่อที่แสดง)",
+    "sendInvite": "ส่งคำเชิญ",
+    "pendingInvite": "รอการยืนยัน",
+    "pendingInvites": "คำเชิญที่รอดำเนินการ",
+    "invitedBy": "เชิญโดย {{name}}",
+    "cancelInvite": "ยกเลิกคำเชิญ",
+    "cancelInviteDesc": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำเชิญสำหรับ {{name}}?",
+    "removeCoParent": "ลบผู้ดูแลร่วม",
+    "removeCoParentDesc": "{{name}} จะไม่สามารถเข้าถึงข้อมูลสุนัขนี้ได้อีกต่อไป การกระทำนี้ไม่สามารถยกเลิกได้",
+    "leaveCoParent": "ออกจากการดูแล",
+    "leaveCoParentDesc": "คุณจะไม่สามารถเข้าถึงข้อมูลสุนัขนี้ได้อีกต่อไป คุณจะต้องได้รับคำเชิญใหม่เพื่อกลับมาร่วมดูแล"
   }
 }

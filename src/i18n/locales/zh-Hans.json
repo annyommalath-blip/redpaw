@@ -349,7 +349,10 @@
       "care_request_nearby": "附近的照看请求",
       "medication_expiring": "药物提醒",
       "sighting_reported": "目击已报告",
-      "found_dog_reply": "新回复"
+      "found_dog_reply": "新回复",
+      "dog_invite": "共同家长邀请",
+      "dog_invite_accepted": "邀请已接受",
+      "dog_invite_declined": "邀请已拒绝"
     },
     "bodies": {
       "new_application": "{{applicantName}} 申请照看 {{dogName}}",
@@ -360,7 +363,10 @@
       "sighting_reported": "有人报告看到了 {{dogName}}！",
       "found_dog_reply": "{{replierName}} 回复了您的发现狗狗帖子",
       "medication_expired": "{{dogName}} 的 {{medName}} 已过期。",
-      "medication_expiring_days": "{{dogName}} 的 {{medName}} 将在 {{days}} 天后过期。"
+      "medication_expiring_days": "{{dogName}} 的 {{medName}} 将在 {{days}} 天后过期。",
+      "dog_invite": "{{inviterName}} 邀请您成为 {{dogName}} 的共同家长",
+      "dog_invite_accepted": "{{inviteeName}} 接受了成为 {{dogName}} 共同家长的邀请",
+      "dog_invite_declined": "{{inviteeName}} 拒绝了成为 {{dogName}} 共同家长的邀请"
     },
     "careTypes": {
       "walk": "遛",
@@ -484,5 +490,28 @@
     "play": "玩耍时间",
     "note": "备注",
     "by": "由"
+  },
+  "coParent": {
+    "title": "共同家长",
+    "owner": "主人",
+    "primaryOwner": "主要主人",
+    "coParent": "共同家长",
+    "you": "您",
+    "unknownUser": "未知用户",
+    "inviteCoParent": "邀请共同家长",
+    "inviteDescription": "邀请他人帮助管理 {{dogName}}。他们将能够查看和编辑狗狗的资料、健康记录和药物记录。",
+    "usernameOrEmail": "用户名",
+    "usernamePlaceholder": "输入他们的用户名",
+    "inviteHint": "对方必须拥有 RedPaw 账户。输入他们的用户名（显示名称）。",
+    "sendInvite": "发送邀请",
+    "pendingInvite": "等待中的邀请",
+    "pendingInvites": "待处理邀请",
+    "invitedBy": "由 {{name}} 邀请",
+    "cancelInvite": "取消邀请",
+    "cancelInviteDesc": "确定要取消对 {{name}} 的邀请吗？",
+    "removeCoParent": "移除共同家长",
+    "removeCoParentDesc": "{{name}} 将无法再访问此狗狗的信息。此操作无法撤销。",
+    "leaveCoParent": "退出",
+    "leaveCoParentDesc": "您将无法再访问此狗狗的信息。您需要新的邀请才能重新加入。"
   }
 }
