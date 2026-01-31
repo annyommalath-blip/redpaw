@@ -1,6 +1,7 @@
 import { formatDistanceToNow } from "date-fns";
 import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useDateLocale } from "@/hooks/useDateLocale";
 
 interface ConversationItemProps {
   id: string;
@@ -22,6 +23,8 @@ export function ConversationItem({
   unreadCount = 0,
   onClick,
 }: ConversationItemProps) {
+  const dateLocale = useDateLocale();
+  
   return (
     <button
       onClick={onClick}
@@ -43,7 +46,7 @@ export function ConversationItem({
             {participantName}
           </span>
           <span className="text-xs text-muted-foreground shrink-0">
-            {formatDistanceToNow(updatedAt, { addSuffix: true })}
+            {formatDistanceToNow(updatedAt, { addSuffix: true, locale: dateLocale })}
           </span>
         </div>
         <p className={`text-sm truncate ${unread ? "text-foreground font-semibold" : "text-muted-foreground"}`}>

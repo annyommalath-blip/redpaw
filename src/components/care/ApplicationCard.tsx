@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import { useDateLocale } from "@/hooks/useDateLocale";
+import { useTranslation } from "react-i18next";
 
 interface ApplicationCardProps {
   id: string;
@@ -31,13 +33,6 @@ interface ApplicationCardProps {
   onReapply?: () => void;
 }
 
-const statusConfig = {
-  pending: { label: "Pending", className: "bg-warning text-warning-foreground" },
-  approved: { label: "Approved", className: "bg-primary text-primary-foreground" },
-  declined: { label: "Declined", className: "bg-muted text-muted-foreground" },
-  withdrawn: { label: "Withdrawn", className: "bg-muted text-muted-foreground" },
-};
-
 export function ApplicationCard({
   id,
   applicantName,
@@ -60,7 +55,17 @@ export function ApplicationCard({
   onWithdraw,
   onReapply,
 }: ApplicationCardProps) {
+  const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const [loading, setLoading] = useState<"approve" | "decline" | "withdraw" | "reapply" | null>(null);
+  
+  const statusConfig = {
+    pending: { label: t("care.pending"), className: "bg-warning text-warning-foreground" },
+    approved: { label: t("care.approved"), className: "bg-primary text-primary-foreground" },
+    declined: { label: t("care.declined"), className: "bg-muted text-muted-foreground" },
+    withdrawn: { label: t("care.withdrawn"), className: "bg-muted text-muted-foreground" },
+  };
+  
   const config = statusConfig[status];
 
   // Format full name
@@ -119,7 +124,7 @@ export function ApplicationCard({
                 </div>
               )}
               <span className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
+                {formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: dateLocale })}
               </span>
             </div>
           </div>

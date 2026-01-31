@@ -447,5 +447,13 @@
     "goHome": "Go Home",
     "noDetails": "No additional details recorded yet.",
     "editProfile": "Edit Profile"
+  },
+  "sitterLog": {
+    "walk": "Walk",
+    "meal": "Meal",
+    "potty": "Potty Break",
+    "play": "Play Time",
+    "note": "Note",
+    "by": "by"
   }
 }
