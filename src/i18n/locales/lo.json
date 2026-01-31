@@ -338,7 +338,19 @@
     "subtitle": "ຕິດຕາມຂ່າວສານ",
     "noNotifications": "ບໍ່ມີການແຈ້ງເຕືອນ",
     "allCaughtUp": "ທ່ານຈະໄດ້ຮັບການແຈ້ງເຕືອນກ່ຽວກັບການມອບໝາຍ, ການພົບເຫັນ, ແລະ ອື່ນໆ.",
-    "markAllRead": "ໝາຍວ່າອ່ານແລ້ວທັງໝົດ"
+    "markAllRead": "ໝາຍວ່າອ່ານແລ້ວທັງໝົດ",
+    "types": {
+      "new_application": "ການສະໝັກໃໝ່",
+      "application_withdrawn": "ຖອນການສະໝັກແລ້ວ",
+      "care_reapply": "ອັບເດດການສະໝັກແລ້ວ",
+      "assigned_job_owner": "ມອບໝາຍຜູ້ເບິ່ງແຍງແລ້ວ",
+      "assigned_job_sitter": "ໄດ້ຮັບວຽກແລ້ວ",
+      "lost_dog_nearby": "ໝາຫາຍໃກ້ຄຽງ",
+      "care_request_nearby": "ຄຳຂໍເບິ່ງແຍງໃກ້ຄຽງ",
+      "medication_expiring": "ແຈ້ງເຕືອນຢາ",
+      "sighting_reported": "ລາຍງານການພົບເຫັນ",
+      "found_dog_reply": "ຕອບກັບໃໝ່"
+    }
   },
   "medications": {
     "title": "ບັນທຶກຢາ",

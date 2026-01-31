@@ -338,7 +338,19 @@
     "subtitle": "ติดตามข่าวสาร",
     "noNotifications": "ไม่มีการแจ้งเตือน",
     "allCaughtUp": "คุณจะได้รับการแจ้งเตือนเกี่ยวกับการมอบหมาย การพบเห็น และอื่นๆ",
-    "markAllRead": "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด"
+    "markAllRead": "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด",
+    "types": {
+      "new_application": "การสมัครใหม่",
+      "application_withdrawn": "ถอนการสมัครแล้ว",
+      "care_reapply": "อัปเดตการสมัครแล้ว",
+      "assigned_job_owner": "มอบหมายผู้ดูแลแล้ว",
+      "assigned_job_sitter": "ได้รับงานแล้ว",
+      "lost_dog_nearby": "สุนัขหายใกล้เคียง",
+      "care_request_nearby": "คำขอดูแลใกล้เคียง",
+      "medication_expiring": "แจ้งเตือนยา",
+      "sighting_reported": "รายงานการพบเห็น",
+      "found_dog_reply": "ตอบกลับใหม่"
+    }
   },
   "medications": {
     "title": "บันทึกยา",
