@@ -47,7 +47,25 @@
     "dogsNeedCare": "dogs need care together",
     "unknownBreed": "Unknown breed",
     "contact": "Contact",
-    "reportSighting": "Report Sighting"
+    "reportSighting": "Report Sighting",
+    "optional": "(optional)"
+  },
+  "location": {
+    "label": "Location",
+    "useGPS": "Use GPS",
+    "pickOnMap": "Pick on map",
+    "searchAddress": "Search address...",
+    "dragOrTap": "Drag the pin or tap to adjust location",
+    "tapOrDrag": "Tap or drag pin to set location",
+    "hideMap": "Hide map",
+    "editOnMap": "Edit on map",
+    "locationSet": "Location set"
+  },
+  "quickActions": {
+    "addLog": "Add Log",
+    "lostMode": "Lost Mode",
+    "endLost": "End Lost",
+    "careRequest": "Care Request"
   },
   "nav": {
     "home": "Home",
@@ -165,7 +183,7 @@
     "noDogsDesc": "Add your furry friend to get started!",
     "lost": "Lost"
   },
-  "care": {
+"care": {
     "title": "Care Requests",
     "createRequest": "Create Care Request",
     "careType": "Care Type",
@@ -209,7 +227,13 @@
     "specialInstructions": "Any special instructions or info about your dog...",
     "whereToMeet": "Help sitters know where to meet you.",
     "whereToCome": "Where should they come?",
-    "dogsLabel": "Dogs"
+    "dogsLabel": "Dogs",
+    "date": "Date",
+    "selectDate": "Select date",
+    "timeSlot": "Time Slot",
+    "startTime": "Start time",
+    "endTime": "End time",
+    "to": "to"
   },
   "community": {
     "title": "Community",
@@ -227,7 +251,7 @@
     "reunited": "REUNITED",
     "dogReunited": "This dog has been reunited with their owner!"
   },
-  "lost": {
+"lost": {
     "title": "Lost Dog Alert",
     "reportLost": "Report Lost Dog",
     "postLostAlert": "Post Lost Alert",
@@ -245,7 +269,16 @@
     "whereLastSeen": "Where was your dog last seen?",
     "locationDesc": "Used to show others where to look for your dog.",
     "provideDetails": "Provide details to help the community find your dog",
-    "found": "FOUND"
+    "found": "FOUND",
+    "reportAsLost": "Report {{name}} as Lost",
+    "lastSeenWhen": "Last seen when?",
+    "lastSeenWhenPlaceholder": "e.g., Today around 3pm",
+    "additionalDetails": "Additional details (optional)",
+    "additionalDetailsPlaceholder": "e.g., Was wearing a red collar, responds to treats...",
+    "posting": "Posting...",
+    "postAlert": "Post Alert",
+    "alertPosted": "🚨 Lost Alert Posted",
+    "alertPostedDesc": "Your lost dog alert is now visible to the community."
   },
   "found": {
     "title": "Found Dog",

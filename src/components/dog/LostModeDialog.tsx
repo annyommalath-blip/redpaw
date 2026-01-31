@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ export function LostModeDialog({
   dog,
   onSuccess,
 }: LostModeDialogProps) {
+  const { t } = useTranslation();
   const location = useGeolocation();
   const [lastSeenWhen, setLastSeenWhen] = useState("");
   const [extraNotes, setExtraNotes] = useState("");
@@ -81,8 +83,8 @@ export function LostModeDialog({
       if (alertError) throw alertError;
 
       toast({
-        title: "🚨 Lost Alert Posted",
-        description: "Your lost dog alert is now visible to the community.",
+        title: t("lost.alertPosted"),
+        description: t("lost.alertPostedDesc"),
         variant: "destructive",
       });
 
@@ -122,10 +124,10 @@ export function LostModeDialog({
         <DialogHeader>
           <div className="flex items-center gap-2 text-lost">
             <AlertTriangle className="h-5 w-5" />
-            <DialogTitle>Report {dog.name} as Lost</DialogTitle>
+            <DialogTitle>{t("lost.reportAsLost", { name: dog.name })}</DialogTitle>
           </div>
           <DialogDescription>
-            Provide details to help the community find your dog.
+            {t("lost.provideDetails")}
           </DialogDescription>
         </DialogHeader>
 
@@ -144,19 +146,19 @@ export function LostModeDialog({
             onLocationTextChange={location.setLocationFromText}
             onSearchAddress={location.searchAddress}
             required
-            placeholder="Where was your dog last seen?"
-            description="Used to show others where to look for your dog."
+            placeholder={t("lost.whereLastSeen")}
+            description={t("lost.locationDesc")}
           />
 
           {/* Last Seen When */}
           <div className="space-y-2">
             <Label htmlFor="when" className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              Last seen when? <span className="text-destructive">*</span>
+              {t("lost.lastSeenWhen")} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="when"
-              placeholder="e.g., Today around 3pm"
+              placeholder={t("lost.lastSeenWhenPlaceholder")}
               value={lastSeenWhen}
               onChange={(e) => setLastSeenWhen(e.target.value)}
               disabled={isSubmitting}
@@ -165,10 +167,10 @@ export function LostModeDialog({
 
           {/* Extra Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Additional details (optional)</Label>
+            <Label htmlFor="notes">{t("lost.additionalDetails")}</Label>
             <Textarea
               id="notes"
-              placeholder="e.g., Was wearing a red collar, responds to treats..."
+              placeholder={t("lost.additionalDetailsPlaceholder")}
               value={extraNotes}
               onChange={(e) => setExtraNotes(e.target.value)}
               disabled={isSubmitting}
@@ -184,7 +186,7 @@ export function LostModeDialog({
             onClick={handleClose}
             disabled={isSubmitting}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handlePost}
@@ -194,10 +196,10 @@ export function LostModeDialog({
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Posting...
+                {t("lost.posting")}
               </>
             ) : (
-              "Post Alert"
+              t("lost.postAlert")
             )}
           </Button>
         </div>

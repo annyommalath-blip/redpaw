@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, forwardRef } from "react";
 import { MapPin, Navigation, Search, X, Loader2, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +55,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
   placeholder = "Enter location or use GPS",
   description,
 }, ref) {
+  const { t } = useTranslation();
   const [showMap, setShowMap] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -138,7 +140,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
       <div className="flex items-center justify-between">
         <Label className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-muted-foreground" />
-          Location {required && <span className="text-destructive">*</span>}
+          {t("location.label")} {required && <span className="text-destructive">*</span>}
         </Label>
         <Button
           type="button"
@@ -153,7 +155,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
           ) : (
             <Navigation className="h-4 w-4 mr-1" />
           )}
-          Use GPS
+          {t("location.useGPS")}
         </Button>
       </div>
 
@@ -210,7 +212,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium truncate max-w-[200px]">
-                  {locationLabel || "Location set"}
+                  {locationLabel || t("location.locationSet")}
                 </span>
                 {locationSource === "gps" && (
                   <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
@@ -225,7 +227,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
                 className="h-7 text-xs"
                 onClick={() => setShowMap(!showMap)}
               >
-                {showMap ? "Hide map" : "Edit on map"}
+                {showMap ? t("location.hideMap") : t("location.editOnMap")}
               </Button>
             </div>
 
@@ -242,7 +244,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
                     <Input
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search address..."
+                      placeholder={t("location.searchAddress")}
                       className="h-8 text-sm"
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     />
@@ -253,11 +255,11 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
                       onClick={handleSearch}
                       disabled={searching}
                     >
-                      {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 text-center">
-                    Drag the pin or tap to adjust location
+                    {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 text-center">
+                  {t("location.dragOrTap")}
                   </p>
                 </div>
               </div>
@@ -276,7 +278,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
           onClick={() => setShowMap(true)}
         >
           <MapPin className="h-4 w-4 mr-2" />
-          Pick on map
+          {t("location.pickOnMap")}
         </Button>
       )}
 
@@ -285,7 +287,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             <div className="p-2 bg-muted/50 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Tap or drag pin to set location</span>
+              <span className="text-sm text-muted-foreground">{t("location.tapOrDrag")}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -307,7 +309,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search address..."
+                    placeholder={t("location.searchAddress")}
                     className="h-8 text-sm"
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   />
