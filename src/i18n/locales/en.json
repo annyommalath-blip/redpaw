@@ -45,7 +45,9 @@
     "sending": "Sending...",
     "away": "away",
     "dogsNeedCare": "dogs need care together",
-    "unknownBreed": "Unknown breed"
+    "unknownBreed": "Unknown breed",
+    "contact": "Contact",
+    "reportSighting": "Report Sighting"
   },
   "nav": {
     "home": "Home",
@@ -160,7 +162,8 @@
     "addYourDog": "Add Your Dog",
     "needToAddDog": "You need to add a dog first!",
     "noDogs": "No dogs yet",
-    "noDogsDesc": "Add your furry friend to get started!"
+    "noDogsDesc": "Add your furry friend to get started!",
+    "lost": "Lost"
   },
   "care": {
     "title": "Care Requests",
@@ -205,7 +208,8 @@
     "postRequest": "Post Request",
     "specialInstructions": "Any special instructions or info about your dog...",
     "whereToMeet": "Help sitters know where to meet you.",
-    "whereToCome": "Where should they come?"
+    "whereToCome": "Where should they come?",
+    "dogsLabel": "Dogs"
   },
   "community": {
     "title": "Community",
@@ -240,7 +244,8 @@
     "descriptionPlaceholder": "Describe your dog: color, size, collar, distinguishing features...",
     "whereLastSeen": "Where was your dog last seen?",
     "locationDesc": "Used to show others where to look for your dog.",
-    "provideDetails": "Provide details to help the community find your dog"
+    "provideDetails": "Provide details to help the community find your dog",
+    "found": "FOUND"
   },
   "found": {
     "title": "Found Dog",
@@ -259,7 +264,8 @@
     "setFoundLocation": "Please set the found location",
     "setWhenFound": "Please set when you found the dog",
     "foundToday": "Found today",
-    "foundYesterday": "Found yesterday"
+    "foundYesterday": "Found yesterday",
+    "foundOn": "Found"
   },
   "messages": {
     "title": "Messages",
@@ -313,7 +319,7 @@
     "selectLogTypeAndDog": "Please select a log type and dog",
     "walk": "Walk",
     "food": "Food",
-    "meds": "Meds",
+    "meds": "Medication",
     "mood": "Mood",
     "symptom": "Symptom",
     "valueDetails": "Value / Details",

@@ -6,6 +6,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { LocationLink } from "@/components/location/LocationLink";
 import { getDistanceLabel } from "@/lib/distanceUtils";
+import { useTranslation } from "react-i18next";
 
 interface FoundDogCardProps {
   id: string;
@@ -36,6 +37,7 @@ export function FoundDogCard({
   createdAt,
   onContact,
 }: FoundDogCardProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const isActive = status === "active";
   const isReunited = status === "reunited";
@@ -90,7 +92,7 @@ export function FoundDogCard({
         <div className={`px-4 py-2 ${isReunited ? "bg-success" : isActive ? "bg-success" : "bg-muted"}`}>
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-success-foreground">
-              {isReunited ? "✅ REUNITED" : "🐕 FOUND DOG"}
+              {isReunited ? `✅ ${t("community.reunited")}` : `🐕 ${t("community.foundDog")}`}
             </span>
             <Badge variant="outline" className="bg-background/20 text-success-foreground border-background/30">
               {formatDistanceToNow(createdAt, { addSuffix: true })}
@@ -111,7 +113,7 @@ export function FoundDogCard({
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-bold text-foreground">Found Dog</h3>
+              <h3 className="text-lg font-bold text-foreground">{t("community.foundDog")}</h3>
               
               {/* Found Time */}
               <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
@@ -134,26 +136,20 @@ export function FoundDogCard({
               className="text-muted-foreground hover:text-primary"
             />
             {distanceLabel && (
-              <span className="text-xs text-muted-foreground shrink-0">
-                • {distanceLabel} away
-              </span>
+              <span className="text-xs text-muted-foreground shrink-0">• {distanceLabel} {t("common.away")}</span>
             )}
           </div>
+          </div>
 
-          {/* Actions */}
           {isActive && (
             <div className="flex gap-2 mt-4">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={handleReplyClick}
-              >
+              <Button variant="outline" className="flex-1" onClick={handleReplyClick}>
                 <MessageCircle className="h-4 w-4 mr-2" />
-                Reply
+                {t("common.reply")}
               </Button>
               <Button className="flex-1 bg-primary" onClick={handleContact}>
                 <MessageCircle className="h-4 w-4 mr-2" />
-                Message
+                {t("common.message")}
               </Button>
             </div>
           )}
@@ -161,7 +157,7 @@ export function FoundDogCard({
           {isReunited && (
             <div className="mt-4 flex items-center justify-center gap-2 text-sm text-success">
               <CheckCircle className="h-4 w-4" />
-              <span>This dog has been reunited with their owner!</span>
+              <span>{t("community.dogReunited")}</span>
             </div>
           )}
         </div>

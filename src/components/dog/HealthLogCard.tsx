@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 type LogType = "walk" | "food" | "meds" | "mood" | "symptom";
 
@@ -29,7 +30,19 @@ const logTypeConfig: Record<LogType, { icon: string; label: string; color: strin
 };
 
 export function HealthLogCard({ id, type, value, notes, createdAt, onDelete }: HealthLogCardProps) {
+  const { t } = useTranslation();
   const config = logTypeConfig[type];
+  
+  const getLogLabel = (logType: LogType) => {
+    const labels: Record<LogType, string> = {
+      walk: t("healthLog.walk"),
+      food: t("healthLog.food"),
+      meds: t("healthLog.meds"),
+      mood: t("healthLog.mood"),
+      symptom: t("healthLog.symptom"),
+    };
+    return labels[logType];
+  };
 
   return (
     <Card className="border-border/50">
@@ -40,7 +53,7 @@ export function HealthLogCard({ id, type, value, notes, createdAt, onDelete }: H
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-medium text-foreground">{config.label}</span>
+              <span className="font-medium text-foreground">{getLogLabel(type)}</span>
               <span className="text-xs text-muted-foreground shrink-0">
                 {formatDistanceToNow(createdAt, { addSuffix: true })}
               </span>
@@ -66,7 +79,7 @@ export function HealthLogCard({ id, type, value, notes, createdAt, onDelete }: H
                   className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                  {t("common.delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
