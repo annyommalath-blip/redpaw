@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
@@ -9,6 +10,7 @@ import { useNotifications, Notification } from "@/hooks/useNotifications";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
   const hasAutoMarkedRef = useRef(false);
 
@@ -57,8 +59,8 @@ export default function NotificationsPage() {
   return (
     <MobileLayout>
       <PageHeader 
-        title="Notifications" 
-        subtitle="Stay updated"
+        title={t("notifications.title")} 
+        subtitle={t("notifications.subtitle")}
       />
 
       {loading ? (
@@ -83,8 +85,8 @@ export default function NotificationsPage() {
       ) : (
         <EmptyState
           icon={<Bell className="h-10 w-10 text-muted-foreground" />}
-          title="No notifications yet"
-          description="You'll be notified about care assignments, sightings, and more."
+          title={t("notifications.noNotifications")}
+          description={t("notifications.allCaughtUp")}
         />
       )}
     </MobileLayout>

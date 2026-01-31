@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -83,6 +84,7 @@ const isRequestArchived = (request: MyCareRequest): boolean => {
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<OwnerProfile | null>(null);
   const [dogs, setDogs] = useState<UserDog[]>([]);
   const [myCareRequests, setMyCareRequests] = useState<MyCareRequest[]>([]);
@@ -202,13 +204,13 @@ export default function ProfilePage() {
       
       setIsEditing(false);
       toast({
-        title: "Profile updated",
-        description: "Your profile has been saved! 🐾",
+        title: t("profile.profileUpdated"),
+        description: t("profile.profileSaved"),
       });
     } catch (error) {
       console.error("Error saving profile:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description: "Failed to save profile. Please try again.",
         variant: "destructive",
       });
@@ -230,8 +232,8 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     await signOut();
     toast({
-      title: "Signed out",
-      description: "See you soon! 🐾",
+      title: t("auth.signOut"),
+      description: t("auth.seeYouSoon"),
     });
     navigate("/auth");
   };
@@ -253,29 +255,29 @@ export default function ProfilePage() {
       );
 
       toast({
-        title: "📦 Archived",
-        description: "Care request moved to archive.",
+        title: t("profile.archived"),
+        description: t("profile.careRequestArchived"),
       });
     } catch (error) {
       console.error("Error archiving request:", error);
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t("common.error"),
         description: "Failed to archive request.",
       });
     }
   };
 
   const careTypeLabels: Record<string, string> = {
-    walk: "🚶 Walk",
-    watch: "👀 Watch",
-    overnight: "🌙 Overnight",
-    "check-in": "👋 Check-in",
+    walk: `🚶 ${t("care.walk")}`,
+    watch: `👀 ${t("care.watch")}`,
+    overnight: `🌙 ${t("care.overnight")}`,
+    "check-in": `👋 ${t("care.checkIn")}`,
   };
 
   return (
     <MobileLayout>
-      <PageHeader title="Profile" subtitle="Manage your account" />
+      <PageHeader title={t("profile.title")} subtitle={t("profile.subtitle")} />
 
       {loading ? (
         <div className="p-4 flex items-center justify-center h-64">
@@ -327,25 +329,25 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label htmlFor="first_name" className="text-xs text-muted-foreground">
-                        First Name
+                        {t("profile.firstName")}
                       </Label>
                       <Input
                         id="first_name"
                         value={editForm.first_name}
                         onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
-                        placeholder="First name"
+                        placeholder={t("profile.firstName")}
                         className="h-9"
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="last_name" className="text-xs text-muted-foreground">
-                        Last Name
+                        {t("profile.lastName")}
                       </Label>
                       <Input
                         id="last_name"
                         value={editForm.last_name}
                         onChange={(e) => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
-                        placeholder="Last name"
+                        placeholder={t("profile.lastName")}
                         className="h-9"
                       />
                     </div>
@@ -355,7 +357,7 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label htmlFor="city" className="text-xs text-muted-foreground">
-                        City
+                        {t("profile.city")}
                       </Label>
                       <Input
                         id="city"
@@ -367,7 +369,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="postal_code" className="text-xs text-muted-foreground">
-                        Postal Code
+                        {t("profile.postalCode")}
                       </Label>
                       <Input
                         id="postal_code"
@@ -390,12 +392,12 @@ export default function ProfilePage() {
                       {saving ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Saving...
+                          {t("profile.saving")}
                         </>
                       ) : (
                         <>
                           <Save className="h-4 w-4 mr-2" />
-                          Save Profile
+                          {t("profile.saveProfile")}
                         </>
                       )}
                     </Button>
@@ -412,7 +414,7 @@ export default function ProfilePage() {
                         });
                       }}
                     >
-                      Cancel
+                      {t("common.cancel")}
                     </Button>
                   </div>
                 </div>
@@ -423,7 +425,7 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <span className="text-muted-foreground">Name: </span>
+                        <span className="text-muted-foreground">{t("profile.name")}: </span>
                         <span className="font-medium text-foreground">{formatName()}</span>
                       </span>
                     </div>
@@ -434,7 +436,7 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <span className="text-muted-foreground">Location: </span>
+                        <span className="text-muted-foreground">{t("profile.location")}: </span>
                         <span className="font-medium text-foreground">{formatLocation()}</span>
                       </span>
                     </div>
@@ -446,7 +448,7 @@ export default function ProfilePage() {
                     <div className="flex items-start gap-2">
                       <Dog className="h-4 w-4 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
-                        <span className="text-sm text-muted-foreground">Owner of: </span>
+                        <span className="text-sm text-muted-foreground">{t("profile.ownerOf")}: </span>
                         <div className="flex flex-wrap gap-1.5 mt-1">
                           {dogs.map((dog) => (
                             <span
@@ -464,7 +466,7 @@ export default function ProfilePage() {
                   {/* Show hint if no details filled */}
                   {!formatName() && !formatLocation() && (
                     <p className="text-sm text-muted-foreground italic">
-                      Tap the edit icon to add your profile details.
+                      {t("profile.editHint")}
                     </p>
                   )}
                 </div>
@@ -476,21 +478,21 @@ export default function ProfilePage() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                My Dogs
+                {t("profile.myDogs")}
               </h2>
               <Button variant="ghost" size="sm" onClick={() => navigate("/profile/add-dog")}>
                 <Plus className="h-4 w-4 mr-1" />
-                Add Dog
+                {t("profile.addDog")}
               </Button>
             </div>
             
             {dogs.length === 0 ? (
               <EmptyState
                 icon={<Dog className="h-10 w-10 text-muted-foreground" />}
-                title="No dogs yet"
-                description="Add your furry friend to get started!"
+                title={t("dogs.noDogs")}
+                description={t("dogs.noDogsDesc")}
                 action={{
-                  label: "Add My Dog",
+                  label: t("home.addMyDog"),
                   onClick: () => navigate("/profile/add-dog"),
                 }}
               />
@@ -509,7 +511,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-foreground">{dog.name}</h3>
-                          <p className="text-sm text-muted-foreground">{dog.breed || "Mixed breed"}</p>
+                          <p className="text-sm text-muted-foreground">{dog.breed || t("common.mixedBreed")}</p>
                           {(dog.age || dog.weight) && (
                             <p className="text-xs text-muted-foreground">
                               {dog.age}{dog.age && dog.weight && " • "}{dog.weight}
@@ -531,7 +533,7 @@ export default function ProfilePage() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                My Care Requests
+                {t("profile.myCareRequests")}
               </h2>
             </div>
 
@@ -541,7 +543,7 @@ export default function ProfilePage() {
               return activeRequests.length === 0 ? (
                 <Card>
                   <CardContent className="p-4 text-center text-muted-foreground">
-                    <p>No active care requests</p>
+                    <p>{t("profile.noCareRequests")}</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -568,18 +570,18 @@ export default function ProfilePage() {
                               </p>
                               <p className="text-xs text-muted-foreground truncate">
                                 {request.time_window}
-                                {!isOwner && isAssignedSitter && " • You're the sitter"}
+                                {!isOwner && isAssignedSitter && ` • ${t("profile.youreTheSitter")}`}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <Badge className={request.assigned_sitter_id ? "bg-primary" : "bg-warning"}>
-                              {request.assigned_sitter_id ? "Assigned" : "Open"}
+                              {request.assigned_sitter_id ? t("common.assigned") : t("common.open")}
                             </Badge>
                             <button
                               onClick={(e) => handleArchiveRequest(request.id, e)}
                               className="p-1.5 rounded-md hover:bg-muted transition-colors"
-                              title="Archive this request"
+                              title={t("profile.archive")}
                             >
                               <ArchiveX className="h-4 w-4 text-muted-foreground" />
                             </button>
@@ -596,7 +598,7 @@ export default function ProfilePage() {
           {/* Settings */}
           <section>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-              Settings
+              {t("profile.settings")}
             </h2>
             <Card>
               <CardContent className="p-0">
@@ -605,7 +607,7 @@ export default function ProfilePage() {
                   onClick={() => navigate("/settings")}
                 >
                   <Settings className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-foreground">App Settings</span>
+                  <span className="text-foreground">{t("profile.appSettings")}</span>
                 </button>
                 <Separator />
                 <button 
@@ -614,7 +616,7 @@ export default function ProfilePage() {
                 >
                   <div className="flex items-center gap-3">
                     <Archive className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-foreground">Archive</span>
+                    <span className="text-foreground">{t("profile.archive")}</span>
                   </div>
                   <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${showArchive ? 'rotate-90' : ''}`} />
                 </button>
@@ -625,13 +627,13 @@ export default function ProfilePage() {
                     {/* Archived Care Requests */}
                     <div>
                       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                        Archived Care Requests
+                        {t("profile.archivedCareRequests")}
                       </h3>
                       {(() => {
                         const archivedRequests = myCareRequests.filter(r => isRequestArchived(r));
                         
                         return archivedRequests.length === 0 ? (
-                          <p className="text-sm text-muted-foreground italic">No archived care requests</p>
+                          <p className="text-sm text-muted-foreground italic">{t("profile.noArchivedCareRequests")}</p>
                         ) : (
                           <div className="space-y-2">
                             {archivedRequests.map((request) => {
@@ -656,11 +658,11 @@ export default function ProfilePage() {
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                           {request.time_window}
-                                          {!isOwner && isAssignedSitter && " • You were the sitter"}
+                                          {!isOwner && isAssignedSitter && ` • ${t("profile.youWereTheSitter")}`}
                                         </p>
                                       </div>
                                     </div>
-                                    <Badge variant="secondary">Completed</Badge>
+                                    <Badge variant="secondary">{t("common.completed")}</Badge>
                                   </CardContent>
                                 </Card>
                               );
@@ -673,10 +675,10 @@ export default function ProfilePage() {
                     {/* Archived Lost Dog Alerts */}
                     <div>
                       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                        Resolved Lost Alerts
+                        {t("profile.resolvedLostAlerts")}
                       </h3>
                       {archivedLostAlerts.length === 0 ? (
-                        <p className="text-sm text-muted-foreground italic">No resolved lost alerts</p>
+                        <p className="text-sm text-muted-foreground italic">{t("profile.noResolvedAlerts")}</p>
                       ) : (
                         <div className="space-y-2">
                           {archivedLostAlerts.map((alert) => (
@@ -690,17 +692,17 @@ export default function ProfilePage() {
                                   <AlertTriangle className="h-5 w-5 text-success shrink-0" />
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-foreground truncate">
-                                      {alert.dogs?.name || "Unknown"} - Found! ✅
+                                      {alert.dogs?.name || "Unknown"} - {t("profile.found")}! ✅
                                     </p>
                                     <div className="text-xs text-muted-foreground space-y-0.5">
-                                      <p>Lost: {format(new Date(alert.created_at), "MMM d, yyyy")}</p>
+                                      <p>{t("profile.lost")}: {format(new Date(alert.created_at), "MMM d, yyyy")}</p>
                                       {alert.resolved_at && (
-                                        <p>Found: {format(new Date(alert.resolved_at), "MMM d, yyyy")}</p>
+                                        <p>{t("profile.found")}: {format(new Date(alert.resolved_at), "MMM d, yyyy")}</p>
                                       )}
                                     </div>
                                   </div>
                                   <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
-                                    Resolved
+                                    {t("common.resolved")}
                                   </Badge>
                                 </div>
                               </CardContent>
@@ -718,7 +720,7 @@ export default function ProfilePage() {
                   onClick={handleSignOut}
                 >
                   <LogOut className="h-5 w-5" />
-                  <span>Sign Out</span>
+                  <span>{t("auth.signOut")}</span>
                 </button>
               </CardContent>
             </Card>
@@ -727,7 +729,7 @@ export default function ProfilePage() {
           {/* App Info */}
           <div className="text-center text-sm text-muted-foreground pt-4">
             <p>RedPaw v1.0.0 🐾</p>
-            <p className="mt-1">Made with ❤️ for dog lovers</p>
+            <p className="mt-1">{t("profile.madeWithLove")}</p>
           </div>
         </div>
       )}
