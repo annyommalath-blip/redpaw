@@ -135,10 +135,9 @@ export function FoundDogCard({
               locationLabel={locationLabel}
               className="text-muted-foreground hover:text-primary"
             />
-            {distanceLabel && (
+          {distanceLabel && (
               <span className="text-xs text-muted-foreground shrink-0">• {distanceLabel} {t("common.away")}</span>
             )}
-          </div>
           </div>
 
           {isActive && (
