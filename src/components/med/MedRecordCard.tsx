@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MedRecordWithStatus } from "@/lib/medRecordUtils";
+import { MedRecordWithStatus, getCountdownText } from "@/lib/medRecordUtils";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
@@ -74,7 +74,7 @@ export function MedRecordCard({ record, onEdit, onDelete }: MedRecordCardProps) 
                 record.status === "expired" && "text-destructive",
                 record.status === "expiring-soon" && "text-warning"
               )}>
-                {record.countdown}
+                {getCountdownText(new Date(record.expires_on), t)}
               </p>
             </div>
           </div>
