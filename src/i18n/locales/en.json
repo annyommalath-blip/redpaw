@@ -338,7 +338,19 @@
     "subtitle": "Stay updated",
     "noNotifications": "No notifications yet",
     "allCaughtUp": "You'll be notified about care assignments, sightings, and more.",
-    "markAllRead": "Mark all read"
+    "markAllRead": "Mark all read",
+    "types": {
+      "new_application": "New Application",
+      "application_withdrawn": "Application Withdrawn",
+      "care_reapply": "Application Updated",
+      "assigned_job_owner": "Sitter Assigned",
+      "assigned_job_sitter": "Job Assigned",
+      "lost_dog_nearby": "Lost Dog Nearby",
+      "care_request_nearby": "Care Request Nearby",
+      "medication_expiring": "Medication Alert",
+      "sighting_reported": "Sighting Reported",
+      "found_dog_reply": "New Reply"
+    }
   },
   "medications": {
     "title": "Medication Records",

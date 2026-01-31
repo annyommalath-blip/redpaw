@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { 
   Bell, 
   AlertTriangle, 
@@ -11,6 +12,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDateLocale } from "@/hooks/useDateLocale";
 
 interface NotificationItemProps {
   id: string;
@@ -56,8 +58,13 @@ export function NotificationItem({
   createdAt,
   onClick,
 }: NotificationItemProps) {
+  const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const Icon = typeIcons[type] || Bell;
   const colorClass = typeColors[type] || "text-muted-foreground bg-muted";
+
+  // Use translated title based on notification type, fallback to original title
+  const translatedTitle = t(`notifications.types.${type}`, { defaultValue: title });
 
   return (
     <button
@@ -79,10 +86,10 @@ export function NotificationItem({
             "text-sm text-foreground line-clamp-1",
             !isRead && "font-semibold"
           )}>
-            {title}
+            {translatedTitle}
           </span>
           <span className="text-xs text-muted-foreground shrink-0">
-            {formatDistanceToNow(createdAt, { addSuffix: true })}
+            {formatDistanceToNow(createdAt, { addSuffix: true, locale: dateLocale })}
           </span>
         </div>
         <p className={cn(

@@ -338,7 +338,19 @@
     "subtitle": "保持更新",
     "noNotifications": "没有通知",
     "allCaughtUp": "您将收到关于分配、目击等的通知。",
-    "markAllRead": "全部标记为已读"
+    "markAllRead": "全部标记为已读",
+    "types": {
+      "new_application": "新申请",
+      "application_withdrawn": "申请已撤回",
+      "care_reapply": "申请已更新",
+      "assigned_job_owner": "已分配看护人",
+      "assigned_job_sitter": "工作已分配",
+      "lost_dog_nearby": "附近有走失的狗",
+      "care_request_nearby": "附近的照看请求",
+      "medication_expiring": "药物提醒",
+      "sighting_reported": "目击已报告",
+      "found_dog_reply": "新回复"
+    }
   },
   "medications": {
     "title": "药物记录",
