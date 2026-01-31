@@ -9,6 +9,7 @@ import {
 import { MoreVertical, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslation } from "react-i18next";
+import { useDateLocale } from "@/hooks/useDateLocale";
 
 type LogType = "walk" | "food" | "meds" | "mood" | "symptom";
 
@@ -31,6 +32,7 @@ const logTypeConfig: Record<LogType, { icon: string; label: string; color: strin
 
 export function HealthLogCard({ id, type, value, notes, createdAt, onDelete }: HealthLogCardProps) {
   const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const config = logTypeConfig[type];
   
   const getLogLabel = (logType: LogType) => {
@@ -55,7 +57,7 @@ export function HealthLogCard({ id, type, value, notes, createdAt, onDelete }: H
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium text-foreground">{getLogLabel(type)}</span>
               <span className="text-xs text-muted-foreground shrink-0">
-                {formatDistanceToNow(createdAt, { addSuffix: true })}
+                {formatDistanceToNow(createdAt, { addSuffix: true, locale: dateLocale })}
               </span>
             </div>
             {value && (

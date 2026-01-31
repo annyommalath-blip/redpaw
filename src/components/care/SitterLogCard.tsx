@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { getSignedUrls } from "@/hooks/useSignedUrl";
+import { useDateLocale } from "@/hooks/useDateLocale";
+import { useTranslation } from "react-i18next";
 
 type LogType = "walk" | "meal" | "potty" | "play" | "note";
 
@@ -30,9 +32,22 @@ export function SitterLogCard({
   createdAt,
   sitterName,
 }: SitterLogCardProps) {
+  const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const config = logTypeConfig[logType];
   const [signedUrls, setSignedUrls] = useState<(string | null)[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  const getLogLabel = (type: LogType) => {
+    const labels: Record<LogType, string> = {
+      walk: t("sitterLog.walk"),
+      meal: t("sitterLog.meal"),
+      potty: t("sitterLog.potty"),
+      play: t("sitterLog.play"),
+      note: t("sitterLog.note"),
+    };
+    return labels[type];
+  };
 
   useEffect(() => {
     if (mediaUrls.length === 0) {
@@ -70,14 +85,14 @@ export function SitterLogCard({
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
           <Badge className={config.color}>
-            {config.icon} {config.label}
+            {config.icon} {getLogLabel(logType)}
           </Badge>
           <div className="text-right">
             <span className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
+              {formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: dateLocale })}
             </span>
             {sitterName && (
-              <p className="text-xs text-muted-foreground">by {sitterName}</p>
+              <p className="text-xs text-muted-foreground">{t("sitterLog.by")} {sitterName}</p>
             )}
           </div>
         </div>

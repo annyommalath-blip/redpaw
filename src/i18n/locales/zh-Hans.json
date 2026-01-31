@@ -447,5 +447,13 @@
     "goHome": "返回首页",
     "noDetails": "尚未记录其他详细信息。",
     "editProfile": "编辑资料"
+  },
+  "sitterLog": {
+    "walk": "遛狗",
+    "meal": "喂食",
+    "potty": "如厕",
+    "play": "玩耍时间",
+    "note": "备注",
+    "by": "由"
   }
 }
