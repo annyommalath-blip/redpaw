@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Send, ArrowLeft, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatBubble } from "@/components/messages/ChatBubble";
@@ -27,9 +28,10 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [otherParticipantName, setOtherParticipantName] = useState("Loading...");
+  const [otherParticipantName, setOtherParticipantName] = useState(t("common.loading"));
   const [contextLabel, setContextLabel] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -112,7 +114,7 @@ export default function ChatPage() {
 
       if (error) throw error;
       if (!convo) {
-        toast({ variant: "destructive", title: "Conversation not found" });
+        toast({ variant: "destructive", title: t("messages.conversationNotFound") });
         navigate("/messages");
         return;
       }
@@ -129,7 +131,7 @@ export default function ChatPage() {
           .maybeSingle();
 
         const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
-        setOtherParticipantName(fullName || profile?.display_name || "User");
+        setOtherParticipantName(fullName || profile?.display_name || t("messages.user"));
       }
 
       // Fetch context label if care request
@@ -202,7 +204,7 @@ export default function ChatPage() {
       if (convoError) throw convoError;
     } catch (error: any) {
       console.error("Error sending message:", error);
-      toast({ variant: "destructive", title: "Failed to send", description: error.message });
+      toast({ variant: "destructive", title: t("messages.failedToSend"), description: error.message });
       setNewMessage(messageText); // Restore message on error
     } finally {
       setSending(false);
@@ -241,7 +243,7 @@ export default function ChatPage() {
           </div>
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-            No messages yet. Send the first message!
+            {t("messages.sendFirstMessage")}
           </div>
         ) : (
           messages.map((message) => (
@@ -260,7 +262,7 @@ export default function ChatPage() {
       <div className="border-t border-border bg-card p-4 safe-area-bottom">
         <div className="flex gap-2">
           <Input
-            placeholder="Type a message..."
+            placeholder={t("messages.typeMessage")}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Dog, Edit, Calendar, Scale, FileText, Camera, Loader2, ArrowLeft, Cpu } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export default function DogDetailPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [dog, setDog] = useState<DogData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +55,7 @@ export default function DogDetailPage() {
 
       if (error) throw error;
       if (!data) {
-        toast({ variant: "destructive", title: "Dog not found" });
+        toast({ variant: "destructive", title: t("dogDetail.dogNotFound") });
         navigate("/");
         return;
       }
@@ -81,8 +83,8 @@ export default function DogDetailPage() {
     return (
       <MobileLayout>
         <div className="p-4 text-center">
-          <p className="text-muted-foreground">Dog not found</p>
-          <Button variant="ghost" onClick={() => navigate("/")}>Go Home</Button>
+          <p className="text-muted-foreground">{t("dogDetail.dogNotFound")}</p>
+          <Button variant="ghost" onClick={() => navigate("/")}>{t("dogDetail.goHome")}</Button>
         </div>
       </MobileLayout>
     );
@@ -120,7 +122,7 @@ export default function DogDetailPage() {
             </Avatar>
             {dog.is_lost && (
               <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-destructive text-destructive-foreground">
-                🚨 Lost
+                🚨 {t("dogs.lost")}
               </Badge>
             )}
           </div>
@@ -139,7 +141,7 @@ export default function DogDetailPage() {
                   <Calendar className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Age</p>
+                  <p className="text-sm text-muted-foreground">{t("dogs.age")}</p>
                   <p className="font-medium text-foreground">{dog.age}</p>
                 </div>
               </div>
@@ -151,7 +153,7 @@ export default function DogDetailPage() {
                   <Calendar className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Birthday</p>
+                  <p className="text-sm text-muted-foreground">{t("dogs.birthday")}</p>
                   <p className="font-medium text-foreground">
                     {new Date(dog.date_of_birth).toLocaleDateString("en-US", {
                       month: "long",
@@ -169,7 +171,7 @@ export default function DogDetailPage() {
                   <Scale className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Weight</p>
+                  <p className="text-sm text-muted-foreground">{t("dogs.weight")}</p>
                   <p className="font-medium text-foreground">
                     {dog.weight} {dog.weight_unit || "lbs"}
                   </p>
@@ -184,7 +186,7 @@ export default function DogDetailPage() {
                   <Cpu className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Microchip No.</p>
+                  <p className="text-sm text-muted-foreground">{t("dogs.microchip")}</p>
                   <p className="font-medium text-foreground font-mono">{dog.microchip_no}</p>
                 </div>
               </div>
@@ -196,7 +198,7 @@ export default function DogDetailPage() {
                   <FileText className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Notes</p>
+                  <p className="text-sm text-muted-foreground">{t("dogs.notes")}</p>
                   <p className="font-medium text-foreground">{dog.notes}</p>
                 </div>
               </div>
@@ -204,7 +206,7 @@ export default function DogDetailPage() {
 
             {!dog.age && !dog.weight && !dog.notes && !dog.date_of_birth && !dog.microchip_no && (
               <p className="text-center text-muted-foreground py-4">
-                No additional details recorded yet.
+                {t("dogDetail.noDetails")}
               </p>
             )}
           </CardContent>
@@ -216,7 +218,7 @@ export default function DogDetailPage() {
             <div className="flex items-center gap-2 mb-3">
               <Camera className="h-4 w-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Photos ({allPhotos.length})
+                {t("dogs.photos")} ({allPhotos.length})
               </h3>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -242,7 +244,7 @@ export default function DogDetailPage() {
           onClick={() => navigate(`/profile/edit-dog/${dog.id}`)}
         >
           <Edit className="h-4 w-4 mr-2" />
-          Edit Profile
+          {t("dogDetail.editProfile")}
         </Button>
       </div>
     </MobileLayout>

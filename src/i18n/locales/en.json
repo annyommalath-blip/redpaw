@@ -267,7 +267,7 @@
     "foundYesterday": "Found yesterday",
     "foundOn": "Found"
   },
-  "messages": {
+"messages": {
     "title": "Messages",
     "subtitle": "Your conversations",
     "noConversations": "No other messages yet",
@@ -276,7 +276,16 @@
     "send": "Send",
     "aiAssistant": "RedPaw AI",
     "askMeAnything": "Ask me anything about dogs! 🐕",
-    "noMessagesYet": "No messages yet"
+    "noMessagesYet": "No messages yet",
+    "sendFirstMessage": "No messages yet. Send the first message!",
+    "conversationNotFound": "Conversation not found",
+    "failedToSend": "Failed to send",
+    "aiPersonalAssistant": "Personal assistant with access to your data",
+    "aiGeneralHelp": "AI-powered help for dog owners",
+    "signInForPersonalized": "Sign in to get personalized answers about your dogs",
+    "askAboutYourDogs": "Ask about your dogs, meds, care requests...",
+    "askAnythingAboutDogs": "Ask me anything about dogs...",
+    "user": "User"
   },
   "notifications": {
     "title": "Notifications",
@@ -379,5 +388,11 @@
     "writeMessage": "Please write a message to the owner",
     "messageTooLong": "Message must be less than 500 characters",
     "alreadyApplied": "You've already applied to this request"
+  },
+  "dogDetail": {
+    "dogNotFound": "Dog not found",
+    "goHome": "Go Home",
+    "noDetails": "No additional details recorded yet.",
+    "editProfile": "Edit Profile"
   }
 }

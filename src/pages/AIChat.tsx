@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Send, ArrowLeft, Loader2, Bot, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +22,7 @@ export default function AIChatPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
   
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -215,7 +217,7 @@ export default function AIChatPage() {
               <Sparkles className="h-4 w-4 text-primary" />
             </h1>
             <p className="text-xs text-muted-foreground">
-              {user ? "Personal assistant with access to your data" : "AI-powered help for dog owners"}
+              {user ? t("messages.aiPersonalAssistant") : t("messages.aiGeneralHelp")}
             </p>
           </div>
         </div>
@@ -225,7 +227,7 @@ export default function AIChatPage() {
       {!user && (
         <div className="bg-muted/50 border-b border-border px-4 py-2">
           <p className="text-xs text-muted-foreground text-center">
-            <Link to="/auth" className="text-primary underline">Sign in</Link> to get personalized answers about your dogs
+            <Link to="/auth" className="text-primary underline">{t("auth.signIn")}</Link> {t("messages.signInForPersonalized")}
           </p>
         </div>
       )}
@@ -282,7 +284,7 @@ export default function AIChatPage() {
       <div className="border-t border-border bg-card p-4 safe-area-bottom">
         <div className="flex gap-2">
           <Input
-            placeholder={user ? "Ask about your dogs, meds, care requests..." : "Ask me anything about dogs..."}
+            placeholder={user ? t("messages.askAboutYourDogs") : t("messages.askAnythingAboutDogs")}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}

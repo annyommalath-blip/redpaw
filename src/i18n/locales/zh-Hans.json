@@ -267,7 +267,7 @@
     "foundYesterday": "昨天发现",
     "foundOn": "发现"
   },
-  "messages": {
+"messages": {
     "title": "消息",
     "subtitle": "您的对话",
     "noConversations": "还没有其他消息",
@@ -276,7 +276,16 @@
     "send": "发送",
     "aiAssistant": "RedPaw AI",
     "askMeAnything": "问我任何关于狗狗的问题！🐕",
-    "noMessagesYet": "还没有消息"
+    "noMessagesYet": "还没有消息",
+    "sendFirstMessage": "还没有消息。发送第一条消息吧！",
+    "conversationNotFound": "未找到对话",
+    "failedToSend": "发送失败",
+    "aiPersonalAssistant": "可访问您数据的个人助手",
+    "aiGeneralHelp": "为狗主人提供的AI帮助",
+    "signInForPersonalized": "登录以获取关于您狗狗的个性化回答",
+    "askAboutYourDogs": "询问关于您的狗狗、药物、照顾请求...",
+    "askAnythingAboutDogs": "问我任何关于狗狗的问题...",
+    "user": "用户"
   },
   "notifications": {
     "title": "通知",
@@ -379,5 +388,11 @@
     "writeMessage": "请给主人写一条消息",
     "messageTooLong": "消息必须少于500个字符",
     "alreadyApplied": "您已经申请过这个请求了"
+  },
+  "dogDetail": {
+    "dogNotFound": "未找到狗狗",
+    "goHome": "返回首页",
+    "noDetails": "尚未记录其他详细信息。",
+    "editProfile": "编辑资料"
   }
 }

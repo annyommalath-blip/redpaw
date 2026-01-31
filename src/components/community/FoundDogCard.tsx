@@ -70,11 +70,11 @@ export function FoundDogCard({
     const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
     
     if (diffHours < 24) {
-      return `Found today ${format(date, "h:mm a")}`;
+      return `${t("found.foundToday")} ${format(date, "h:mm a")}`;
     } else if (diffHours < 48) {
-      return `Found yesterday ${format(date, "h:mm a")}`;
+      return `${t("found.foundYesterday")} ${format(date, "h:mm a")}`;
     } else {
-      return `Found ${format(date, "MMM d")} at ${format(date, "h:mm a")}`;
+      return `${t("found.foundOn")} ${format(date, "MMM d")} at ${format(date, "h:mm a")}`;
     }
   };
 
