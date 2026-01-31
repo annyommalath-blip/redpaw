@@ -7,11 +7,20 @@ interface PageHeaderProps {
   title: string;
   subtitle?: string;
   showBack?: boolean;
+  onBack?: () => void;
   action?: ReactNode;
 }
 
-export function PageHeader({ title, subtitle, showBack = false, action }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, showBack = false, onBack, action }: PageHeaderProps) {
   const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate(-1);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 safe-area-top">
@@ -21,7 +30,7 @@ export function PageHeader({ title, subtitle, showBack = false, action }: PageHe
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate(-1)}
+              onClick={handleBack}
               className="shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
