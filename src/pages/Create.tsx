@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe, Dog, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +43,7 @@ export default function CreatePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   // Dogs state
   const [dogs, setDogs] = useState<DogData[]>([]);
@@ -144,7 +146,7 @@ export default function CreatePage() {
 
   const handleCreateLog = async () => {
     if (!logType || !selectedDogId) {
-      toast({ variant: "destructive", title: "Please select a log type and dog" });
+      toast({ variant: "destructive", title: t("healthLog.selectLogTypeAndDog") });
       return;
     }
 
@@ -159,10 +161,10 @@ export default function CreatePage() {
       });
 
       if (error) throw error;
-      toast({ title: "Health log added! 🐾" });
+      toast({ title: t("healthLog.healthLogAdded") });
       navigate("/");
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: t("common.error"), description: error.message });
     } finally {
       setSubmitting(false);
     }
@@ -170,13 +172,13 @@ export default function CreatePage() {
 
   const handleCreateMedRecord = async () => {
     if (!medName.trim() || !medDateGiven || !medDurationValue || !selectedDogId) {
-      toast({ variant: "destructive", title: "Please fill in all required fields" });
+      toast({ variant: "destructive", title: t("create.fillAllFields") });
       return;
     }
 
     const durVal = parseInt(medDurationValue, 10);
     if (isNaN(durVal) || durVal <= 0) {
-      toast({ variant: "destructive", title: "Duration must be a positive number" });
+      toast({ variant: "destructive", title: t("create.durationPositive") });
       return;
     }
 
@@ -197,10 +199,10 @@ export default function CreatePage() {
       });
 
       if (error) throw error;
-      toast({ title: "Medication record added! 💊" });
+      toast({ title: t("medications.recordAdded") });
       navigate("/");
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: t("common.error"), description: error.message });
     } finally {
       setSubmitting(false);
     }
@@ -208,7 +210,7 @@ export default function CreatePage() {
 
   const handleCreateLostAlert = async () => {
     if (!lostDescription || !lostLocation.locationLabel || !selectedDogId) {
-      toast({ variant: "destructive", title: "Please fill in all fields" });
+      toast({ variant: "destructive", title: t("create.fillAllFields") });
       return;
     }
 
@@ -236,10 +238,10 @@ export default function CreatePage() {
       });
 
       if (error) throw error;
-      toast({ title: "Lost alert posted! 🚨", description: "The community will help find your pup." });
+      toast({ title: t("lost.lostAlertPosted"), description: t("lost.communityWillHelp") });
       navigate("/community");
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: t("common.error"), description: error.message });
     } finally {
       setSubmitting(false);
     }
@@ -256,7 +258,7 @@ export default function CreatePage() {
     setCareTimeError("");
 
     if (!careType || !careLocation.locationLabel || selectedDogIds.length === 0) {
-      toast({ variant: "destructive", title: "Please fill in all required fields" });
+      toast({ variant: "destructive", title: t("create.fillAllFields") });
       return;
     }
 
@@ -292,14 +294,14 @@ export default function CreatePage() {
       
       const dogCount = selectedDogIds.length;
       toast({ 
-        title: "Care request posted! 🐕", 
+        title: t("care.careRequestPosted"), 
         description: dogCount > 1 
-          ? `Posted care request for ${dogCount} dogs. Check Community for responses.`
-          : "Check Community for responses." 
+          ? t("care.postedForDogs", { count: dogCount })
+          : t("care.checkCommunity") 
       });
       navigate("/community?tab=care");
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: t("common.error"), description: error.message });
     } finally {
       setSubmitting(false);
     }
@@ -308,15 +310,15 @@ export default function CreatePage() {
   const handleCreateFoundDog = async () => {
     // Validate required fields
     if (foundPhotoUrls.length === 0) {
-      toast({ variant: "destructive", title: "Please upload at least one photo" });
+      toast({ variant: "destructive", title: t("found.uploadAtLeastOnePhoto") });
       return;
     }
     if (!foundLocation.locationLabel) {
-      toast({ variant: "destructive", title: "Please set the found location" });
+      toast({ variant: "destructive", title: t("found.setFoundLocation") });
       return;
     }
     if (!foundDate || !foundTime) {
-      toast({ variant: "destructive", title: "Please set when you found the dog" });
+      toast({ variant: "destructive", title: t("found.setWhenFound") });
       return;
     }
 
@@ -342,12 +344,12 @@ export default function CreatePage() {
       if (error) throw error;
       
       toast({ 
-        title: "Found dog reported! 🐕", 
-        description: "Thank you for helping! The owner may contact you via messages." 
+        title: t("found.foundDogReported"), 
+        description: t("found.thankYouHelping") 
       });
       navigate("/community?tab=lost");
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: t("common.error"), description: error.message });
     } finally {
       setSubmitting(false);
     }
@@ -356,7 +358,7 @@ export default function CreatePage() {
   if (!createType) {
     return (
       <MobileLayout>
-        <PageHeader title="Create" subtitle="What would you like to do?" />
+        <PageHeader title={t("create.title")} subtitle={t("create.subtitle")} />
 
         <div className="p-4 space-y-4">
           <Card
@@ -368,8 +370,8 @@ export default function CreatePage() {
                 <PlusCircle className="h-6 w-6 text-success" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">Add Health Log</h3>
-                <p className="text-sm text-muted-foreground">Track walks, food, mood & more</p>
+                <h3 className="font-semibold text-foreground">{t("create.healthLog")}</h3>
+                <p className="text-sm text-muted-foreground">{t("create.healthLogDesc")}</p>
               </div>
             </CardContent>
           </Card>
@@ -383,8 +385,8 @@ export default function CreatePage() {
                 <Pill className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">Medication Records</h3>
-                <p className="text-sm text-muted-foreground">Log medications & treatments</p>
+                <h3 className="font-semibold text-foreground">{t("create.medRecord")}</h3>
+                <p className="text-sm text-muted-foreground">{t("create.medRecordDesc")}</p>
               </div>
             </CardContent>
           </Card>
@@ -398,8 +400,8 @@ export default function CreatePage() {
                 <AlertTriangle className="h-6 w-6 text-lost" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">Post Lost Alert</h3>
-                <p className="text-sm text-muted-foreground">Alert the community about your lost dog</p>
+                <h3 className="font-semibold text-foreground">{t("lost.postLostAlert")}</h3>
+                <p className="text-sm text-muted-foreground">{t("lost.alertCommunity")}</p>
               </div>
             </CardContent>
           </Card>
@@ -413,8 +415,8 @@ export default function CreatePage() {
                 <HandHeart className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">Post Care Request</h3>
-                <p className="text-sm text-muted-foreground">Find help for walks, watching & more</p>
+                <h3 className="font-semibold text-foreground">{t("care.postCareRequest")}</h3>
+                <p className="text-sm text-muted-foreground">{t("create.findHelpForWalks")}</p>
               </div>
             </CardContent>
           </Card>
@@ -428,8 +430,8 @@ export default function CreatePage() {
                 <Dog className="h-6 w-6 text-success" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">Report Found Dog</h3>
-                <p className="text-sm text-muted-foreground">Help a lost dog find their owner</p>
+                <h3 className="font-semibold text-foreground">{t("found.reportFound")}</h3>
+                <p className="text-sm text-muted-foreground">{t("found.helpLostDogFindOwner")}</p>
               </div>
             </CardContent>
           </Card>
@@ -443,14 +445,14 @@ export default function CreatePage() {
       <PageHeader
         title={
           createType === "log"
-            ? "Add Health Log"
+            ? t("healthLog.title")
             : createType === "meds"
-            ? "Medication Records"
+            ? t("medications.title")
             : createType === "lost"
-            ? "Post Lost Alert"
+            ? t("lost.postLostAlert")
             : createType === "found"
-            ? "Report Found Dog"
-            : "Post Care Request"
+            ? t("found.reportFound")
+            : t("care.postCareRequest")
         }
         showBack
       />
@@ -478,9 +480,9 @@ export default function CreatePage() {
         ) : dogs.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground mb-4">You need to add a dog first!</p>
+              <p className="text-muted-foreground mb-4">{t("dogs.needToAddDog")}</p>
               <Button onClick={() => navigate("/profile")}>
-                Add Your Dog
+                {t("dogs.addYourDog")}
               </Button>
             </CardContent>
           </Card>
@@ -490,7 +492,7 @@ export default function CreatePage() {
             {dogs.length > 1 && createType !== "care" && (
               <Card className="mb-4">
                 <CardContent className="p-4">
-                  <Label>Select Dog</Label>
+                  <Label>{t("dogs.selectDog")}</Label>
                   <Select value={selectedDogId} onValueChange={setSelectedDogId}>
                     <SelectTrigger className="mt-2">
                       <SelectValue />
@@ -510,38 +512,38 @@ export default function CreatePage() {
             {createType === "log" && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Log Health Event</CardTitle>
-                  <CardDescription>Track your dog's daily activities and health</CardDescription>
+                  <CardTitle>{t("healthLog.logHealthEvent")}</CardTitle>
+                  <CardDescription>{t("healthLog.trackWalksFoodMood")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Type</Label>
+                    <Label>{t("healthLog.type")}</Label>
                     <Select value={logType} onValueChange={setLogType}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select type..." />
+                        <SelectValue placeholder={t("healthLog.selectType")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="walk">🚶 Walk</SelectItem>
-                        <SelectItem value="food">🍖 Food</SelectItem>
-                        <SelectItem value="mood">😊 Mood</SelectItem>
-                        <SelectItem value="symptom">🩺 Symptom</SelectItem>
+                        <SelectItem value="walk">🚶 {t("healthLog.walk")}</SelectItem>
+                        <SelectItem value="food">🍖 {t("healthLog.food")}</SelectItem>
+                        <SelectItem value="mood">😊 {t("healthLog.mood")}</SelectItem>
+                        <SelectItem value="symptom">🩺 {t("healthLog.symptom")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Value / Details</Label>
+                    <Label>{t("healthLog.valueDetails")}</Label>
                     <Input
-                      placeholder="e.g., 30 minutes, Morning kibble..."
+                      placeholder={t("healthLog.valuePlaceholder")}
                       value={logValue}
                       onChange={(e) => setLogValue(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Notes (optional)</Label>
+                    <Label>{t("healthLog.notesOptional")}</Label>
                     <Textarea
-                      placeholder="Any additional notes..."
+                      placeholder={t("healthLog.notesPlaceholder")}
                       value={logNotes}
                       onChange={(e) => setLogNotes(e.target.value)}
                     />
@@ -549,7 +551,7 @@ export default function CreatePage() {
 
                   <Button className="w-full" onClick={handleCreateLog} disabled={submitting}>
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />}
-                    Add Log
+                    {t("healthLog.addLog")}
                   </Button>
                 </CardContent>
               </Card>
@@ -560,22 +562,22 @@ export default function CreatePage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Pill className="h-5 w-5 text-primary" />
-                    Medication Records
+                    {t("medications.title")}
                   </CardTitle>
-                  <CardDescription>Track medications, treatments & vaccines with expiration dates</CardDescription>
+                  <CardDescription>{t("medications.trackMeds")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Name *</Label>
+                    <Label>{t("create.name")} *</Label>
                     <Input
-                      placeholder="e.g., Rabies, Heartworm, Flea treatment..."
+                      placeholder={t("medications.namePlaceholder")}
                       value={medName}
                       onChange={(e) => setMedName(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Type *</Label>
+                    <Label>{t("healthLog.type")} *</Label>
                     <Select value={medType} onValueChange={(v) => setMedType(v as any)}>
                       <SelectTrigger>
                         <SelectValue />
@@ -583,12 +585,12 @@ export default function CreatePage() {
                       <SelectContent className="bg-background border shadow-lg z-50">
                         <SelectItem value="medication">
                           <span className="flex items-center gap-2">
-                            <Pill className="h-4 w-4" /> Medication
+                            <Pill className="h-4 w-4" /> {t("medications.medication")}
                           </span>
                         </SelectItem>
                         <SelectItem value="vaccine">
                           <span className="flex items-center gap-2">
-                            <Syringe className="h-4 w-4" /> Vaccine
+                            <Syringe className="h-4 w-4" /> {t("medications.vaccine")}
                           </span>
                         </SelectItem>
                       </SelectContent>
@@ -596,7 +598,7 @@ export default function CreatePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Date Given *</Label>
+                    <Label>{t("medications.dateGiven")} *</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -607,7 +609,7 @@ export default function CreatePage() {
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {medDateGiven ? format(medDateGiven, "PPP") : "Select date"}
+                          {medDateGiven ? format(medDateGiven, "PPP") : t("create.selectDate")}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 z-50" align="start">
@@ -624,7 +626,7 @@ export default function CreatePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Duration / Validity *</Label>
+                    <Label>{t("medications.durationValidity")} *</Label>
                     <div className="flex gap-2">
                       <Input
                         type="number"
@@ -639,18 +641,18 @@ export default function CreatePage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="days">Days</SelectItem>
-                          <SelectItem value="months">Months</SelectItem>
-                          <SelectItem value="years">Years</SelectItem>
+                          <SelectItem value="days">{t("medications.days")}</SelectItem>
+                          <SelectItem value="months">{t("medications.months")}</SelectItem>
+                          <SelectItem value="years">{t("medications.years")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Notes (optional)</Label>
+                    <Label>{t("care.notesOptional")}</Label>
                     <Textarea
-                      placeholder="Dosage, vet info, side effects..."
+                      placeholder={t("medications.notesPlaceholder")}
                       value={medNotes}
                       onChange={(e) => setMedNotes(e.target.value)}
                       rows={2}
@@ -663,7 +665,7 @@ export default function CreatePage() {
                     disabled={submitting || !medName.trim() || !medDateGiven || !medDurationValue}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Pill className="h-4 w-4 mr-2" />}
-                    Add Medication Record
+                    {t("medications.addRecord")}
                   </Button>
                 </CardContent>
               </Card>
@@ -672,14 +674,14 @@ export default function CreatePage() {
             {createType === "lost" && (
               <Card className="border-lost">
                 <CardHeader>
-                  <CardTitle className="text-lost">🚨 Lost Dog Alert</CardTitle>
-                  <CardDescription>Provide details to help the community find your dog</CardDescription>
+                  <CardTitle className="text-lost">🚨 {t("lost.title")}</CardTitle>
+                  <CardDescription>{t("lost.provideDetails")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Description</Label>
+                    <Label>{t("lost.description")}</Label>
                     <Textarea
-                      placeholder="Describe your dog: color, size, collar, distinguishing features..."
+                      placeholder={t("lost.descriptionPlaceholder")}
                       value={lostDescription}
                       onChange={(e) => setLostDescription(e.target.value)}
                       rows={4}
@@ -699,13 +701,13 @@ export default function CreatePage() {
                     onLocationTextChange={lostLocation.setLocationFromText}
                     onSearchAddress={lostLocation.searchAddress}
                     required
-                    placeholder="Where was your dog last seen?"
-                    description="Used to show others where to look for your dog."
+                    placeholder={t("lost.whereLastSeen")}
+                    description={t("lost.locationDesc")}
                   />
 
                   <Button className="w-full bg-lost hover:bg-lost/90" onClick={handleCreateLostAlert} disabled={submitting || !lostLocation.locationLabel}>
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
-                    Post Lost Alert
+                    {t("lost.postLostAlert")}
                   </Button>
                 </CardContent>
               </Card>
@@ -714,15 +716,15 @@ export default function CreatePage() {
             {createType === "care" && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Care Request</CardTitle>
-                  <CardDescription>Find trusted help for your dog{dogs.length > 1 ? 's' : ''}</CardDescription>
+                  <CardTitle>{t("care.title")}</CardTitle>
+                  <CardDescription>{t("care.findTrustedHelp")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Multi-dog selector for care requests */}
                   {dogs.length > 1 && (
                     <div className="space-y-2">
-                      <Label>Select Dog{selectedDogIds.length > 1 ? 's' : ''} *</Label>
-                      <p className="text-xs text-muted-foreground">Select one or more dogs for this care request</p>
+                      <Label>{selectedDogIds.length > 1 ? t("dogs.selectDogs") : t("dogs.selectDog")} *</Label>
+                      <p className="text-xs text-muted-foreground">{t("care.selectDogsForCare")}</p>
                       <DogMultiSelector
                         dogs={dogs}
                         selectedDogIds={selectedDogIds}
@@ -732,16 +734,16 @@ export default function CreatePage() {
                   )}
 
                   <div className="space-y-2">
-                    <Label>Type of Care</Label>
+                    <Label>{t("care.typeOfCare")}</Label>
                     <Select value={careType} onValueChange={setCareType}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select type..." />
+                        <SelectValue placeholder={t("healthLog.selectType")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="walk">🚶 Walk</SelectItem>
-                        <SelectItem value="watch">👀 Short Watch</SelectItem>
-                        <SelectItem value="overnight">🌙 Overnight</SelectItem>
-                        <SelectItem value="check-in">👋 Check-in</SelectItem>
+                        <SelectItem value="walk">🚶 {t("care.walk")}</SelectItem>
+                        <SelectItem value="watch">👀 {t("care.shortWatch")}</SelectItem>
+                        <SelectItem value="overnight">🌙 {t("care.overnight")}</SelectItem>
+                        <SelectItem value="check-in">👋 {t("care.checkIn")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -769,17 +771,17 @@ export default function CreatePage() {
                     onLocationTextChange={careLocation.setLocationFromText}
                     onSearchAddress={careLocation.searchAddress}
                     required
-                    placeholder="Where should they come?"
-                    description="Help sitters know where to meet you."
+                    placeholder={t("care.whereToCome")}
+                    description={t("care.whereToMeet")}
                   />
 
                   <div className="space-y-2">
                     <Label>
                       <FileText className="h-4 w-4 inline mr-1" />
-                      Notes (optional)
+                      {t("care.notesOptional")}
                     </Label>
                     <Textarea
-                      placeholder="Any special instructions or info about your dog..."
+                      placeholder={t("care.specialInstructions")}
                       value={careNotes}
                       onChange={(e) => setCareNotes(e.target.value)}
                     />
@@ -790,7 +792,7 @@ export default function CreatePage() {
                     currency={payCurrency}
                     onAmountChange={setPayAmount}
                     onCurrencyChange={setPayCurrency}
-                    label="Pay Offered"
+                    label={t("care.payOffered")}
                     optional={true}
                   />
 
@@ -800,7 +802,7 @@ export default function CreatePage() {
                     disabled={submitting || !careType || !careDate || !careStartTime || !careEndTime || !careLocation.locationLabel || selectedDogIds.length === 0}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <HandHeart className="h-4 w-4 mr-2" />}
-                    Post Request{selectedDogIds.length > 1 ? ` for ${selectedDogIds.length} Dogs` : ''}
+                    {selectedDogIds.length > 1 ? t("care.postRequestForDogs", { count: selectedDogIds.length }) : t("care.postRequest")}
                   </Button>
                 </CardContent>
               </Card>

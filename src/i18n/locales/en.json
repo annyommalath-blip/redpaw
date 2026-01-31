@@ -37,7 +37,15 @@
     "enable": "Enable",
     "updateLocation": "Update location",
     "enableLocationToSeeDistance": "Enable location to see distance",
-    "mixedBreed": "Mixed breed"
+    "mixedBreed": "Mixed breed",
+    "assigned": "Assigned",
+    "completed": "Completed",
+    "saving": "Saving...",
+    "deleting": "Deleting...",
+    "sending": "Sending...",
+    "away": "away",
+    "dogsNeedCare": "dogs need care together",
+    "unknownBreed": "Unknown breed"
   },
   "nav": {
     "home": "Home",
@@ -85,9 +93,9 @@
     "myDogs": "My Dogs",
     "addDog": "Add Dog",
     "noDogs": "No dogs added yet",
-    "addFirstDog": "Add your first furry friend!",
+    "addFirstDog": "Add your furry friend to get started!",
     "myCareRequests": "My Care Requests",
-    "noCareRequests": "No care requests yet",
+    "noCareRequests": "No active care requests",
     "settings": "Settings",
     "appSettings": "App Settings",
     "signOut": "Sign Out",
@@ -107,7 +115,16 @@
     "profileUpdated": "Profile updated",
     "profileSaved": "Your profile has been saved! 🐾",
     "archived": "📦 Archived",
-    "careRequestArchived": "Care request moved to archive."
+    "careRequestArchived": "Care request moved to archive.",
+    "archivedCareRequests": "Archived Care Requests",
+    "noArchivedCareRequests": "No archived care requests",
+    "resolvedLostAlerts": "Resolved Lost Alerts",
+    "noResolvedAlerts": "No resolved lost alerts",
+    "youreTheSitter": "You're the sitter",
+    "youWereTheSitter": "You were the sitter",
+    "found": "Found",
+    "lost": "Lost",
+    "madeWithLove": "Made with ❤️ for dog lovers"
   },
   "settings": {
     "title": "Settings",
@@ -134,22 +151,33 @@
     "notes": "Notes",
     "photos": "Photos",
     "lostMode": "Lost Mode",
+    "lostModeActive": "Lost Mode Active",
     "markAsLost": "Mark as Lost",
     "markAsFound": "Mark as Found",
-    "isLost": "Currently Lost"
+    "isLost": "Currently Lost",
+    "selectDog": "Select Dog",
+    "selectDogs": "Select Dogs",
+    "addYourDog": "Add Your Dog",
+    "needToAddDog": "You need to add a dog first!",
+    "noDogs": "No dogs yet",
+    "noDogsDesc": "Add your furry friend to get started!"
   },
   "care": {
     "title": "Care Requests",
     "createRequest": "Create Care Request",
     "careType": "Care Type",
+    "typeOfCare": "Type of Care",
     "walk": "Walk",
     "watch": "Watch",
+    "shortWatch": "Short Watch",
     "overnight": "Overnight",
     "checkIn": "Check-in",
     "timeWindow": "Time Window",
     "location": "Location",
     "payment": "Payment",
+    "payOffered": "Pay Offered",
     "notes": "Notes",
+    "notesOptional": "Notes (optional)",
     "apply": "Apply",
     "applications": "Applications",
     "noApplications": "No applications yet",
@@ -167,7 +195,17 @@
     "checkCommunity": "Check Community for responses.",
     "postedForDogs": "Posted care request for {{count}} dogs. Check Community for responses.",
     "applied": "Applied",
-    "noCareRequestsArea": "There are no open care requests in your area right now."
+    "noCareRequestsArea": "There are no open care requests in your area right now.",
+    "careRequestDeleted": "Care request deleted",
+    "deleteCareRequest": "Delete Care Request?",
+    "deleteCareRequestDesc": "This will permanently delete this care request and all applications. This action cannot be undone.",
+    "findTrustedHelp": "Find trusted help for your dog",
+    "selectDogsForCare": "Select one or more dogs for this care request",
+    "postRequestForDogs": "Post Request for {{count}} Dogs",
+    "postRequest": "Post Request",
+    "specialInstructions": "Any special instructions or info about your dog...",
+    "whereToMeet": "Help sitters know where to meet you.",
+    "whereToCome": "Where should they come?"
   },
   "community": {
     "title": "Community",
@@ -179,7 +217,11 @@
     "noPostsYet": "No posts yet",
     "beFirstToPost": "Be the first to post!",
     "lost": "🚨 Lost",
-    "found": "🐕 Found"
+    "found": "🐕 Found",
+    "lostDog": "LOST DOG",
+    "foundDog": "Found Dog",
+    "reunited": "REUNITED",
+    "dogReunited": "This dog has been reunited with their owner!"
   },
   "lost": {
     "title": "Lost Dog Alert",
@@ -194,7 +236,11 @@
     "active": "Active",
     "lostAlertPosted": "Lost alert posted! 🚨",
     "communityWillHelp": "The community will help find your pup.",
-    "alertCommunity": "Alert the community about your lost dog"
+    "alertCommunity": "Alert the community about your lost dog",
+    "descriptionPlaceholder": "Describe your dog: color, size, collar, distinguishing features...",
+    "whereLastSeen": "Where was your dog last seen?",
+    "locationDesc": "Used to show others where to look for your dog.",
+    "provideDetails": "Provide details to help the community find your dog"
   },
   "found": {
     "title": "Found Dog",
@@ -211,7 +257,9 @@
     "helpLostDogFindOwner": "Help a lost dog find their owner",
     "uploadAtLeastOnePhoto": "Please upload at least one photo",
     "setFoundLocation": "Please set the found location",
-    "setWhenFound": "Please set when you found the dog"
+    "setWhenFound": "Please set when you found the dog",
+    "foundToday": "Found today",
+    "foundYesterday": "Found yesterday"
   },
   "messages": {
     "title": "Messages",
@@ -227,38 +275,53 @@
   "notifications": {
     "title": "Notifications",
     "subtitle": "Stay updated",
-    "noNotifications": "No notifications",
-    "allCaughtUp": "You're all caught up!",
+    "noNotifications": "No notifications yet",
+    "allCaughtUp": "You'll be notified about care assignments, sightings, and more.",
     "markAllRead": "Mark all read"
   },
   "medications": {
     "title": "Medication Records",
-    "addRecord": "Add Record",
+    "addRecord": "Add Medication Record",
     "vaccine": "Vaccine",
     "medication": "Medication",
     "dateGiven": "Date Given",
     "expiresOn": "Expires On",
     "duration": "Duration",
-    "days": "days",
-    "months": "months",
-    "years": "years",
+    "durationValidity": "Duration / Validity",
+    "days": "Days",
+    "months": "Months",
+    "years": "Years",
     "expired": "Expired",
     "expiringSoon": "Expiring Soon",
     "current": "Current",
+    "active": "Active",
     "recordAdded": "Medication record added! 💊",
-    "logMedsTreatments": "Log medications & treatments"
+    "logMedsTreatments": "Log medications & treatments",
+    "trackMeds": "Track medications, treatments & vaccines with expiration dates",
+    "namePlaceholder": "e.g., Rabies, Heartworm, Flea treatment...",
+    "notesPlaceholder": "Dosage, vet info, side effects...",
+    "given": "Given",
+    "expires": "Expires"
   },
   "healthLog": {
-    "addHealthLog": "Add Health Log",
+    "title": "Add Health Log",
+    "logHealthEvent": "Log Health Event",
     "logType": "Log Type",
-    "trackWalksFoodMood": "Track walks, food, mood & more",
+    "type": "Type",
+    "trackWalksFoodMood": "Track your dog's daily activities and health",
     "healthLogAdded": "Health log added! 🐾",
     "selectLogTypeAndDog": "Please select a log type and dog",
     "walk": "Walk",
     "food": "Food",
     "meds": "Meds",
     "mood": "Mood",
-    "symptom": "Symptom"
+    "symptom": "Symptom",
+    "valueDetails": "Value / Details",
+    "valuePlaceholder": "e.g., 30 minutes, Morning kibble...",
+    "notesOptional": "Notes (optional)",
+    "notesPlaceholder": "Any additional notes...",
+    "addLog": "Add Log",
+    "selectType": "Select type..."
   },
   "create": {
     "title": "Create",
@@ -277,7 +340,9 @@
     "medRecordDesc": "Log medications & treatments",
     "findHelpForWalks": "Find help for walks, watching & more",
     "fillAllFields": "Please fill in all required fields",
-    "durationPositive": "Duration must be a positive number"
+    "durationPositive": "Duration must be a positive number",
+    "selectDate": "Select date",
+    "name": "Name"
   },
   "time": {
     "today": "Today",
@@ -296,5 +361,17 @@
     "enterDescription": "Enter description",
     "addNotes": "Add notes (optional)",
     "uploadPhotos": "Upload Photos"
+  },
+  "application": {
+    "title": "Apply for this job",
+    "subtitle": "Introduce yourself to the owner",
+    "messageToOwner": "Message to Owner",
+    "messagePlaceholder": "Hi! I'd love to help care for your dog. I have experience with...",
+    "sendApplication": "Send Application",
+    "applicationSent": "Application sent! 🐾",
+    "ownerWillReview": "The owner will review your application.",
+    "writeMessage": "Please write a message to the owner",
+    "messageTooLong": "Message must be less than 500 characters",
+    "alreadyApplied": "You've already applied to this request"
   }
 }
