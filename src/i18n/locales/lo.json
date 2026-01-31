@@ -350,6 +350,23 @@
       "medication_expiring": "ແຈ້ງເຕືອນຢາ",
       "sighting_reported": "ລາຍງານການພົບເຫັນ",
       "found_dog_reply": "ຕອບກັບໃໝ່"
+    },
+    "bodies": {
+      "new_application": "{{applicantName}} ສະໝັກເບິ່ງແຍງ {{dogName}}",
+      "application_withdrawn": "{{applicantName}} ຖອນການສະໝັກສຳລັບ {{dogName}}",
+      "care_reapply": "{{applicantName}} ສະໝັກໃໝ່ສຳລັບຄຳຂໍເບິ່ງແຍງ {{dogName}}",
+      "assigned_job_sitter_single": "ທ່ານໄດ້ຮັບມອບໝາຍໃຫ້ {{careType}} {{dogName}}",
+      "assigned_job_sitter_multi": "ທ່ານໄດ້ຮັບມອບໝາຍໃຫ້ {{careType}} ໝາຂອງ {{ownerName}} ({{dogCount}} ໂຕ)",
+      "sighting_reported": "ມີຄົນລາຍງານການພົບເຫັນ {{dogName}}!",
+      "found_dog_reply": "{{replierName}} ຕອບກັບໂພສໝາທີ່ພົບຂອງທ່ານ",
+      "medication_expired": "{{medName}} ສຳລັບ {{dogName}} ໝົດອາຍຸແລ້ວ",
+      "medication_expiring_days": "{{medName}} ສຳລັບ {{dogName}} ຈະໝົດອາຍຸໃນ {{days}} ມື້"
+    },
+    "careTypes": {
+      "walk": "ພາຍ່າງ",
+      "watch": "ເບິ່ງແຍງ",
+      "overnight": "ເບິ່ງແຍງ",
+      "check-in": "ກວດເບິ່ງ"
     }
   },
   "medications": {

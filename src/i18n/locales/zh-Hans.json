@@ -350,6 +350,23 @@
       "medication_expiring": "药物提醒",
       "sighting_reported": "目击已报告",
       "found_dog_reply": "新回复"
+    },
+    "bodies": {
+      "new_application": "{{applicantName}} 申请照看 {{dogName}}",
+      "application_withdrawn": "{{applicantName}} 撤回了对 {{dogName}} 的申请",
+      "care_reapply": "{{applicantName}} 重新申请了您的 {{dogName}} 照看请求",
+      "assigned_job_sitter_single": "您被分配去 {{careType}} {{dogName}}。",
+      "assigned_job_sitter_multi": "您被分配去 {{careType}} {{ownerName}} 的狗（{{dogCount}} 只）。",
+      "sighting_reported": "有人报告看到了 {{dogName}}！",
+      "found_dog_reply": "{{replierName}} 回复了您的发现狗狗帖子",
+      "medication_expired": "{{dogName}} 的 {{medName}} 已过期。",
+      "medication_expiring_days": "{{dogName}} 的 {{medName}} 将在 {{days}} 天后过期。"
+    },
+    "careTypes": {
+      "walk": "遛",
+      "watch": "照看",
+      "overnight": "照看",
+      "check-in": "探访"
     }
   },
   "medications": {

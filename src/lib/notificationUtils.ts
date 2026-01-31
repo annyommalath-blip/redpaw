@@ -59,6 +59,7 @@ export async function checkMedicationNotifications(userId: string): Promise<void
         body: string;
         link_type: string;
         link_id: string;
+        body_params: Record<string, string | number>;
       } | null = null;
 
       // Check if expired
@@ -70,6 +71,7 @@ export async function checkMedicationNotifications(userId: string): Promise<void
           body: `${record.name} for ${dogName} has expired.`,
           link_type: "dog",
           link_id: record.dog_id,
+          body_params: { medName: record.name, dogName },
         };
       }
       // Check if expiring within 30 days
@@ -82,6 +84,7 @@ export async function checkMedicationNotifications(userId: string): Promise<void
           body: `${record.name} for ${dogName} expires in ${daysUntil} day${daysUntil === 1 ? "" : "s"}.`,
           link_type: "dog",
           link_id: record.dog_id,
+          body_params: { medName: record.name, dogName, days: daysUntil },
         };
       }
 
@@ -89,7 +92,7 @@ export async function checkMedicationNotifications(userId: string): Promise<void
       if (notification) {
         const { error: insertError } = await supabase
           .from("notifications")
-          .insert(notification);
+          .insert(notification as any);
 
         if (insertError) {
           console.error("Error creating medication notification:", insertError);

@@ -19,6 +19,7 @@ interface NotificationItemProps {
   type: string;
   title: string;
   body: string;
+  bodyParams?: Record<string, string | number> | null;
   isRead: boolean;
   createdAt: Date;
   onClick: () => void;
@@ -54,6 +55,7 @@ export function NotificationItem({
   type,
   title,
   body,
+  bodyParams,
   isRead,
   createdAt,
   onClick,
@@ -63,8 +65,48 @@ export function NotificationItem({
   const Icon = typeIcons[type] || Bell;
   const colorClass = typeColors[type] || "text-muted-foreground bg-muted";
 
-  // Use translated title based on notification type, fallback to original title
+  // Use translated title based on notification type
   const translatedTitle = t(`notifications.types.${type}`, { defaultValue: title });
+
+  // Get translated body using body_params if available
+  const getTranslatedBody = (): string => {
+    if (!bodyParams) {
+      return body; // Fallback to original body for old notifications
+    }
+
+    // Handle different notification types
+    switch (type) {
+      case "new_application":
+        return t("notifications.bodies.new_application", bodyParams);
+      case "application_withdrawn":
+        return t("notifications.bodies.application_withdrawn", bodyParams);
+      case "care_reapply":
+        return t("notifications.bodies.care_reapply", bodyParams);
+      case "assigned_job_sitter": {
+        const dogCount = bodyParams.dogCount as number;
+        const careType = t(`notifications.careTypes.${bodyParams.careType}`, { defaultValue: bodyParams.careType });
+        if (dogCount === 1) {
+          return t("notifications.bodies.assigned_job_sitter_single", { ...bodyParams, careType });
+        }
+        return t("notifications.bodies.assigned_job_sitter_multi", { ...bodyParams, careType });
+      }
+      case "sighting_reported":
+        return t("notifications.bodies.sighting_reported", bodyParams);
+      case "found_dog_reply":
+        return t("notifications.bodies.found_dog_reply", bodyParams);
+      case "medication_expiring": {
+        // Check if it's expired or expiring
+        if (bodyParams.days) {
+          return t("notifications.bodies.medication_expiring_days", bodyParams);
+        }
+        return t("notifications.bodies.medication_expired", bodyParams);
+      }
+      default:
+        return body;
+    }
+  };
+
+  const translatedBody = getTranslatedBody();
 
   return (
     <button
@@ -96,7 +138,7 @@ export function NotificationItem({
           "text-sm line-clamp-2 mt-0.5",
           isRead ? "text-muted-foreground" : "text-foreground"
         )}>
-          {body}
+          {translatedBody}
         </p>
       </div>
 

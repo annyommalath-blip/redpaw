@@ -76,6 +76,7 @@ export default function NotificationsPage() {
               type={notification.type}
               title={notification.title}
               body={notification.body}
+              bodyParams={notification.body_params}
               isRead={notification.is_read}
               createdAt={new Date(notification.created_at)}
               onClick={() => handleNotificationClick(notification)}

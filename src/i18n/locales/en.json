@@ -350,6 +350,23 @@
       "medication_expiring": "Medication Alert",
       "sighting_reported": "Sighting Reported",
       "found_dog_reply": "New Reply"
+    },
+    "bodies": {
+      "new_application": "{{applicantName}} applied to care for {{dogName}}",
+      "application_withdrawn": "{{applicantName}} withdrew their application for {{dogName}}",
+      "care_reapply": "{{applicantName}} reapplied for your care request for {{dogName}}",
+      "assigned_job_sitter_single": "You were assigned to {{careType}} {{dogName}}.",
+      "assigned_job_sitter_multi": "You were assigned to {{careType}} {{ownerName}}'s dogs ({{dogCount}} dogs).",
+      "sighting_reported": "Someone reported a sighting of {{dogName}}!",
+      "found_dog_reply": "{{replierName}} replied to your found dog post",
+      "medication_expired": "{{medName}} for {{dogName}} has expired.",
+      "medication_expiring_days": "{{medName}} for {{dogName}} expires in {{days}} day(s)."
+    },
+    "careTypes": {
+      "walk": "walk",
+      "watch": "care for",
+      "overnight": "care for",
+      "check-in": "check in on"
     }
   },
   "medications": {
