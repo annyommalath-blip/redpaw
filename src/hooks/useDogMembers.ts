@@ -91,31 +91,36 @@ export function useDogMembers(dogId: string | undefined) {
     fetchMembers();
   }, [fetchMembers]);
 
-  const inviteMember = async (username: string): Promise<boolean> => {
+  const inviteMember = async (email: string): Promise<boolean> => {
     if (!dogId || !user) return false;
 
     try {
-      // Use the security definer function to find users by display_name
-      // This bypasses RLS since we need to find users we don't have relationships with yet
-      const { data: profiles, error: profilesError } = await supabase.rpc("get_public_profiles");
-      
-      if (profilesError) throw profilesError;
-      
-      // Find user by display_name (case-insensitive)
-      const matchedProfile = profiles?.find(
-        (p: any) => p.display_name?.toLowerCase() === username.toLowerCase()
+      // Use the security definer function to find user by email
+      const { data: inviteeUserId, error: lookupError } = await supabase.rpc(
+        "get_user_id_by_email",
+        { lookup_email: email }
       );
-      
-      if (!matchedProfile) {
+
+      if (lookupError) throw lookupError;
+
+      if (!inviteeUserId) {
         toast({
           variant: "destructive",
           title: "User not found",
-          description: "No user found with that username. Ask them to sign up first!",
+          description: "No user found with that email address. Ask them to sign up first!",
         });
         return false;
       }
-      
-      const inviteeUserId = matchedProfile.user_id;
+
+      // Prevent self-invite
+      if (inviteeUserId === user.id) {
+        toast({
+          variant: "destructive",
+          title: "Cannot invite yourself",
+          description: "You are already the owner of this dog.",
+        });
+        return false;
+      }
 
       
 
