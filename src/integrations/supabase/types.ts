@@ -531,6 +531,7 @@ export type Database = {
       notifications: {
         Row: {
           body: string
+          body_params: Json | null
           created_at: string
           id: string
           is_read: boolean
@@ -542,6 +543,7 @@ export type Database = {
         }
         Insert: {
           body: string
+          body_params?: Json | null
           created_at?: string
           id?: string
           is_read?: boolean
@@ -553,6 +555,7 @@ export type Database = {
         }
         Update: {
           body?: string
+          body_params?: Json | null
           created_at?: string
           id?: string
           is_read?: boolean

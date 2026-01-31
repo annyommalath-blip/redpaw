@@ -8,6 +8,7 @@ export interface Notification {
   type: string;
   title: string;
   body: string;
+  body_params: Record<string, string | number> | null;
   link_type: string | null;
   link_id: string | null;
   is_read: boolean;

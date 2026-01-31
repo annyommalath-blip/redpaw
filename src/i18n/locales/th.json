@@ -350,6 +350,23 @@
       "medication_expiring": "แจ้งเตือนยา",
       "sighting_reported": "รายงานการพบเห็น",
       "found_dog_reply": "ตอบกลับใหม่"
+    },
+    "bodies": {
+      "new_application": "{{applicantName}} สมัครดูแล {{dogName}}",
+      "application_withdrawn": "{{applicantName}} ถอนการสมัครสำหรับ {{dogName}}",
+      "care_reapply": "{{applicantName}} สมัครใหม่สำหรับคำขอดูแล {{dogName}}",
+      "assigned_job_sitter_single": "คุณได้รับมอบหมายให้ {{careType}} {{dogName}}",
+      "assigned_job_sitter_multi": "คุณได้รับมอบหมายให้ {{careType}} สุนัขของ {{ownerName}} ({{dogCount}} ตัว)",
+      "sighting_reported": "มีคนรายงานการพบเห็น {{dogName}}!",
+      "found_dog_reply": "{{replierName}} ตอบกลับโพสต์สุนัขที่พบของคุณ",
+      "medication_expired": "{{medName}} สำหรับ {{dogName}} หมดอายุแล้ว",
+      "medication_expiring_days": "{{medName}} สำหรับ {{dogName}} จะหมดอายุใน {{days}} วัน"
+    },
+    "careTypes": {
+      "walk": "พาเดิน",
+      "watch": "ดูแล",
+      "overnight": "ดูแล",
+      "check-in": "เช็คอิน"
     }
   },
   "medications": {
