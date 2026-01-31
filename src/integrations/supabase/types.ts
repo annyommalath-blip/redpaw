@@ -212,6 +212,47 @@ export type Database = {
         }
         Relationships: []
       }
+      dog_members: {
+        Row: {
+          created_at: string
+          dog_id: string
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["dog_member_role"]
+          status: Database["public"]["Enums"]["dog_member_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dog_id: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["dog_member_role"]
+          status?: Database["public"]["Enums"]["dog_member_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dog_id?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["dog_member_role"]
+          status?: Database["public"]["Enums"]["dog_member_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dog_members_dog_id_fkey"
+            columns: ["dog_id"]
+            isOneToOne: false
+            referencedRelation: "dogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dogs: {
         Row: {
           age: string | null
@@ -729,11 +770,21 @@ export type Database = {
           user_id: string
         }[]
       }
+      has_dog_access: {
+        Args: { p_dog_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_dog_owner: {
+        Args: { p_dog_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       alert_status: "active" | "resolved"
       application_status: "pending" | "approved" | "declined" | "withdrawn"
       care_type: "walk" | "watch" | "overnight" | "check-in"
+      dog_member_role: "owner" | "coparent"
+      dog_member_status: "invited" | "active" | "removed"
       duration_unit: "days" | "months" | "years"
       found_dog_status: "active" | "reunited" | "closed"
       log_type: "walk" | "food" | "meds" | "mood" | "symptom"
@@ -749,6 +800,9 @@ export type Database = {
         | "application_withdrawn"
         | "care_reapply"
         | "found_dog_reply"
+        | "dog_invite"
+        | "dog_invite_accepted"
+        | "dog_invite_declined"
       request_status: "open" | "closed"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
     }
@@ -881,6 +935,8 @@ export const Constants = {
       alert_status: ["active", "resolved"],
       application_status: ["pending", "approved", "declined", "withdrawn"],
       care_type: ["walk", "watch", "overnight", "check-in"],
+      dog_member_role: ["owner", "coparent"],
+      dog_member_status: ["invited", "active", "removed"],
       duration_unit: ["days", "months", "years"],
       found_dog_status: ["active", "reunited", "closed"],
       log_type: ["walk", "food", "meds", "mood", "symptom"],
@@ -896,6 +952,9 @@ export const Constants = {
         "application_withdrawn",
         "care_reapply",
         "found_dog_reply",
+        "dog_invite",
+        "dog_invite_accepted",
+        "dog_invite_declined",
       ],
       request_status: ["open", "closed"],
       sitter_log_type: ["walk", "meal", "potty", "play", "note"],

@@ -9,7 +9,8 @@ import {
   UserCheck,
   UserPlus,
   UserMinus,
-  MessageSquare
+  MessageSquare,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDateLocale } from "@/hooks/useDateLocale";
@@ -36,6 +37,9 @@ const typeIcons: Record<string, typeof Bell> = {
   medication_expiring: Syringe,
   sighting_reported: Eye,
   found_dog_reply: MessageSquare,
+  dog_invite: Users,
+  dog_invite_accepted: UserCheck,
+  dog_invite_declined: UserMinus,
 };
 
 const typeColors: Record<string, string> = {
@@ -49,6 +53,9 @@ const typeColors: Record<string, string> = {
   medication_expiring: "text-orange-600 bg-orange-100",
   sighting_reported: "text-purple-600 bg-purple-100",
   found_dog_reply: "text-teal-600 bg-teal-100",
+  dog_invite: "text-violet-600 bg-violet-100",
+  dog_invite_accepted: "text-green-600 bg-green-100",
+  dog_invite_declined: "text-amber-600 bg-amber-100",
 };
 
 export function NotificationItem({
@@ -101,6 +108,12 @@ export function NotificationItem({
         }
         return t("notifications.bodies.medication_expired", bodyParams);
       }
+      case "dog_invite":
+        return t("notifications.bodies.dog_invite", bodyParams);
+      case "dog_invite_accepted":
+        return t("notifications.bodies.dog_invite_accepted", bodyParams);
+      case "dog_invite_declined":
+        return t("notifications.bodies.dog_invite_declined", bodyParams);
       default:
         return body;
     }

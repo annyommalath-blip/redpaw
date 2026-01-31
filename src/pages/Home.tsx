@@ -15,6 +15,7 @@ import { MedRecordCardReadOnly } from "@/components/med/MedRecordCardReadOnly";
 import { ExpirationNotices } from "@/components/med/ExpirationNotices";
 import { LostModeDialog } from "@/components/dog/LostModeDialog";
 import { MedRecordEditDialog } from "@/components/med/MedRecordEditDialog";
+import { PendingInvitesCard } from "@/components/dog/PendingInvitesCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -106,43 +107,69 @@ export default function HomePage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Fetch all dogs
-      const { data: dogsData } = await supabase
+      // Fetch dogs the user owns
+      const { data: ownedDogs } = await supabase
         .from("dogs")
         .select("id, name, breed, photo_url, is_lost")
         .eq("owner_id", user.id)
         .order("created_at", { ascending: true });
 
-      const fetchedDogs = dogsData || [];
-      setDogs(fetchedDogs);
+      // Fetch dogs where user is an active co-parent
+      const { data: coParentedMemberships } = await supabase
+        .from("dog_members")
+        .select("dog_id")
+        .eq("user_id", user.id)
+        .eq("status", "active");
+
+      let coParentedDogs: UserDog[] = [];
+      if (coParentedMemberships && coParentedMemberships.length > 0) {
+        const dogIds = coParentedMemberships.map((m) => m.dog_id);
+        const { data: sharedDogs } = await supabase
+          .from("dogs")
+          .select("id, name, breed, photo_url, is_lost")
+          .in("id", dogIds)
+          .order("created_at", { ascending: true });
+        
+        coParentedDogs = (sharedDogs || []) as UserDog[];
+      }
+
+      // Combine and dedupe (user could be both owner and co-parent theoretically)
+      const allDogs = [...(ownedDogs || []), ...coParentedDogs];
+      const uniqueDogs = allDogs.filter(
+        (dog, index, self) => self.findIndex((d) => d.id === dog.id) === index
+      );
+      
+      setDogs(uniqueDogs);
 
       // Determine active dog
-      if (fetchedDogs.length > 0) {
+      if (uniqueDogs.length > 0) {
         const savedDogId = localStorage.getItem(ACTIVE_DOG_STORAGE_KEY);
-        const savedDogExists = fetchedDogs.some(d => d.id === savedDogId);
+        const savedDogExists = uniqueDogs.some(d => d.id === savedDogId);
         
         if (savedDogId && savedDogExists) {
           setActiveDogId(savedDogId);
         } else {
           // Default to first dog
-          setActiveDogId(fetchedDogs[0].id);
-          localStorage.setItem(ACTIVE_DOG_STORAGE_KEY, fetchedDogs[0].id);
+          setActiveDogId(uniqueDogs[0].id);
+          localStorage.setItem(ACTIVE_DOG_STORAGE_KEY, uniqueDogs[0].id);
         }
       }
 
-      // Fetch all health logs and med records for the user (we'll filter client-side)
-      if (fetchedDogs.length > 0) {
+      // Fetch all health logs and med records for all accessible dogs
+      if (uniqueDogs.length > 0) {
+        const dogIds = uniqueDogs.map((d) => d.id);
+        
         const [logsResult, medResult] = await Promise.all([
           supabase
             .from("health_logs")
             .select("id, dog_id, log_type, value, created_at")
-            .eq("owner_id", user.id)
+            .in("dog_id", dogIds)
             .order("created_at", { ascending: false })
             .limit(20),
           supabase
             .from("med_records")
             .select("*")
-            .eq("owner_id", user.id)
+            .in("dog_id", dogIds)
             .order("expires_on", { ascending: true }),
         ]);
 
@@ -284,6 +311,9 @@ export default function HomePage() {
       />
 
       <div className="p-4 space-y-6">
+        {/* Pending Invites */}
+        <PendingInvitesCard onInviteAccepted={fetchData} />
+
         {dogs.length > 0 && activeDog ? (
           <>
             {/* Expiration Notices for active dog */}
