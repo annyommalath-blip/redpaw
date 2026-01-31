@@ -188,8 +188,8 @@ export default function HomePage() {
       );
 
       toast({
-        title: "✅ Lost Mode Deactivated",
-        description: "Glad your pup is safe! The alert has been resolved.",
+        title: t("home.lostModeDeactivated"),
+        description: t("home.gladPupSafe"),
       });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -213,7 +213,7 @@ export default function HomePage() {
       if (error) throw error;
 
       setMedRecords((prev) => prev.filter((r) => r.id !== deletingMedRecord.id));
-      toast({ title: "Record deleted" });
+      toast({ title: t("home.recordDeleted") });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
     } finally {
@@ -239,7 +239,7 @@ export default function HomePage() {
       if (error) throw error;
 
       setLogs((prev) => prev.filter((l) => l.id !== deletingLogId));
-      toast({ title: "Log deleted" });
+      toast({ title: t("home.logDeleted") });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
     } finally {
@@ -306,7 +306,7 @@ export default function HomePage() {
                 // Single dog: show full card
                 <DogCard
                   name={activeDog.name}
-                  breed={activeDog.breed || "Mixed breed"}
+                  breed={activeDog.breed || t("common.mixedBreed")}
                   photoUrl={activeDog.photo_url || ""}
                   isLost={activeDog.is_lost}
                   onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
@@ -320,7 +320,7 @@ export default function HomePage() {
               <section>
                 <DogCard
                   name={activeDog.name}
-                  breed={activeDog.breed || "Mixed breed"}
+                  breed={activeDog.breed || t("common.mixedBreed")}
                   photoUrl={activeDog.photo_url || ""}
                   isLost={activeDog.is_lost}
                   onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
@@ -423,10 +423,10 @@ export default function HomePage() {
         ) : (
           <EmptyState
             icon={<Dog className="h-10 w-10 text-muted-foreground" />}
-            title="No dog profile yet"
-            description="Add your furry friend to start tracking their health and keep them safe!"
+            title={t("home.noDogProfile")}
+            description={t("home.addFurryFriend")}
             action={{
-              label: "Add My Dog",
+              label: t("home.addMyDog"),
               onClick: () => navigate("/profile/add-dog"),
             }}
           />

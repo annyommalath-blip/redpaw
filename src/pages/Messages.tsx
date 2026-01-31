@@ -171,7 +171,7 @@ export default function MessagesPage() {
                   id={conversation.id}
                   participantName={conversation.otherParticipantName}
                   participantAvatar={conversation.otherParticipantAvatar || ""}
-                  lastMessage={conversation.last_message || "No messages yet"}
+                  lastMessage={conversation.last_message || t("messages.noMessagesYet")}
                   updatedAt={new Date(conversation.updated_at)}
                   unread={unreadCount > 0}
                   unreadCount={unreadCount}
