@@ -91,23 +91,22 @@ export function useDogMembers(dogId: string | undefined) {
     fetchMembers();
   }, [fetchMembers]);
 
-  const inviteMember = async (email: string): Promise<boolean> => {
+  const inviteMember = async (username: string): Promise<boolean> => {
     if (!dogId || !user) return false;
 
     try {
-      // First, find the user by email
-      const { data: authData, error: authError } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .ilike("display_name", email)
-        .maybeSingle();
-
-      // If not found by display_name, try to find via auth email
-      // Since we can't query auth.users directly, we need an alternative approach
-      // For now, let's use a function approach or just check if the email exists in profiles
+      // Use the security definer function to find users by display_name
+      // This bypasses RLS since we need to find users we don't have relationships with yet
+      const { data: profiles, error: profilesError } = await supabase.rpc("get_public_profiles");
       
-      // Alternative: Look up user by their profile email or display_name match
-      if (!authData) {
+      if (profilesError) throw profilesError;
+      
+      // Find user by display_name (case-insensitive)
+      const matchedProfile = profiles?.find(
+        (p: any) => p.display_name?.toLowerCase() === username.toLowerCase()
+      );
+      
+      if (!matchedProfile) {
         toast({
           variant: "destructive",
           title: "User not found",
@@ -115,8 +114,10 @@ export function useDogMembers(dogId: string | undefined) {
         });
         return false;
       }
+      
+      const inviteeUserId = matchedProfile.user_id;
 
-      const inviteeUserId = authData.user_id;
+      
 
       // Check if already a member
       const { data: existing } = await supabase

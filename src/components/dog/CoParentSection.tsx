@@ -48,7 +48,8 @@ export function CoParentSection({ dogId, dogName, ownerId }: CoParentSectionProp
   const activeMembers = members.filter((m) => m.status === "active");
   const pendingMembers = members.filter((m) => m.status === "invited");
 
-  const getMemberName = (member: DogMember) => {
+  const getMemberName = (member: DogMember | null) => {
+    if (!member) return t("coParent.unknownUser");
     if (member.profile?.first_name && member.profile?.last_name) {
       return `${member.profile.first_name} ${member.profile.last_name}`.trim();
     }
