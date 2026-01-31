@@ -455,6 +455,7 @@ export default function CreatePage() {
             : t("care.postCareRequest")
         }
         showBack
+        onBack={() => setCreateType(null)}
       />
 
       <div className="p-4">
