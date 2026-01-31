@@ -11,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getDistanceLabel } from "@/lib/distanceUtils";
+import { useTranslation } from "react-i18next";
 
 type CareType = "walk" | "watch" | "overnight" | "check-in";
 
@@ -62,11 +63,11 @@ interface CareRequestCardProps {
   onUpdated?: () => void;
 }
 
-const careTypeConfig: Record<CareType, { icon: string; label: string; color: string }> = {
-  walk: { icon: "🚶", label: "Walk", color: "bg-success text-success-foreground" },
-  watch: { icon: "👀", label: "Short Watch", color: "bg-warning text-warning-foreground" },
-  overnight: { icon: "🌙", label: "Overnight", color: "bg-primary text-primary-foreground" },
-  "check-in": { icon: "👋", label: "Check-in", color: "bg-accent text-accent-foreground" },
+const careTypeConfig: Record<CareType, { icon: string; labelKey: string; color: string }> = {
+  walk: { icon: "🚶", labelKey: "care.walk", color: "bg-success text-success-foreground" },
+  watch: { icon: "👀", labelKey: "care.shortWatch", color: "bg-warning text-warning-foreground" },
+  overnight: { icon: "🌙", labelKey: "care.overnight", color: "bg-primary text-primary-foreground" },
+  "check-in": { icon: "👋", labelKey: "care.checkIn", color: "bg-accent text-accent-foreground" },
 };
 
 export function CareRequestCard({
@@ -92,6 +93,7 @@ export function CareRequestCard({
   onDeleted,
   onUpdated,
 }: CareRequestCardProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -123,7 +125,7 @@ export function CareRequestCard({
 
       if (error) throw error;
 
-      toast({ title: "Care request deleted" });
+      toast({ title: t("care.careRequestDeleted") });
       onDeleted?.();
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -147,23 +149,23 @@ export function CareRequestCard({
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge className={config.color}>
-                {config.icon} {config.label}
+                {config.icon} {t(config.labelKey)}
               </Badge>
               {isMultipleDogs && (
                 <Badge variant="outline" className="border-primary text-primary">
-                  🐾 {displayDogs.length} Dogs
+                  🐾 {displayDogs.length} {t("care.dogsLabel")}
                 </Badge>
               )}
               {isAssigned && (
                 <Badge className="bg-primary text-primary-foreground">
                   <Check className="h-3 w-3 mr-1" />
-                  Assigned
+                  {t("common.assigned")}
                 </Badge>
               )}
               {hasApplied && !isAssigned && (
                 <Badge className="bg-success text-success-foreground">
                   <Check className="h-3 w-3 mr-1" />
-                  Applied
+                  {t("care.applied")}
                 </Badge>
               )}
             </div>
@@ -182,14 +184,14 @@ export function CareRequestCard({
                     <DropdownMenuContent align="end" className="bg-background border shadow-lg z-50">
                       <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
                         <Pencil className="h-4 w-4 mr-2" />
-                        Edit
+                        {t("common.edit")}
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => setShowDeleteDialog(true)}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
+                        {t("common.delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -229,7 +231,7 @@ export function CareRequestCard({
                   }
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {displayDogs.length} dogs need care together
+                  {displayDogs.length} {t("common.dogsNeedCare")}
                 </p>
               </div>
               {onClick && (
@@ -246,8 +248,8 @@ export function CareRequestCard({
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-foreground">{displayDogs[0].name || "Unknown"}</h3>
-                <p className="text-sm text-muted-foreground">{displayDogs[0].breed || "Unknown breed"}</p>
+                <h3 className="font-bold text-foreground">{displayDogs[0].name || t("common.unknownBreed")}</h3>
+                <p className="text-sm text-muted-foreground">{displayDogs[0].breed || t("common.unknownBreed")}</p>
               </div>
               {onClick && (
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
@@ -268,9 +270,7 @@ export function CareRequestCard({
                 className="text-muted-foreground hover:text-primary"
               />
               {distanceLabel && (
-                <span className="text-xs text-muted-foreground shrink-0">
-                  • {distanceLabel} away
-                </span>
+                <span className="text-xs text-muted-foreground shrink-0">• {distanceLabel} {t("common.away")}</span>
               )}
             </div>
             {payOffered && (
@@ -301,19 +301,17 @@ export function CareRequestCard({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Care Request?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this care request and all applications. This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("care.deleteCareRequest")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("care.deleteCareRequestDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? t("common.deleting") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

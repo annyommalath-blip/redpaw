@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { calculateAge } from "@/lib/ageCalculator";
 import { LocationLink } from "@/components/location/LocationLink";
 import { getDistanceLabel } from "@/lib/distanceUtils";
+import { useTranslation } from "react-i18next";
 
 interface LostAlertCardProps {
   id: string;
@@ -48,6 +49,7 @@ export function LostAlertCard({
   status,
   onContact,
 }: LostAlertCardProps) {
+  const { t } = useTranslation();
   const isActive = status === "active";
   const navigate = useNavigate();
   
@@ -83,7 +85,7 @@ export function LostAlertCard({
         <div className={`px-4 py-2 ${isActive ? "bg-lost" : "bg-success"}`}>
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-white">
-              {isActive ? "🚨 LOST DOG" : "✅ FOUND"}
+              {isActive ? `🚨 ${t("community.lostDog")}` : `✅ ${t("lost.found")}`}
             </span>
             <Badge variant="outline" className="bg-white/20 text-white border-white/30">
               {formatDistanceToNow(createdAt, { addSuffix: true })}
@@ -136,26 +138,20 @@ export function LostAlertCard({
               className="text-muted-foreground hover:text-primary"
             />
             {distanceLabel && (
-              <span className="text-xs text-muted-foreground shrink-0">
-                • {distanceLabel} away
-              </span>
+              <span className="text-xs text-muted-foreground shrink-0">• {distanceLabel} {t("common.away")}</span>
             )}
           </div>
+          </div>
 
-          {/* Actions */}
           {isActive && (
             <div className="flex gap-2 mt-4">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={handleReportSighting}
-              >
+              <Button variant="outline" className="flex-1" onClick={handleReportSighting}>
                 <Eye className="h-4 w-4 mr-2" />
-                Report Sighting
+                {t("common.reportSighting")}
               </Button>
               <Button className="flex-1 bg-primary" onClick={handleContact}>
                 <MessageCircle className="h-4 w-4 mr-2" />
-                Contact
+                {t("common.contact")}
               </Button>
             </div>
           )}

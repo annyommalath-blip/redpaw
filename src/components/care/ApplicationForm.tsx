@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface ApplicationFormProps {
   requestId: string;
@@ -14,6 +15,7 @@ interface ApplicationFormProps {
 }
 
 export function ApplicationForm({ requestId, onSuccess, onCancel }: ApplicationFormProps) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -22,12 +24,12 @@ export function ApplicationForm({ requestId, onSuccess, onCancel }: ApplicationF
     e.preventDefault();
     
     if (!message.trim()) {
-      toast({ variant: "destructive", title: "Please write a message to the owner" });
+      toast({ variant: "destructive", title: t("application.writeMessage") });
       return;
     }
 
     if (message.trim().length > 500) {
-      toast({ variant: "destructive", title: "Message must be less than 500 characters" });
+      toast({ variant: "destructive", title: t("application.messageTooLong") });
       return;
     }
 
@@ -46,14 +48,14 @@ export function ApplicationForm({ requestId, onSuccess, onCancel }: ApplicationF
 
       if (error) {
         if (error.code === "23505") {
-          toast({ variant: "destructive", title: "You've already applied to this request" });
+          toast({ variant: "destructive", title: t("application.alreadyApplied") });
         } else {
           throw error;
         }
         return;
       }
 
-      toast({ title: "Application sent! 🐾", description: "The owner will review your application." });
+      toast({ title: t("application.applicationSent"), description: t("application.ownerWillReview") });
       onSuccess();
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -65,16 +67,16 @@ export function ApplicationForm({ requestId, onSuccess, onCancel }: ApplicationF
   return (
     <Card className="border-primary">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Apply for this job</CardTitle>
-        <CardDescription>Introduce yourself to the owner</CardDescription>
+        <CardTitle className="text-lg">{t("application.title")}</CardTitle>
+        <CardDescription>{t("application.subtitle")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="message">Message to Owner *</Label>
+            <Label htmlFor="message">{t("application.messageToOwner")} *</Label>
             <Textarea
               id="message"
-              placeholder="Hi! I'd love to help care for your dog. I have experience with..."
+              placeholder={t("application.messagePlaceholder")}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
@@ -88,11 +90,11 @@ export function ApplicationForm({ requestId, onSuccess, onCancel }: ApplicationF
 
           <div className="flex gap-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" className="flex-1" disabled={loading || !message.trim()}>
               <Send className="h-4 w-4 mr-2" />
-              {loading ? "Sending..." : "Send Application"}
+              {loading ? t("common.sending") : t("application.sendApplication")}
             </Button>
           </div>
         </form>

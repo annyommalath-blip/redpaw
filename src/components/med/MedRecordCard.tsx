@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MedRecordWithStatus } from "@/lib/medRecordUtils";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface MedRecordCardProps {
   record: MedRecordWithStatus;
@@ -19,17 +20,19 @@ interface MedRecordCardProps {
 }
 
 export function MedRecordCard({ record, onEdit, onDelete }: MedRecordCardProps) {
+  const { t } = useTranslation();
+  
   const statusConfig = {
     active: {
-      label: "Active",
+      label: t("medications.active"),
       className: "bg-success/10 text-success border-success/20",
     },
     "expiring-soon": {
-      label: "Expiring Soon",
+      label: t("medications.expiringSoon"),
       className: "bg-warning/10 text-warning border-warning/20",
     },
     expired: {
-      label: "Expired",
+      label: t("medications.expired"),
       className: "bg-destructive/10 text-destructive border-destructive/20",
     },
   };
@@ -64,8 +67,8 @@ export function MedRecordCard({ record, onEdit, onDelete }: MedRecordCardProps) 
             </div>
 
             <div className="text-sm text-muted-foreground space-y-0.5">
-              <p>Given: {format(new Date(record.date_given), "MMM d, yyyy")}</p>
-              <p>Expires: {format(new Date(record.expires_on), "MMM d, yyyy")}</p>
+              <p>{t("medications.given")}: {format(new Date(record.date_given), "MMM d, yyyy")}</p>
+              <p>{t("medications.expires")}: {format(new Date(record.expires_on), "MMM d, yyyy")}</p>
               <p className={cn(
                 "font-medium",
                 record.status === "expired" && "text-destructive",
@@ -85,14 +88,14 @@ export function MedRecordCard({ record, onEdit, onDelete }: MedRecordCardProps) 
             <DropdownMenuContent align="end" className="bg-background border shadow-lg z-50">
               <DropdownMenuItem onClick={() => onEdit(record)}>
                 <Edit className="h-4 w-4 mr-2" />
-                Edit
+                {t("common.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => onDelete(record)}
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+                {t("common.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

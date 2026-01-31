@@ -2,6 +2,7 @@ import { Dog } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface DogCardProps {
   name: string;
@@ -20,6 +21,7 @@ export function DogCard({
   onLostToggle,
   onClick,
 }: DogCardProps) {
+  const { t } = useTranslation();
   return (
     <Card
       className={cn(
@@ -61,7 +63,7 @@ export function DogCard({
             <p className="text-sm text-muted-foreground truncate">{breed}</p>
             {isLost && (
               <p className="text-sm font-semibold text-lost mt-1">
-                🔴 Lost Mode Active
+                🔴 {t("dogs.lostModeActive")}
               </p>
             )}
           </div>
@@ -78,7 +80,7 @@ export function DogCard({
                 isLost && "data-[state=checked]:bg-lost"
               )}
             />
-            <span className="text-xs text-muted-foreground">Lost</span>
+            <span className="text-xs text-muted-foreground">{t("dogs.lost")}</span>
           </div>
         </div>
       </CardContent>
