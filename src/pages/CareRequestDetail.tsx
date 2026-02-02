@@ -16,6 +16,7 @@ import { SitterLogForm } from "@/components/care/SitterLogForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useConversation } from "@/hooks/useConversation";
 import { formatDistanceToNow } from "date-fns";
 
 type CareType = "walk" | "watch" | "overnight" | "check-in";
@@ -98,6 +99,7 @@ export default function CareRequestDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { openConversation } = useConversation();
 
   const [request, setRequest] = useState<CareRequest | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -352,42 +354,8 @@ export default function CareRequestDetailPage() {
   };
 
   const handleChat = async (otherUserId: string) => {
-    if (!user) return;
-    
-    try {
-      // Check for existing conversation with this context
-      const { data: conversations } = await supabase
-        .from("conversations")
-        .select("id, participant_ids")
-        .eq("context_type", "careRequest")
-        .eq("context_id", requestId);
-
-      // Find conversation where both users are participants
-      const existingConvo = conversations?.find(c => 
-        c.participant_ids.includes(user.id) && c.participant_ids.includes(otherUserId)
-      );
-
-      if (existingConvo) {
-        navigate(`/messages/${existingConvo.id}`);
-        return;
-      }
-
-      // Create new conversation
-      const { data: newConvo, error } = await supabase
-        .from("conversations")
-        .insert({
-          participant_ids: [user.id, otherUserId],
-          context_type: "careRequest",
-          context_id: requestId,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      navigate(`/messages/${newConvo.id}`);
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    }
+    if (!user || !requestId) return;
+    await openConversation(otherUserId, "careRequest", requestId);
   };
 
   if (loading) {
