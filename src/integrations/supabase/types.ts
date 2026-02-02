@@ -190,6 +190,7 @@ export type Database = {
           id: string
           last_message: string | null
           participant_ids: string[]
+          participant_key: string | null
           updated_at: string
         }
         Insert: {
@@ -199,6 +200,7 @@ export type Database = {
           id?: string
           last_message?: string | null
           participant_ids: string[]
+          participant_key?: string | null
           updated_at?: string
         }
         Update: {
@@ -208,6 +210,7 @@ export type Database = {
           id?: string
           last_message?: string | null
           participant_ids?: string[]
+          participant_key?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -753,6 +756,16 @@ export type Database = {
       }
     }
     Functions: {
+      generate_participant_key: { Args: { p_ids: string[] }; Returns: string }
+      get_or_create_conversation: {
+        Args: {
+          p_context_id?: string
+          p_context_type?: string
+          p_user_id_1: string
+          p_user_id_2: string
+        }
+        Returns: string
+      }
       get_profile_location: {
         Args: { target_user_id: string }
         Returns: {
