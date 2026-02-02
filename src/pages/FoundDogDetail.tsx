@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useConversation } from "@/hooks/useConversation";
 import { useToast } from "@/hooks/use-toast";
 import { format, formatDistanceToNow } from "date-fns";
 import { FoundDogReplies } from "@/components/community/FoundDogReplies";
@@ -67,6 +68,7 @@ export default function FoundDogDetailPage() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getOrCreateConversation, openConversation } = useConversation();
 
   const [foundDog, setFoundDog] = useState<FoundDog | null>(null);
   const [reporter, setReporter] = useState<ReporterProfile | null>(null);
@@ -141,36 +143,15 @@ export default function FoundDogDetailPage() {
     try {
       const selectedDog = userDogs.find((d) => d.id === selectedDogId);
       
-      // Create or find conversation with reporter
-      const { data: conversations } = await supabase
-        .from("conversations")
-        .select("id, participant_ids")
-        .eq("context_type", "foundDog")
-        .eq("context_id", foundDog.id);
-
-      const existingConvo = conversations?.find(
-        (c) =>
-          c.participant_ids.includes(user.id) &&
-          c.participant_ids.includes(foundDog.reporter_id)
+      // Get or create conversation with reporter
+      const conversationId = await getOrCreateConversation(
+        foundDog.reporter_id,
+        "foundDog",
+        foundDog.id
       );
 
-      let conversationId: string;
-
-      if (existingConvo) {
-        conversationId = existingConvo.id;
-      } else {
-        const { data: newConvo, error } = await supabase
-          .from("conversations")
-          .insert({
-            participant_ids: [user.id, foundDog.reporter_id],
-            context_type: "foundDog",
-            context_id: foundDog.id,
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        conversationId = newConvo.id;
+      if (!conversationId) {
+        throw new Error("Could not create conversation");
       }
 
       // Send initial message
@@ -185,7 +166,7 @@ export default function FoundDogDetailPage() {
       // Update conversation last_message
       await supabase
         .from("conversations")
-        .update({ last_message: message })
+        .update({ last_message: message, updated_at: new Date().toISOString() })
         .eq("id", conversationId);
 
       toast({
@@ -238,42 +219,7 @@ export default function FoundDogDetailPage() {
     // Don't message yourself
     if (user.id === foundDog.reporter_id) return;
 
-    try {
-      const { data: conversations } = await supabase
-        .from("conversations")
-        .select("id, participant_ids")
-        .eq("context_type", "foundDog")
-        .eq("context_id", foundDog.id);
-
-      const existingConvo = conversations?.find(
-        (c) =>
-          c.participant_ids.includes(user.id) &&
-          c.participant_ids.includes(foundDog.reporter_id)
-      );
-
-      if (existingConvo) {
-        navigate(`/messages/${existingConvo.id}`);
-      } else {
-        const { data: newConvo, error } = await supabase
-          .from("conversations")
-          .insert({
-            participant_ids: [user.id, foundDog.reporter_id],
-            context_type: "foundDog",
-            context_id: foundDog.id,
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        navigate(`/messages/${newConvo.id}`);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not start conversation",
-      });
-    }
+    await openConversation(foundDog.reporter_id, "foundDog", foundDog.id);
   };
 
   const getReporterName = () => {

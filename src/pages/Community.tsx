@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useConversation } from "@/hooks/useConversation";
 import { useViewerLocation } from "@/hooks/useViewerLocation";
 
 interface LostAlert {
@@ -89,6 +90,7 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openConversation } = useConversation();
   const viewerLocation = useViewerLocation();
 
   // Check for tab parameter in URL
@@ -211,41 +213,7 @@ export default function CommunityPage() {
     // Don't message yourself
     if (user.id === alert.owner_id) return;
     
-    try {
-      // Check for existing conversation for this lost alert
-      const { data: conversations } = await supabase
-        .from("conversations")
-        .select("id, participant_ids")
-        .eq("context_type", "lostAlert")
-        .eq("context_id", alertId);
-      
-      const ownerId = alert.owner_id;
-      
-      // Find existing conversation between these two users
-      const existingConvo = conversations?.find(c => 
-        c.participant_ids.includes(user.id) && c.participant_ids.includes(ownerId)
-      );
-      
-      if (existingConvo) {
-        navigate(`/messages/${existingConvo.id}`);
-      } else {
-        // Create new conversation
-        const { data: newConvo, error } = await supabase
-          .from("conversations")
-          .insert({
-            participant_ids: [user.id, ownerId],
-            context_type: "lostAlert",
-            context_id: alertId,
-          })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        navigate(`/messages/${newConvo.id}`);
-      }
-    } catch (error) {
-      console.error("Error starting conversation:", error);
-    }
+    await openConversation(alert.owner_id, "lostAlert", alertId);
   };
 
   const handleContactFoundDogReporter = async (foundDogId: string) => {
@@ -260,36 +228,7 @@ export default function CommunityPage() {
     // Don't message yourself
     if (user.id === foundDog.reporter_id) return;
     
-    try {
-      const { data: conversations } = await supabase
-        .from("conversations")
-        .select("id, participant_ids")
-        .eq("context_type", "foundDog")
-        .eq("context_id", foundDogId);
-      
-      const existingConvo = conversations?.find(c => 
-        c.participant_ids.includes(user.id) && c.participant_ids.includes(foundDog.reporter_id)
-      );
-      
-      if (existingConvo) {
-        navigate(`/messages/${existingConvo.id}`);
-      } else {
-        const { data: newConvo, error } = await supabase
-          .from("conversations")
-          .insert({
-            participant_ids: [user.id, foundDog.reporter_id],
-            context_type: "foundDog",
-            context_id: foundDogId,
-          })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        navigate(`/messages/${newConvo.id}`);
-      }
-    } catch (error) {
-      console.error("Error starting conversation:", error);
-    }
+    await openConversation(foundDog.reporter_id, "foundDog", foundDogId);
   };
 
   const handleReportSighting = (alertId: string) => {
