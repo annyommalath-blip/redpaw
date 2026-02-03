@@ -6,6 +6,7 @@ import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ConversationItem } from "@/components/messages/ConversationItem";
 import { EmptyState } from "@/components/ui/empty-state";
+import { GlassCard } from "@/components/ui/glass-card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -36,7 +37,6 @@ export default function MessagesPage() {
     if (user) {
       fetchConversations();
       
-      // Subscribe to conversation updates
       const channel = supabase
         .channel('conversations-updates')
         .on(
@@ -73,7 +73,6 @@ export default function MessagesPage() {
     if (!user) return;
     
     try {
-      // Fetch conversations where user is a participant
       const { data: convos, error } = await supabase
         .from("conversations")
         .select("*")
@@ -87,18 +86,15 @@ export default function MessagesPage() {
         return;
       }
 
-      // Get all other participant IDs
       const otherParticipantIds = convos
         .flatMap(c => c.participant_ids.filter(id => id !== user.id))
         .filter((id, index, arr) => arr.indexOf(id) === index);
 
-      // Fetch profiles for other participants
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, display_name, first_name, last_name, avatar_url")
         .in("user_id", otherParticipantIds);
 
-      // Combine conversations with profiles
       const conversationsWithProfiles: ConversationWithProfile[] = convos.map(convo => {
         const otherParticipantId = convo.participant_ids.find(id => id !== user.id);
         const profile = profiles?.find(p => p.user_id === otherParticipantId);
@@ -136,57 +132,60 @@ export default function MessagesPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="flex flex-col">
-          {/* AI Assistant - Always First */}
-          <div
+        <div className="p-4 space-y-4">
+          {/* AI Assistant Card */}
+          <GlassCard
+            hover
+            className="overflow-hidden animate-slide-up"
             onClick={handleOpenAIChat}
-            className="flex items-center gap-3 px-4 py-3 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors bg-primary/5"
           >
-            <div className="relative">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Bot className="h-6 w-6 text-primary" />
+            <div className="flex items-center gap-4 p-4">
+              <div className="relative">
+                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Bot className="h-7 w-7 text-primary" />
+                </div>
+                <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
+                  <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+                </div>
               </div>
-              <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                <Sparkles className="h-3 w-3 text-primary-foreground" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-foreground">{t("messages.aiAssistant")}</span>
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">AI</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {t("messages.askMeAnything")}
+                </p>
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-foreground">{t("messages.aiAssistant")}</span>
-                <span className="text-xs text-primary font-medium">AI</span>
-              </div>
-              <p className="text-sm text-muted-foreground truncate">
-                {t("messages.askMeAnything")}
-              </p>
-            </div>
-          </div>
+          </GlassCard>
 
-          {/* Regular Conversations */}
+          {/* Conversations List */}
           {conversations.length > 0 ? (
-            conversations.map((conversation) => {
-              const unreadCount = getUnreadCount(conversation.id);
-              return (
-                <ConversationItem
-                  key={conversation.id}
-                  id={conversation.id}
-                  participantName={conversation.otherParticipantName}
-                  participantAvatar={conversation.otherParticipantAvatar || ""}
-                  lastMessage={conversation.last_message || t("messages.noMessagesYet")}
-                  updatedAt={new Date(conversation.updated_at)}
-                  unread={unreadCount > 0}
-                  unreadCount={unreadCount}
-                  onClick={() => handleOpenConversation(conversation.id)}
-                />
-              );
-            })
+            <GlassCard variant="light" className="overflow-hidden divide-y divide-border/50">
+              {conversations.map((conversation) => {
+                const unreadCount = getUnreadCount(conversation.id);
+                return (
+                  <ConversationItem
+                    key={conversation.id}
+                    id={conversation.id}
+                    participantName={conversation.otherParticipantName}
+                    participantAvatar={conversation.otherParticipantAvatar || ""}
+                    lastMessage={conversation.last_message || t("messages.noMessagesYet")}
+                    updatedAt={new Date(conversation.updated_at)}
+                    unread={unreadCount > 0}
+                    unreadCount={unreadCount}
+                    onClick={() => handleOpenConversation(conversation.id)}
+                  />
+                );
+              })}
+            </GlassCard>
           ) : (
-            <div className="p-4">
-              <EmptyState
-                icon={<MessageCircle className="h-10 w-10 text-muted-foreground" />}
-                title={t("messages.noConversations")}
-                description={t("messages.conversationsAppearHere")}
-              />
-            </div>
+            <EmptyState
+              icon={<MessageCircle className="h-10 w-10 text-muted-foreground" />}
+              title={t("messages.noConversations")}
+              description={t("messages.conversationsAppearHere")}
+            />
           )}
         </div>
       )}

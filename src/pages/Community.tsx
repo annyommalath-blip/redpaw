@@ -267,7 +267,7 @@ export default function CommunityPage() {
       <div className="p-4">
         {/* Location permission banner */}
         {viewerLocation.permissionDenied && (
-          <div className="mb-4 p-3 bg-muted rounded-lg flex items-center justify-between gap-2">
+          <div className="mb-4 p-3 glass-card-light rounded-2xl flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
               <span>{t("common.enableLocationToSeeDistance")}</span>
@@ -276,14 +276,14 @@ export default function CommunityPage() {
               variant="ghost"
               size="sm"
               onClick={viewerLocation.requestLocation}
-              className="text-primary"
+              className="text-primary rounded-xl"
             >
               {t("common.enable")}
             </Button>
           </div>
         )}
         
-        {/* Refresh location button (only show if has location) */}
+        {/* Refresh location button */}
         {viewerLocation.hasLocation && (
           <div className="mb-3 flex justify-end">
             <Button
@@ -291,7 +291,7 @@ export default function CommunityPage() {
               size="sm"
               onClick={viewerLocation.refreshLocation}
               disabled={viewerLocation.loading}
-              className="text-xs text-muted-foreground"
+              className="text-xs text-muted-foreground rounded-xl"
             >
               <RefreshCw className={`h-3 w-3 mr-1 ${viewerLocation.loading ? 'animate-spin' : ''}`} />
               {t("common.updateLocation")}
@@ -300,12 +300,12 @@ export default function CommunityPage() {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="care" className="gap-2">
+          <TabsList className="grid w-full grid-cols-2 mb-4 glass-card-light p-1 rounded-2xl">
+            <TabsTrigger value="care" className="gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <HandHeart className="h-4 w-4" />
               {t("community.careRequests")}
             </TabsTrigger>
-            <TabsTrigger value="lost" className="gap-2">
+            <TabsTrigger value="lost" className="gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <AlertTriangle className="h-4 w-4" />
               {t("community.lostAndFound")}
             </TabsTrigger>
@@ -372,15 +372,15 @@ export default function CommunityPage() {
               type="single" 
               value={lostFoundFilter}
               onValueChange={(val) => val && setLostFoundFilter(val)}
-              className="justify-start"
+              className="justify-start bg-muted/30 p-1 rounded-xl w-fit"
             >
-              <ToggleGroupItem value="all" size="sm" className="text-xs px-3">
+              <ToggleGroupItem value="all" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
                 {t("common.all")}
               </ToggleGroupItem>
-              <ToggleGroupItem value="lost" size="sm" className="text-xs px-3">
+              <ToggleGroupItem value="lost" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
                 {t("community.lost")}
               </ToggleGroupItem>
-              <ToggleGroupItem value="found" size="sm" className="text-xs px-3">
+              <ToggleGroupItem value="found" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
                 {t("community.found")}
               </ToggleGroupItem>
             </ToggleGroup>

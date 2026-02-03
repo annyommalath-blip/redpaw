@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   title: string;
@@ -9,9 +10,17 @@ interface PageHeaderProps {
   showBack?: boolean;
   onBack?: () => void;
   action?: ReactNode;
+  className?: string;
 }
 
-export function PageHeader({ title, subtitle, showBack = false, onBack, action }: PageHeaderProps) {
+export function PageHeader({ 
+  title, 
+  subtitle, 
+  showBack = false, 
+  onBack, 
+  action,
+  className 
+}: PageHeaderProps) {
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -23,7 +32,10 @@ export function PageHeader({ title, subtitle, showBack = false, onBack, action }
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 safe-area-top">
+    <header className={cn(
+      "sticky top-0 z-40 glass-nav safe-area-top",
+      className
+    )}>
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           {showBack && (
@@ -31,19 +43,23 @@ export function PageHeader({ title, subtitle, showBack = false, onBack, action }
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="shrink-0"
+              className="shrink-0 rounded-xl hover:bg-muted"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
           <div>
-            <h1 className="text-xl font-bold text-foreground">{title}</h1>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">
+              {title}
+            </h1>
             {subtitle && (
-              <p className="text-sm text-muted-foreground">{subtitle}</p>
+              <p className="text-sm text-muted-foreground">
+                {subtitle}
+              </p>
             )}
           </div>
         </div>
-        {action && <div>{action}</div>}
+        {action && <div className="flex items-center gap-2">{action}</div>}
       </div>
     </header>
   );

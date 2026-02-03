@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -59,6 +60,10 @@ export default {
           DEFAULT: "hsl(var(--lost))",
           foreground: "hsl(var(--lost-foreground))",
         },
+        glass: {
+          DEFAULT: "hsl(var(--glass))",
+          border: "hsl(var(--glass-border))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -74,6 +79,15 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 4px)",
         sm: "calc(var(--radius) - 8px)",
+        xl: "calc(var(--radius) + 4px)",
+        "2xl": "calc(var(--radius) + 8px)",
+        "3xl": "calc(var(--radius) + 16px)",
+      },
+      boxShadow: {
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+        glow: "var(--shadow-glow)",
       },
       keyframes: {
         "accordion-down": {
@@ -96,6 +110,13 @@ export default {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.95)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -103,13 +124,18 @@ export default {
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
         "slide-up": "slide-up 0.3s ease-out",
         "fade-in": "fade-in 0.2s ease-out",
+        "scale-in": "scale-in 0.2s ease-out",
+        shimmer: "shimmer 1.5s infinite",
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       spacing: {
         'safe-bottom': 'env(safe-area-inset-bottom, 16px)',
         'safe-top': 'env(safe-area-inset-top, 16px)',
+      },
+      backdropBlur: {
+        xs: '2px',
       },
     },
   },
