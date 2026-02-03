@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dog, Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,38 +88,58 @@ export default function AuthPage() {
   // Show loading while checking auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-warm paw-pattern flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-fade-in">
+      <div className="min-h-screen bg-gradient-redpaw flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
           <div className="relative">
-            <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow animate-pulse-soft">
+            <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg animate-pulse-soft"
+              style={{ boxShadow: '0 8px 32px -4px hsl(0 78% 52% / 0.3)' }}
+            >
               <Dog className="h-12 w-12 text-primary-foreground" />
             </div>
             <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-primary animate-pulse" />
           </div>
           <p className="text-muted-foreground font-medium">Loading...</p>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-warm paw-pattern flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-redpaw flex flex-col items-center justify-center p-4">
       {/* Logo */}
-      <div className="flex flex-col items-center mb-8 animate-slide-up">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center mb-8"
+      >
         <div className="relative mb-4">
-          <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center"
+            style={{ boxShadow: '0 8px 32px -4px hsl(0 78% 52% / 0.3)' }}
+          >
             <Dog className="h-12 w-12 text-primary-foreground" />
-          </div>
-          <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-primary" />
+          </motion.div>
+          <motion.div
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          >
+            <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-primary" />
+          </motion.div>
         </div>
         <h1 className="text-4xl font-bold text-foreground tracking-tight">RedPaw</h1>
         <p className="text-muted-foreground mt-2 flex items-center gap-2">
           Your dog's best companion
           <span className="text-xl">🐾</span>
         </p>
-      </div>
+      </motion.div>
 
-      <GlassCard className="w-full max-w-md animate-scale-in">
+      <GlassCard className="w-full max-w-md" variant="modal" delay={0.2}>
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2 m-4 mb-0 w-[calc(100%-2rem)] bg-muted/50">
             <TabsTrigger value="signin" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm">

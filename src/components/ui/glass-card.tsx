@@ -1,11 +1,14 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { motion, HTMLMotionProps } from "framer-motion";
 
 type GlassVariant = "default" | "light" | "modal" | "surface";
 
-interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface GlassCardProps extends Omit<HTMLMotionProps<"div">, "ref"> {
   variant?: GlassVariant;
   hover?: boolean;
+  animate?: boolean;
+  delay?: number;
 }
 
 const variantStyles: Record<GlassVariant, string> = {
@@ -16,13 +19,17 @@ const variantStyles: Record<GlassVariant, string> = {
 };
 
 const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
-  ({ className, variant = "default", hover = false, ...props }, ref) => (
-    <div
+  ({ className, variant = "default", hover = false, animate = true, delay = 0, ...props }, ref) => (
+    <motion.div
       ref={ref}
+      initial={animate ? { opacity: 0, y: 20 } : false}
+      animate={animate ? { opacity: 1, y: 0 } : undefined}
+      transition={{ duration: 0.4, ease: "easeOut", delay }}
+      whileHover={hover ? { y: -2, transition: { duration: 0.2 } } : undefined}
       className={cn(
         "rounded-2xl text-card-foreground",
         variantStyles[variant],
-        hover && "hover-lift cursor-pointer",
+        hover && "cursor-pointer",
         className
       )}
       {...props}

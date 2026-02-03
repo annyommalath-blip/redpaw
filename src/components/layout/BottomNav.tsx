@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export function BottomNav() {
   const { totalUnread } = useUnreadMessages();
@@ -18,25 +19,34 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass-nav safe-area-bottom">
+    <motion.nav 
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="fixed bottom-4 left-4 right-4 z-50 glass-card-modal rounded-2xl safe-area-bottom"
+    >
       <div className="flex items-center justify-around px-2 py-2">
-        {navItems.map((item) => (
+        {navItems.map((item, index) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === "/"}
             className={cn(
-              "relative flex flex-col items-center gap-1 px-3 py-2 rounded-2xl text-muted-foreground transition-all duration-200",
+              "relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-muted-foreground transition-all duration-200",
               item.isCreate && "relative"
             )}
             activeClassName="text-primary bg-primary/10"
           >
             {({ isActive }: { isActive: boolean }) => (
               <>
-                <div className={cn(
-                  "relative flex items-center justify-center",
-                  item.isCreate && "h-12 w-12 -mt-4 rounded-full bg-primary text-primary-foreground shadow-glow"
-                )}>
+                <motion.div 
+                  whileTap={{ scale: 0.9 }}
+                  className={cn(
+                    "relative flex items-center justify-center",
+                    item.isCreate && "h-12 w-12 -mt-6 rounded-2xl bg-primary text-primary-foreground shadow-lg"
+                  )}
+                  style={item.isCreate ? { boxShadow: '0 4px 20px -4px hsl(0 78% 52% / 0.4)' } : undefined}
+                >
                   <item.icon className={cn(
                     "transition-transform duration-200",
                     item.isCreate ? "h-6 w-6" : "h-5 w-5",
@@ -45,12 +55,12 @@ export function BottomNav() {
                   {item.to === "/messages" && totalUnread > 0 && (
                     <Badge 
                       variant="destructive" 
-                      className="absolute -top-1.5 -right-1.5 h-5 min-w-5 flex items-center justify-center p-0 text-xs font-bold border-2 border-white dark:border-card"
+                      className="absolute -top-1.5 -right-1.5 h-5 min-w-5 flex items-center justify-center p-0 text-xs font-bold border-2 border-background"
                     >
                       {totalUnread > 99 ? "99+" : totalUnread}
                     </Badge>
                   )}
-                </div>
+                </motion.div>
                 <span className={cn(
                   "text-[10px] font-medium transition-colors",
                   item.isCreate && "mt-1"
@@ -62,6 +72,6 @@ export function BottomNav() {
           </NavLink>
         ))}
       </div>
-    </nav>
+    </motion.nav>
   );
 }

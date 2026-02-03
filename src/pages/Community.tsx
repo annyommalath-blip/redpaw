@@ -11,6 +11,8 @@ import { FoundDogCard } from "@/components/community/FoundDogCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatedList } from "@/components/ui/animated-list";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversation } from "@/hooks/useConversation";
@@ -253,8 +255,11 @@ export default function CommunityPage() {
     return (
       <MobileLayout>
         <PageHeader title={t("community.title")} subtitle={t("community.subtitle")} />
-        <div className="p-4 flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="p-4 space-y-4">
+          <Skeleton className="h-12 w-full rounded-2xl" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
         </div>
       </MobileLayout>
     );
@@ -311,52 +316,54 @@ export default function CommunityPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="care" className="space-y-4 mt-0">
+          <TabsContent value="care" className="mt-0">
             {careRequests.length > 0 ? (
-              careRequests.map((request) => (
-                <CareRequestCard
-                  key={request.id}
-                  id={request.id}
-                  dogName={request.dogs?.name || "Unknown"}
-                  breed={request.dogs?.breed || ""}
-                  photoUrl={request.dogs?.photo_url || undefined}
-                  careType={request.care_type}
-                  timeWindow={request.time_window}
-                  location={request.location_label || request.location_text}
-                  notes={request.notes || undefined}
-                  payOffered={request.pay_offered || undefined}
-                  createdAt={new Date(request.created_at)}
-                  status={request.status}
-                  isAssigned={!!request.assigned_sitter_id}
-                  hasApplied={userApplications.has(request.id)}
-                  onClick={() => handleCareRequestClick(request.id)}
-                  dogs={request.allDogs}
-                  isOwner={user?.id === request.owner_id}
-                  requestData={{
-                    id: request.id,
-                    dog_id: request.dog_id,
-                    dog_ids: request.dog_ids,
-                    care_type: request.care_type,
-                    time_window: request.time_window,
-                    location_text: request.location_text,
-                    notes: request.notes,
-                    pay_offered: request.pay_offered,
-                    pay_amount: request.pay_amount,
-                    pay_currency: request.pay_currency,
-                    request_date: request.request_date,
-                    start_time: request.start_time,
-                    end_time: request.end_time,
-                    latitude: request.latitude,
-                    longitude: request.longitude,
-                    location_label: request.location_label,
-                    location_source: request.location_source,
-                  }}
-                  viewerLatitude={viewerLocation.latitude}
-                  viewerLongitude={viewerLocation.longitude}
-                  onDeleted={fetchData}
-                  onUpdated={fetchData}
-                />
-              ))
+              <AnimatedList className="space-y-4">
+                {careRequests.map((request) => (
+                  <CareRequestCard
+                    key={request.id}
+                    id={request.id}
+                    dogName={request.dogs?.name || "Unknown"}
+                    breed={request.dogs?.breed || ""}
+                    photoUrl={request.dogs?.photo_url || undefined}
+                    careType={request.care_type}
+                    timeWindow={request.time_window}
+                    location={request.location_label || request.location_text}
+                    notes={request.notes || undefined}
+                    payOffered={request.pay_offered || undefined}
+                    createdAt={new Date(request.created_at)}
+                    status={request.status}
+                    isAssigned={!!request.assigned_sitter_id}
+                    hasApplied={userApplications.has(request.id)}
+                    onClick={() => handleCareRequestClick(request.id)}
+                    dogs={request.allDogs}
+                    isOwner={user?.id === request.owner_id}
+                    requestData={{
+                      id: request.id,
+                      dog_id: request.dog_id,
+                      dog_ids: request.dog_ids,
+                      care_type: request.care_type,
+                      time_window: request.time_window,
+                      location_text: request.location_text,
+                      notes: request.notes,
+                      pay_offered: request.pay_offered,
+                      pay_amount: request.pay_amount,
+                      pay_currency: request.pay_currency,
+                      request_date: request.request_date,
+                      start_time: request.start_time,
+                      end_time: request.end_time,
+                      latitude: request.latitude,
+                      longitude: request.longitude,
+                      location_label: request.location_label,
+                      location_source: request.location_source,
+                    }}
+                    viewerLatitude={viewerLocation.latitude}
+                    viewerLongitude={viewerLocation.longitude}
+                    onDeleted={fetchData}
+                    onUpdated={fetchData}
+                  />
+                ))}
+              </AnimatedList>
             ) : (
               <EmptyState
                 icon={<HandHeart className="h-10 w-10 text-muted-foreground" />}
@@ -366,13 +373,13 @@ export default function CommunityPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="lost" className="space-y-4 mt-0">
+          <TabsContent value="lost" className="mt-0">
             {/* Filter chips */}
             <ToggleGroup 
               type="single" 
               value={lostFoundFilter}
               onValueChange={(val) => val && setLostFoundFilter(val)}
-              className="justify-start bg-muted/30 p-1 rounded-xl w-fit"
+              className="justify-start bg-muted/30 p-1 rounded-xl w-fit mb-4"
             >
               <ToggleGroupItem value="all" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
                 {t("common.all")}
@@ -386,47 +393,49 @@ export default function CommunityPage() {
             </ToggleGroup>
 
             {combinedFeed.length > 0 ? (
-              combinedFeed.map((item) => 
-                item.type === "lost" ? (
-                  <LostAlertCard
-                    key={`lost-${item.data.id}`}
-                    id={item.data.id}
-                    dogName={(item.data as LostAlert).dogs?.name || "Unknown"}
-                    breed={(item.data as LostAlert).dogs?.breed || ""}
-                    photoUrl={(item.data as LostAlert).photo_url || ((item.data as LostAlert).dogs as any)?.photo_url || undefined}
-                    age={((item.data as LostAlert).dogs as any)?.date_of_birth || ((item.data as LostAlert).dogs as any)?.age || undefined}
-                    weight={((item.data as LostAlert).dogs as any)?.weight || undefined}
-                    weightUnit={((item.data as LostAlert).dogs as any)?.weight_unit || undefined}
-                    description={(item.data as LostAlert).description}
-                    lastSeenLocation={(item.data as LostAlert).last_seen_location}
-                    locationLabel={(item.data as LostAlert).location_label}
-                    latitude={(item.data as LostAlert).latitude}
-                    longitude={(item.data as LostAlert).longitude}
-                    viewerLatitude={viewerLocation.latitude}
-                    viewerLongitude={viewerLocation.longitude}
-                    createdAt={new Date((item.data as LostAlert).created_at)}
-                    status={(item.data as LostAlert).status}
-                    onContact={() => handleContactOwner(item.data.id)}
-                    onReportSighting={() => handleReportSighting(item.data.id)}
-                  />
-                ) : (
-                  <FoundDogCard
-                    key={`found-${item.data.id}`}
-                    id={item.data.id}
-                    photoUrls={(item.data as FoundDog).photo_urls}
-                    description={(item.data as FoundDog).description}
-                    locationLabel={(item.data as FoundDog).location_label}
-                    latitude={(item.data as FoundDog).latitude}
-                    longitude={(item.data as FoundDog).longitude}
-                    viewerLatitude={viewerLocation.latitude}
-                    viewerLongitude={viewerLocation.longitude}
-                    foundAt={new Date((item.data as FoundDog).found_at)}
-                    status={(item.data as FoundDog).status}
-                    createdAt={new Date((item.data as FoundDog).created_at)}
-                    onContact={() => handleContactFoundDogReporter(item.data.id)}
-                  />
-                )
-              )
+              <AnimatedList className="space-y-4">
+                {combinedFeed.map((item) => 
+                  item.type === "lost" ? (
+                    <LostAlertCard
+                      key={`lost-${item.data.id}`}
+                      id={item.data.id}
+                      dogName={(item.data as LostAlert).dogs?.name || "Unknown"}
+                      breed={(item.data as LostAlert).dogs?.breed || ""}
+                      photoUrl={(item.data as LostAlert).photo_url || ((item.data as LostAlert).dogs as any)?.photo_url || undefined}
+                      age={((item.data as LostAlert).dogs as any)?.date_of_birth || ((item.data as LostAlert).dogs as any)?.age || undefined}
+                      weight={((item.data as LostAlert).dogs as any)?.weight || undefined}
+                      weightUnit={((item.data as LostAlert).dogs as any)?.weight_unit || undefined}
+                      description={(item.data as LostAlert).description}
+                      lastSeenLocation={(item.data as LostAlert).last_seen_location}
+                      locationLabel={(item.data as LostAlert).location_label}
+                      latitude={(item.data as LostAlert).latitude}
+                      longitude={(item.data as LostAlert).longitude}
+                      viewerLatitude={viewerLocation.latitude}
+                      viewerLongitude={viewerLocation.longitude}
+                      createdAt={new Date((item.data as LostAlert).created_at)}
+                      status={(item.data as LostAlert).status}
+                      onContact={() => handleContactOwner(item.data.id)}
+                      onReportSighting={() => handleReportSighting(item.data.id)}
+                    />
+                  ) : (
+                    <FoundDogCard
+                      key={`found-${item.data.id}`}
+                      id={item.data.id}
+                      photoUrls={(item.data as FoundDog).photo_urls}
+                      description={(item.data as FoundDog).description}
+                      locationLabel={(item.data as FoundDog).location_label}
+                      latitude={(item.data as FoundDog).latitude}
+                      longitude={(item.data as FoundDog).longitude}
+                      viewerLatitude={viewerLocation.latitude}
+                      viewerLongitude={viewerLocation.longitude}
+                      foundAt={new Date((item.data as FoundDog).found_at)}
+                      status={(item.data as FoundDog).status}
+                      createdAt={new Date((item.data as FoundDog).created_at)}
+                      onContact={() => handleContactFoundDogReporter(item.data.id)}
+                    />
+                  )
+                )}
+              </AnimatedList>
             ) : (
               <EmptyState
                 icon={<Dog className="h-10 w-10 text-muted-foreground" />}

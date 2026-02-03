@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
@@ -24,11 +25,22 @@ export function EmptyState({
   return (
     <GlassCard 
       variant="light" 
-      className={cn("animate-fade-in", className)}
+      className={cn(className)}
+      animate={false}
     >
-      <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="flex flex-col items-center justify-center py-12 px-6 text-center"
+      >
         {/* Icon container with subtle gradient */}
-        <div className="relative mb-5">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="relative mb-5"
+        >
           <div className="h-20 w-20 rounded-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
             <div className="text-muted-foreground">
               {icon}
@@ -38,7 +50,7 @@ export function EmptyState({
           <span className="absolute -bottom-1 -right-1 text-2xl opacity-40">
             🐾
           </span>
-        </div>
+        </motion.div>
         
         <h3 className="text-lg font-semibold text-foreground mb-2">
           {title}
@@ -51,14 +63,16 @@ export function EmptyState({
         )}
         
         {action && (
-          <Button 
-            onClick={action.onClick}
-            className="btn-glow"
-          >
-            {action.label}
-          </Button>
+          <motion.div whileTap={{ scale: 0.95 }}>
+            <Button 
+              onClick={action.onClick}
+              className="btn-glow"
+            >
+              {action.label}
+            </Button>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     </GlassCard>
   );
 }

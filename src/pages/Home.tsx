@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dog, PlusCircle, Loader2, Syringe, ChevronRight, Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DogSelector } from "@/components/dog/DogSelector";
@@ -11,11 +12,13 @@ import { HealthLogCard } from "@/components/dog/HealthLogCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MedRecordCardReadOnly } from "@/components/med/MedRecordCardReadOnly";
 import { ExpirationNotices } from "@/components/med/ExpirationNotices";
 import { LostModeDialog } from "@/components/dog/LostModeDialog";
 import { MedRecordEditDialog } from "@/components/med/MedRecordEditDialog";
 import { PendingInvitesCard } from "@/components/dog/PendingInvitesCard";
+import { AnimatedList, AnimatedItem } from "@/components/ui/animated-list";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -278,8 +281,13 @@ export default function HomePage() {
     return (
       <MobileLayout>
         <PageHeader title={t("home.title")} subtitle={t("home.subtitle")} />
-        <div className="p-4 flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="p-4 space-y-6">
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <Skeleton className="h-20 w-full rounded-2xl" />
+          <div className="space-y-3">
+            <Skeleton className="h-24 w-full rounded-2xl" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
+          </div>
         </div>
       </MobileLayout>
     );
@@ -310,51 +318,59 @@ export default function HomePage() {
         }
       />
 
-      <div className="p-4 space-y-6 stagger-children">
+      <div className="p-4 space-y-6">
         {/* Pending Invites */}
-        <PendingInvitesCard onInviteAccepted={fetchData} />
+        <AnimatedItem>
+          <PendingInvitesCard onInviteAccepted={fetchData} />
+        </AnimatedItem>
 
         {dogs.length > 0 && activeDog ? (
           <>
             {/* Expiration Notices for active dog */}
-            <ExpirationNotices records={filteredMedRecords} />
+            <AnimatedItem delay={0.1}>
+              <ExpirationNotices records={filteredMedRecords} />
+            </AnimatedItem>
 
             {/* My Dogs Section */}
-            <section>
-              <h2 className="section-header mb-3">
-                {dogs.length > 1 ? t("home.myDogs") : t("home.myDog")}
-              </h2>
-              
-              {dogs.length > 1 ? (
-                <DogSelector
-                  dogs={dogs}
-                  activeDogId={activeDogId!}
-                  onSelectDog={handleSelectDog}
-                />
-              ) : (
-                <DogCard
-                  name={activeDog.name}
-                  breed={activeDog.breed || t("common.mixedBreed")}
-                  photoUrl={activeDog.photo_url || ""}
-                  isLost={activeDog.is_lost}
-                  onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                  onClick={() => navigate(`/dog/${activeDog.id}`)}
-                />
-              )}
-            </section>
+            <AnimatedItem delay={0.15}>
+              <section>
+                <h2 className="section-header mb-3">
+                  {dogs.length > 1 ? t("home.myDogs") : t("home.myDog")}
+                </h2>
+                
+                {dogs.length > 1 ? (
+                  <DogSelector
+                    dogs={dogs}
+                    activeDogId={activeDogId!}
+                    onSelectDog={handleSelectDog}
+                  />
+                ) : (
+                  <DogCard
+                    name={activeDog.name}
+                    breed={activeDog.breed || t("common.mixedBreed")}
+                    photoUrl={activeDog.photo_url || ""}
+                    isLost={activeDog.is_lost}
+                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
+                    onClick={() => navigate(`/dog/${activeDog.id}`)}
+                  />
+                )}
+              </section>
+            </AnimatedItem>
 
             {/* Active Dog Card (shown when multiple dogs) */}
             {dogs.length > 1 && (
-              <section>
-                <DogCard
-                  name={activeDog.name}
-                  breed={activeDog.breed || t("common.mixedBreed")}
-                  photoUrl={activeDog.photo_url || ""}
-                  isLost={activeDog.is_lost}
-                  onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                  onClick={() => navigate(`/dog/${activeDog.id}`)}
-                />
-              </section>
+              <AnimatedItem delay={0.2}>
+                <section>
+                  <DogCard
+                    name={activeDog.name}
+                    breed={activeDog.breed || t("common.mixedBreed")}
+                    photoUrl={activeDog.photo_url || ""}
+                    isLost={activeDog.is_lost}
+                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
+                    onClick={() => navigate(`/dog/${activeDog.id}`)}
+                  />
+                </section>
+              </AnimatedItem>
             )}
 
             {/* Lost Mode Dialog */}
@@ -371,82 +387,88 @@ export default function HomePage() {
             />
 
             {/* Quick Actions */}
-            <section>
-              <h2 className="section-header mb-3">
-                {t("home.quickActions")}
-              </h2>
-              <QuickActions
-                dogId={activeDog.id}
-                isLost={activeDog.is_lost}
-                onToggleLost={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-              />
-            </section>
+            <AnimatedItem delay={0.25}>
+              <section>
+                <h2 className="section-header mb-3">
+                  {t("home.quickActions")}
+                </h2>
+                <QuickActions
+                  dogId={activeDog.id}
+                  isLost={activeDog.is_lost}
+                  onToggleLost={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
+                />
+              </section>
+            </AnimatedItem>
 
             {/* Medication Records for active dog */}
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="section-header flex items-center gap-2">
-                  <Syringe className="h-4 w-4" />
-                  {t("home.medicationRecords")}
-                </h2>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate("/create?type=meds")}
-                  className="text-primary rounded-xl"
-                >
-                  {t("common.add")}
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-              {filteredMedRecords.length > 0 ? (
-                <div className="space-y-3">
-                  {filteredMedRecords.map((record) => (
-                    <MedRecordCardReadOnly
-                      key={record.id}
-                      record={record}
-                      onEdit={setEditingMedRecord}
-                      onDelete={setDeletingMedRecord}
-                    />
-                  ))}
+            <AnimatedItem delay={0.3}>
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="section-header flex items-center gap-2">
+                    <Syringe className="h-4 w-4" />
+                    {t("home.medicationRecords")}
+                  </h2>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => navigate("/create?type=meds")}
+                    className="text-primary rounded-xl"
+                  >
+                    {t("common.add")}
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                  {t("home.noMedRecordsYet")}
-                </p>
-              )}
-            </section>
+                {filteredMedRecords.length > 0 ? (
+                  <div className="space-y-3">
+                    {filteredMedRecords.map((record) => (
+                      <MedRecordCardReadOnly
+                        key={record.id}
+                        record={record}
+                        onEdit={setEditingMedRecord}
+                        onDelete={setDeletingMedRecord}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
+                    {t("home.noMedRecordsYet")}
+                  </p>
+                )}
+              </section>
+            </AnimatedItem>
 
             {/* Recent Logs for active dog */}
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="section-header">
-                  {t("home.recentLogs")}
-                </h2>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=log")} className="text-primary rounded-xl">
-                  <PlusCircle className="h-4 w-4 mr-1" />
-                  {t("common.add")}
-                </Button>
-              </div>
-              {filteredLogs.length > 0 ? (
-                <div className="space-y-3">
-                  {filteredLogs.slice(0, 5).map((log) => (
-                    <HealthLogCard
-                      key={log.id}
-                      id={log.id}
-                      type={log.log_type}
-                      value={log.value || ""}
-                      createdAt={new Date(log.created_at)}
-                      onDelete={setDeletingLogId}
-                    />
-                  ))}
+            <AnimatedItem delay={0.35}>
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="section-header">
+                    {t("home.recentLogs")}
+                  </h2>
+                  <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=log")} className="text-primary rounded-xl">
+                    <PlusCircle className="h-4 w-4 mr-1" />
+                    {t("common.add")}
+                  </Button>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                  {t("home.noHealthLogsYet")}
-                </p>
-              )}
-            </section>
+                {filteredLogs.length > 0 ? (
+                  <div className="space-y-3">
+                    {filteredLogs.slice(0, 5).map((log) => (
+                      <HealthLogCard
+                        key={log.id}
+                        id={log.id}
+                        type={log.log_type}
+                        value={log.value || ""}
+                        createdAt={new Date(log.created_at)}
+                        onDelete={setDeletingLogId}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
+                    {t("home.noHealthLogsYet")}
+                  </p>
+                )}
+              </section>
+            </AnimatedItem>
           </>
         ) : (
           <EmptyState
