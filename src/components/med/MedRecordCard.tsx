@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { Syringe, Pill, MoreVertical, Edit, Trash2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { GlassCard } from "@/components/ui/glass-card";
+import { StatusChip } from "@/components/ui/status-chip";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,35 +22,32 @@ interface MedRecordCardProps {
 export function MedRecordCard({ record, onEdit, onDelete }: MedRecordCardProps) {
   const { t } = useTranslation();
   
-  const statusConfig = {
-    active: {
-      label: t("medications.active"),
-      className: "bg-success/10 text-success border-success/20",
-    },
-    "expiring-soon": {
-      label: t("medications.expiringSoon"),
-      className: "bg-warning/10 text-warning border-warning/20",
-    },
-    expired: {
-      label: t("medications.expired"),
-      className: "bg-destructive/10 text-destructive border-destructive/20",
-    },
+  const statusMap: Record<string, { type: "active" | "expiring" | "expired"; label: string }> = {
+    active: { type: "active", label: t("medications.active") },
+    "expiring-soon": { type: "expiring", label: t("medications.expiringSoon") },
+    expired: { type: "expired", label: t("medications.expired") },
   };
 
-  const status = statusConfig[record.status];
+  const status = statusMap[record.status];
   const Icon = record.record_type === "vaccine" ? Syringe : Pill;
 
   return (
-    <Card className={cn(
-      "transition-all",
-      record.status === "expired" && "border-destructive/30 bg-destructive/5",
-      record.status === "expiring-soon" && "border-warning/30 bg-warning/5"
-    )}>
-      <CardContent className="p-4">
+    <GlassCard 
+      variant="light"
+      className={cn(
+        "transition-all duration-300",
+        record.status === "expired" && "border-destructive/30",
+        record.status === "expiring-soon" && "border-warning/30"
+      )}
+    >
+      <div className="p-4">
         <div className="flex items-start gap-3">
+          {/* Icon */}
           <div className={cn(
-            "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
-            record.record_type === "vaccine" ? "bg-primary/10" : "bg-secondary"
+            "h-11 w-11 rounded-xl flex items-center justify-center shrink-0",
+            record.record_type === "vaccine" 
+              ? "bg-primary/10" 
+              : "bg-muted"
           )}>
             <Icon className={cn(
               "h-5 w-5",
@@ -58,12 +55,11 @@ export function MedRecordCard({ record, onEdit, onDelete }: MedRecordCardProps) 
             )} />
           </div>
 
+          {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1.5">
               <h3 className="font-semibold text-foreground truncate">{record.name}</h3>
-              <Badge variant="outline" className={cn("text-xs shrink-0", status.className)}>
-                {status.label}
-              </Badge>
+              <StatusChip status={status.type} label={status.label} showIcon={false} />
             </div>
 
             <div className="text-sm text-muted-foreground space-y-0.5">
@@ -79,20 +75,21 @@ export function MedRecordCard({ record, onEdit, onDelete }: MedRecordCardProps) 
             </div>
           </div>
 
+          {/* Actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-background border shadow-lg z-50">
-              <DropdownMenuItem onClick={() => onEdit(record)}>
+            <DropdownMenuContent align="end" className="glass-card-modal rounded-xl">
+              <DropdownMenuItem onClick={() => onEdit(record)} className="rounded-lg">
                 <Edit className="h-4 w-4 mr-2" />
                 {t("common.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => onDelete(record)}
-                className="text-destructive focus:text-destructive"
+                className="text-destructive focus:text-destructive rounded-lg"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 {t("common.delete")}
@@ -100,7 +97,7 @@ export function MedRecordCard({ record, onEdit, onDelete }: MedRecordCardProps) 
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </GlassCard>
   );
 }

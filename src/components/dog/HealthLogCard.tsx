@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import { MoreVertical, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { useDateLocale } from "@/hooks/useDateLocale";
+import { cn } from "@/lib/utils";
 
 type LogType = "walk" | "food" | "meds" | "mood" | "symptom";
 
@@ -22,40 +23,32 @@ interface HealthLogCardProps {
   onDelete?: (id: string) => void;
 }
 
-const logTypeConfig: Record<LogType, { icon: string; label: string; color: string }> = {
-  walk: { icon: "🚶", label: "Walk", color: "bg-success/10 text-success" },
-  food: { icon: "🍖", label: "Food", color: "bg-warning/10 text-warning" },
-  meds: { icon: "💊", label: "Medication", color: "bg-primary/10 text-primary" },
-  mood: { icon: "😊", label: "Mood", color: "bg-accent text-accent-foreground" },
-  symptom: { icon: "🩺", label: "Symptom", color: "bg-destructive/10 text-destructive" },
+const logTypeConfig: Record<LogType, { icon: string; labelKey: string; bgColor: string; iconBg: string }> = {
+  walk: { icon: "🚶", labelKey: "healthLog.walk", bgColor: "bg-success/5", iconBg: "bg-success/15" },
+  food: { icon: "🍖", labelKey: "healthLog.food", bgColor: "bg-warning/5", iconBg: "bg-warning/15" },
+  meds: { icon: "💊", labelKey: "healthLog.meds", bgColor: "bg-primary/5", iconBg: "bg-primary/15" },
+  mood: { icon: "😊", labelKey: "healthLog.mood", bgColor: "bg-accent/50", iconBg: "bg-accent" },
+  symptom: { icon: "🩺", labelKey: "healthLog.symptom", bgColor: "bg-destructive/5", iconBg: "bg-destructive/15" },
 };
 
 export function HealthLogCard({ id, type, value, notes, createdAt, onDelete }: HealthLogCardProps) {
   const { t } = useTranslation();
   const dateLocale = useDateLocale();
   const config = logTypeConfig[type];
-  
-  const getLogLabel = (logType: LogType) => {
-    const labels: Record<LogType, string> = {
-      walk: t("healthLog.walk"),
-      food: t("healthLog.food"),
-      meds: t("healthLog.meds"),
-      mood: t("healthLog.mood"),
-      symptom: t("healthLog.symptom"),
-    };
-    return labels[logType];
-  };
 
   return (
-    <Card className="border-border/50">
-      <CardContent className="p-3">
+    <GlassCard variant="light" className={cn("transition-all", config.bgColor)}>
+      <div className="p-4">
         <div className="flex items-start gap-3">
-          <div className={`h-10 w-10 rounded-full flex items-center justify-center text-lg ${config.color}`}>
+          <div className={cn(
+            "h-11 w-11 rounded-xl flex items-center justify-center text-lg shrink-0",
+            config.iconBg
+          )}>
             {config.icon}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-medium text-foreground">{getLogLabel(type)}</span>
+              <span className="font-semibold text-foreground">{t(config.labelKey)}</span>
               <span className="text-xs text-muted-foreground shrink-0">
                 {formatDistanceToNow(createdAt, { addSuffix: true, locale: dateLocale })}
               </span>
@@ -71,14 +64,14 @@ export function HealthLogCard({ id, type, value, notes, createdAt, onDelete }: H
           {onDelete && id && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="glass-card-modal rounded-xl">
                 <DropdownMenuItem 
                   onClick={() => onDelete(id)}
-                  className="text-destructive focus:text-destructive"
+                  className="text-destructive focus:text-destructive rounded-lg"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   {t("common.delete")}
@@ -87,7 +80,7 @@ export function HealthLogCard({ id, type, value, notes, createdAt, onDelete }: H
             </DropdownMenu>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </GlassCard>
   );
 }

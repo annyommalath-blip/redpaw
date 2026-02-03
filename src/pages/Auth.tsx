@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Dog, Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard, GlassCardContent, GlassCardDescription, GlassCardHeader, GlassCardTitle } from "@/components/ui/glass-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,44 +87,57 @@ export default function AuthPage() {
   // Show loading while checking auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center animate-pulse">
-            <Dog className="h-10 w-10 text-primary-foreground" />
+      <div className="min-h-screen bg-gradient-warm paw-pattern flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 animate-fade-in">
+          <div className="relative">
+            <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow animate-pulse-soft">
+              <Dog className="h-12 w-12 text-primary-foreground" />
+            </div>
+            <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-primary animate-pulse" />
           </div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground font-medium">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-warm paw-pattern flex flex-col items-center justify-center p-4">
       {/* Logo */}
-      <div className="flex flex-col items-center mb-8">
-        <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center mb-4">
-          <Dog className="h-10 w-10 text-primary-foreground" />
+      <div className="flex flex-col items-center mb-8 animate-slide-up">
+        <div className="relative mb-4">
+          <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
+            <Dog className="h-12 w-12 text-primary-foreground" />
+          </div>
+          <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold text-foreground">RedPaw</h1>
-        <p className="text-muted-foreground mt-1">Your dog's best companion 🐾</p>
+        <h1 className="text-4xl font-bold text-foreground tracking-tight">RedPaw</h1>
+        <p className="text-muted-foreground mt-2 flex items-center gap-2">
+          Your dog's best companion
+          <span className="text-xl">🐾</span>
+        </p>
       </div>
 
-      <Card className="w-full max-w-md">
+      <GlassCard className="w-full max-w-md animate-scale-in">
         <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 m-4 mb-0 w-[calc(100%-2rem)] bg-muted/50">
+            <TabsTrigger value="signin" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              Sign In
+            </TabsTrigger>
+            <TabsTrigger value="signup" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              Sign Up
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="signin">
             <form onSubmit={handleSignIn}>
-              <CardHeader>
-                <CardTitle>Welcome back</CardTitle>
-                <CardDescription>Sign in to access your dog's profile</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              <GlassCardHeader className="pb-2">
+                <GlassCardTitle className="text-xl">Welcome back</GlassCardTitle>
+                <GlassCardDescription>Sign in to access your dog's profile</GlassCardDescription>
+              </GlassCardHeader>
+              <GlassCardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
+                  <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -133,13 +146,13 @@ export default function AuthPage() {
                       placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 h-12 rounded-xl bg-muted/30 border-muted focus:bg-white transition-colors"
                       required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
+                  <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -148,34 +161,38 @@ export default function AuthPage() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10"
+                      className="pl-10 pr-10 h-12 rounded-xl bg-muted/30 border-muted focus:bg-white transition-colors"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 rounded-xl text-base font-semibold btn-glow" 
+                  disabled={loading}
+                >
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
-              </CardContent>
+              </GlassCardContent>
             </form>
           </TabsContent>
 
           <TabsContent value="signup">
             <form onSubmit={handleSignUp}>
-              <CardHeader>
-                <CardTitle>Create account</CardTitle>
-                <CardDescription>Join RedPaw to manage your dog's health & safety</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              <GlassCardHeader className="pb-2">
+                <GlassCardTitle className="text-xl">Create account</GlassCardTitle>
+                <GlassCardDescription>Join RedPaw to manage your dog's health & safety</GlassCardDescription>
+              </GlassCardHeader>
+              <GlassCardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -184,13 +201,13 @@ export default function AuthPage() {
                       placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 h-12 rounded-xl bg-muted/30 border-muted focus:bg-white transition-colors"
                       required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -199,27 +216,31 @@ export default function AuthPage() {
                       placeholder="Min. 6 characters"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10"
+                      className="pl-10 pr-10 h-12 rounded-xl bg-muted/30 border-muted focus:bg-white transition-colors"
                       minLength={6}
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 rounded-xl text-base font-semibold btn-glow" 
+                  disabled={loading}
+                >
                   {loading ? "Creating account..." : "Create Account"}
                 </Button>
-              </CardContent>
+              </GlassCardContent>
             </form>
           </TabsContent>
         </Tabs>
-      </Card>
+      </GlassCard>
     </div>
   );
 }

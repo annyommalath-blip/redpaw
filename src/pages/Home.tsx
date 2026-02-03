@@ -292,25 +292,25 @@ export default function HomePage() {
         subtitle={t("home.subtitle")}
         action={
           <div className="flex items-center gap-1">
-            <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative">
+            <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative rounded-xl">
               <Bell className="h-5 w-5" />
               {notificationCount > 0 && (
                 <Badge 
                   variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs"
+                  className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs border-2 border-card"
                 >
                   {notificationCount > 9 ? "9+" : notificationCount}
                 </Badge>
               )}
             </Button>
-            <Button size="icon" variant="ghost" onClick={() => navigate("/profile")}>
+            <Button size="icon" variant="ghost" onClick={() => navigate("/profile")} className="rounded-xl">
               <Dog className="h-5 w-5" />
             </Button>
           </div>
         }
       />
 
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 stagger-children">
         {/* Pending Invites */}
         <PendingInvitesCard onInviteAccepted={fetchData} />
 
@@ -321,19 +321,17 @@ export default function HomePage() {
 
             {/* My Dogs Section */}
             <section>
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+              <h2 className="section-header mb-3">
                 {dogs.length > 1 ? t("home.myDogs") : t("home.myDog")}
               </h2>
               
               {dogs.length > 1 ? (
-                // Multiple dogs: show horizontal selector
                 <DogSelector
                   dogs={dogs}
                   activeDogId={activeDogId!}
                   onSelectDog={handleSelectDog}
                 />
               ) : (
-                // Single dog: show full card
                 <DogCard
                   name={activeDog.name}
                   breed={activeDog.breed || t("common.mixedBreed")}
@@ -374,7 +372,7 @@ export default function HomePage() {
 
             {/* Quick Actions */}
             <section>
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+              <h2 className="section-header mb-3">
                 {t("home.quickActions")}
               </h2>
               <QuickActions
@@ -387,7 +385,7 @@ export default function HomePage() {
             {/* Medication Records for active dog */}
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                <h2 className="section-header flex items-center gap-2">
                   <Syringe className="h-4 w-4" />
                   {t("home.medicationRecords")}
                 </h2>
@@ -395,7 +393,7 @@ export default function HomePage() {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate("/create?type=meds")}
-                  className="text-muted-foreground"
+                  className="text-primary rounded-xl"
                 >
                   {t("common.add")}
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -413,7 +411,7 @@ export default function HomePage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
                   {t("home.noMedRecordsYet")}
                 </p>
               )}
@@ -422,10 +420,10 @@ export default function HomePage() {
             {/* Recent Logs for active dog */}
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                <h2 className="section-header">
                   {t("home.recentLogs")}
                 </h2>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=log")}>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=log")} className="text-primary rounded-xl">
                   <PlusCircle className="h-4 w-4 mr-1" />
                   {t("common.add")}
                 </Button>
@@ -444,7 +442,7 @@ export default function HomePage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
                   {t("home.noHealthLogsYet")}
                 </p>
               )}
@@ -473,7 +471,7 @@ export default function HomePage() {
 
       {/* Delete Med Record Confirmation */}
       <AlertDialog open={!!deletingMedRecord} onOpenChange={(open) => !open && setDeletingMedRecord(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="glass-card-modal rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle>{t("home.deleteRecord")}</AlertDialogTitle>
             <AlertDialogDescription>
@@ -481,8 +479,8 @@ export default function HomePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteMedRecord} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteMedRecord} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
               {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -491,7 +489,7 @@ export default function HomePage() {
 
       {/* Delete Log Confirmation */}
       <AlertDialog open={!!deletingLogId} onOpenChange={(open) => !open && setDeletingLogId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="glass-card-modal rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle>{t("home.deleteLog")}</AlertDialogTitle>
             <AlertDialogDescription>
@@ -499,8 +497,8 @@ export default function HomePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
               {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>

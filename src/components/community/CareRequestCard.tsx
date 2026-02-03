@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Clock, Dog, Check, ChevronRight, Banknote, MoreVertical, Pencil, Trash2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getDistanceLabel } from "@/lib/distanceUtils";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 type CareType = "walk" | "watch" | "overnight" | "check-in";
 
@@ -63,11 +64,11 @@ interface CareRequestCardProps {
   onUpdated?: () => void;
 }
 
-const careTypeConfig: Record<CareType, { icon: string; labelKey: string; color: string }> = {
-  walk: { icon: "🚶", labelKey: "care.walk", color: "bg-success text-success-foreground" },
-  watch: { icon: "👀", labelKey: "care.shortWatch", color: "bg-warning text-warning-foreground" },
-  overnight: { icon: "🌙", labelKey: "care.overnight", color: "bg-primary text-primary-foreground" },
-  "check-in": { icon: "👋", labelKey: "care.checkIn", color: "bg-accent text-accent-foreground" },
+const careTypeConfig: Record<CareType, { icon: string; labelKey: string; bgClass: string }> = {
+  walk: { icon: "🚶", labelKey: "care.walk", bgClass: "bg-success/15 text-success border-success/25" },
+  watch: { icon: "👀", labelKey: "care.shortWatch", bgClass: "bg-warning/15 text-warning border-warning/25" },
+  overnight: { icon: "🌙", labelKey: "care.overnight", bgClass: "bg-primary/15 text-primary border-primary/25" },
+  "check-in": { icon: "👋", labelKey: "care.checkIn", bgClass: "bg-accent text-accent-foreground border-accent" },
 };
 
 export function CareRequestCard({
@@ -101,7 +102,6 @@ export function CareRequestCard({
 
   const config = careTypeConfig[careType];
   
-  // Calculate distance from viewer
   const distanceLabel = getDistanceLabel(
     viewerLatitude ?? null,
     viewerLongitude ?? null,
@@ -141,54 +141,60 @@ export function CareRequestCard({
 
   return (
     <>
-      <Card 
-        className={`overflow-hidden ${onClick ? "cursor-pointer hover:border-primary transition-colors" : ""}`}
+      <GlassCard 
+        variant="light"
+        hover={!!onClick}
+        className="overflow-hidden animate-fade-in"
         onClick={onClick}
       >
-        <CardContent className="p-4">
+        <div className="p-4">
+          {/* Header badges */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge className={config.color}>
+              <span className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border",
+                config.bgClass
+              )}>
                 {config.icon} {t(config.labelKey)}
-              </Badge>
+              </span>
               {isMultipleDogs && (
-                <Badge variant="outline" className="border-primary text-primary">
+                <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5">
                   🐾 {displayDogs.length} {t("care.dogsLabel")}
                 </Badge>
               )}
               {isAssigned && (
-                <Badge className="bg-primary text-primary-foreground">
+                <Badge className="bg-primary/15 text-primary border border-primary/25">
                   <Check className="h-3 w-3 mr-1" />
                   {t("common.assigned")}
                 </Badge>
               )}
               {hasApplied && !isAssigned && (
-                <Badge className="bg-success text-success-foreground">
+                <Badge className="bg-success/15 text-success border border-success/25">
                   <Check className="h-3 w-3 mr-1" />
                   {t("care.applied")}
                 </Badge>
               )}
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <span className="text-xs text-muted-foreground">
-                {formatDistanceToNow(createdAt, { addSuffix: true })}
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                {formatDistanceToNow(createdAt, { addSuffix: false })}
               </span>
               {isOwner && !isAssigned && requestData && (
                 <div onClick={handleMenuClick}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-background border shadow-lg z-50">
-                      <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                    <DropdownMenuContent align="end" className="glass-card-modal rounded-xl">
+                      <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="rounded-lg">
                         <Pencil className="h-4 w-4 mr-2" />
                         {t("common.edit")}
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => setShowDeleteDialog(true)}
-                        className="text-destructive focus:text-destructive"
+                        className="text-destructive focus:text-destructive rounded-lg"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         {t("common.delete")}
@@ -202,12 +208,12 @@ export function CareRequestCard({
 
           {/* Dogs Display */}
           {isMultipleDogs ? (
-            <div className="flex gap-2 mb-3">
+            <div className="flex gap-3 mb-3">
               <div className="flex -space-x-3">
                 {displayDogs.slice(0, 4).map((dog, index) => (
                   <div 
                     key={index}
-                    className="h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center border-2 border-background"
+                    className="h-12 w-12 rounded-xl overflow-hidden bg-muted flex items-center justify-center border-2 border-card shadow-sm"
                     style={{ zIndex: displayDogs.length - index }}
                   >
                     {dog.photo_url ? (
@@ -218,7 +224,7 @@ export function CareRequestCard({
                   </div>
                 ))}
                 {displayDogs.length > 4 && (
-                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center border-2 border-background text-xs font-medium text-muted-foreground">
+                  <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center border-2 border-card text-xs font-medium text-muted-foreground">
                     +{displayDogs.length - 4}
                   </div>
                 )}
@@ -227,7 +233,7 @@ export function CareRequestCard({
                 <h3 className="font-bold text-foreground">
                   {displayDogs.length <= 3 
                     ? displayDogs.map(d => d.name).join(", ")
-                    : `${displayDogs.slice(0, 3).map(d => d.name).join(", ")} +${displayDogs.length - 3} more`
+                    : `${displayDogs.slice(0, 3).map(d => d.name).join(", ")} +${displayDogs.length - 3}`
                   }
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -240,7 +246,7 @@ export function CareRequestCard({
             </div>
           ) : (
             <div className="flex gap-3">
-              <div className="h-16 w-16 rounded-xl overflow-hidden bg-muted flex items-center justify-center shrink-0">
+              <div className="h-16 w-16 rounded-2xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center shrink-0 shadow-sm">
                 {displayDogs[0].photo_url ? (
                   <img src={displayDogs[0].photo_url} alt={displayDogs[0].name} className="h-full w-full object-cover" />
                 ) : (
@@ -252,12 +258,13 @@ export function CareRequestCard({
                 <p className="text-sm text-muted-foreground">{displayDogs[0].breed || t("common.unknownBreed")}</p>
               </div>
               {onClick && (
-                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 self-center" />
               )}
             </div>
           )}
 
-          <div className="mt-3 space-y-2">
+          {/* Details */}
+          <div className="mt-4 space-y-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4 shrink-0" />
               <span>{timeWindow}</span>
@@ -267,14 +274,14 @@ export function CareRequestCard({
                 latitude={requestData?.latitude}
                 longitude={requestData?.longitude}
                 locationLabel={requestData?.location_label || location}
-                className="text-muted-foreground hover:text-primary"
+                className="text-muted-foreground hover:text-primary text-sm"
               />
               {distanceLabel && (
                 <span className="text-xs text-muted-foreground shrink-0">• {distanceLabel} {t("common.away")}</span>
               )}
             </div>
             {payOffered && (
-              <div className="flex items-center gap-2 text-sm text-success font-medium">
+              <div className="flex items-center gap-2 text-sm text-success font-semibold">
                 <Banknote className="h-4 w-4 shrink-0" />
                 <span>{payOffered}</span>
               </div>
@@ -282,12 +289,12 @@ export function CareRequestCard({
           </div>
 
           {notes && (
-            <p className="text-sm text-foreground mt-3 line-clamp-2">{notes}</p>
+            <p className="text-sm text-foreground mt-3 line-clamp-2 bg-muted/30 p-2 rounded-lg">{notes}</p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </GlassCard>
 
-      {/* Edit Care Request Dialog */}
+      {/* Edit Dialog */}
       {requestData && (
         <EditCareRequestDialog
           open={showEditDialog}
@@ -297,19 +304,19 @@ export function CareRequestCard({
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="glass-card-modal rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle>{t("care.deleteCareRequest")}</AlertDialogTitle>
             <AlertDialogDescription>{t("care.deleteCareRequestDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting} className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
             >
               {deleting ? t("common.deleting") : t("common.delete")}
             </AlertDialogAction>
