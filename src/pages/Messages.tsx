@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Loader2, Bot, Sparkles } from "lucide-react";
+import { MessageCircle, Bot, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ConversationItem } from "@/components/messages/ConversationItem";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GlassCard } from "@/components/ui/glass-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -128,58 +130,76 @@ export default function MessagesPage() {
       <PageHeader title={t("messages.title")} subtitle={t("messages.subtitle")} />
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="p-4 space-y-4">
+          <Skeleton className="h-20 w-full rounded-2xl" />
+          <Skeleton className="h-16 w-full rounded-2xl" />
+          <Skeleton className="h-16 w-full rounded-2xl" />
+          <Skeleton className="h-16 w-full rounded-2xl" />
         </div>
       ) : (
         <div className="p-4 space-y-4">
           {/* AI Assistant Card */}
-          <GlassCard
-            hover
-            className="overflow-hidden animate-slide-up"
-            onClick={handleOpenAIChat}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
           >
-            <div className="flex items-center gap-4 p-4">
-              <div className="relative">
-                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Bot className="h-7 w-7 text-primary" />
+            <GlassCard
+              hover
+              animate={false}
+              className="overflow-hidden"
+              onClick={handleOpenAIChat}
+            >
+              <div className="flex items-center gap-4 p-4">
+                <div className="relative">
+                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                    <Bot className="h-7 w-7 text-primary" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center"
+                    style={{ boxShadow: '0 4px 12px -2px hsl(0 78% 52% / 0.3)' }}
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+                  </div>
                 </div>
-                <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
-                  <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-foreground">{t("messages.aiAssistant")}</span>
+                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">AI</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {t("messages.askMeAnything")}
+                  </p>
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-foreground">{t("messages.aiAssistant")}</span>
-                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">AI</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  {t("messages.askMeAnything")}
-                </p>
-              </div>
-            </div>
-          </GlassCard>
+            </GlassCard>
+          </motion.div>
 
           {/* Conversations List */}
           {conversations.length > 0 ? (
-            <GlassCard variant="light" className="overflow-hidden divide-y divide-border/50">
-              {conversations.map((conversation) => {
-                const unreadCount = getUnreadCount(conversation.id);
-                return (
-                  <ConversationItem
-                    key={conversation.id}
-                    id={conversation.id}
-                    participantName={conversation.otherParticipantName}
-                    participantAvatar={conversation.otherParticipantAvatar || ""}
-                    lastMessage={conversation.last_message || t("messages.noMessagesYet")}
-                    updatedAt={new Date(conversation.updated_at)}
-                    unread={unreadCount > 0}
-                    unreadCount={unreadCount}
-                    onClick={() => handleOpenConversation(conversation.id)}
-                  />
-                );
-              })}
-            </GlassCard>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <GlassCard variant="light" className="overflow-hidden divide-y divide-border/50" animate={false}>
+                {conversations.map((conversation) => {
+                  const unreadCount = getUnreadCount(conversation.id);
+                  return (
+                    <ConversationItem
+                      key={conversation.id}
+                      id={conversation.id}
+                      participantName={conversation.otherParticipantName}
+                      participantAvatar={conversation.otherParticipantAvatar || ""}
+                      lastMessage={conversation.last_message || t("messages.noMessagesYet")}
+                      updatedAt={new Date(conversation.updated_at)}
+                      unread={unreadCount > 0}
+                      unreadCount={unreadCount}
+                      onClick={() => handleOpenConversation(conversation.id)}
+                    />
+                  );
+                })}
+              </GlassCard>
+            </motion.div>
           ) : (
             <EmptyState
               icon={<MessageCircle className="h-10 w-10 text-muted-foreground" />}

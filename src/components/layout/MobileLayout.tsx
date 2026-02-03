@@ -9,7 +9,7 @@ interface MobileLayoutProps {
 
 export function MobileLayout({ children, hideNav = false }: MobileLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-warm paw-pattern flex flex-col">
+    <div className="min-h-screen bg-gradient-redpaw flex flex-col">
       <main className={cn("flex-1", !hideNav && "pb-24")}>
         {children}
       </main>

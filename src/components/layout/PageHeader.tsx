@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface PageHeaderProps {
   title: string;
@@ -32,21 +33,28 @@ export function PageHeader({
   };
 
   return (
-    <header className={cn(
-      "sticky top-0 z-40 glass-nav safe-area-top",
-      className
-    )}>
+    <motion.header 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={cn(
+        "sticky top-0 z-40 glass-card-modal mx-4 mt-4 rounded-2xl safe-area-top",
+        className
+      )}
+    >
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           {showBack && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleBack}
-              className="shrink-0 rounded-xl hover:bg-muted"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+            <motion.div whileTap={{ scale: 0.9 }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleBack}
+                className="shrink-0 rounded-xl hover:bg-muted"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </motion.div>
           )}
           <div>
             <h1 className="text-xl font-bold text-foreground tracking-tight">
@@ -61,6 +69,6 @@ export function PageHeader({
         </div>
         {action && <div className="flex items-center gap-2">{action}</div>}
       </div>
-    </header>
+    </motion.header>
   );
 }
