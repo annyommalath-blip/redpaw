@@ -126,6 +126,8 @@
   "profile": {
     "title": "Profile",
     "subtitle": "You & your dogs",
+    "ownerProfile": "Owner Profile",
+    "viewOwnerProfile": "Tap to view your profile",
     "myDogs": "My Dogs",
     "addDog": "Add Dog",
     "noDogs": "No dogs added yet",
