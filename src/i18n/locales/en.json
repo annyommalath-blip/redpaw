@@ -86,8 +86,8 @@
     "seeYouSoon": "See you soon! 🐾"
   },
   "home": {
-    "title": "RedPaw 🐾",
-    "subtitle": "Welcome back!",
+    "title": "Feed",
+    "subtitle": "What's happening",
     "myDog": "My Dog",
     "myDogs": "My Dogs",
     "quickActions": "Quick Actions",
@@ -105,11 +105,27 @@
     "deleteLog": "Delete Log?",
     "deleteLogConfirm": "Are you sure you want to delete this health log? This action cannot be undone.",
     "recordDeleted": "Record deleted",
-    "logDeleted": "Log deleted"
+    "logDeleted": "Log deleted",
+    "feed": "Feed",
+    "forYou": "For You",
+    "following": "Following",
+    "noPostsYet": "No posts yet",
+    "beFirstToShare": "Be the first to share a moment with your pup! 📸",
+    "createPost": "Create Post",
+    "sharePhoto": "Share a photo",
+    "writeCaption": "Write a caption...",
+    "postShared": "Post shared! 🐾",
+    "likePost": "Like",
+    "commentPost": "Comment",
+    "sharePost": "Share",
+    "lostDogsNearby": "Lost Dogs Nearby",
+    "careRequestsNearby": "Care Requests Nearby",
+    "communityUpdates": "Community Updates",
+    "seeAll": "See All"
   },
   "profile": {
     "title": "Profile",
-    "subtitle": "Manage your account",
+    "subtitle": "You & your dogs",
     "myDogs": "My Dogs",
     "addDog": "Add Dog",
     "noDogs": "No dogs added yet",
@@ -144,7 +160,13 @@
     "youWereTheSitter": "You were the sitter",
     "found": "Found",
     "lost": "Lost",
-    "madeWithLove": "Made with ❤️ for dog lovers"
+    "madeWithLove": "Made with ❤️ for dog lovers",
+    "quickActions": "Quick Actions",
+    "medicationRecords": "Medication Records",
+    "recentLogs": "Recent Logs",
+    "noMedRecordsYet": "No medication records yet",
+    "noHealthLogsYet": "No health logs yet",
+    "expirationNotices": "Expiration Notices"
   },
   "settings": {
     "title": "Settings",
