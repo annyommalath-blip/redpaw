@@ -468,167 +468,8 @@ export default function ProfilePage() {
           <PendingInvitesCard onInviteAccepted={fetchData} />
         </AnimatedItem>
 
-        {/* Expiration Notices */}
-        {activeDog && (
-          <AnimatedItem delay={0.05}>
-            <ExpirationNotices records={filteredMedRecords} />
-          </AnimatedItem>
-        )}
-
-        {/* My Dogs Section with Dog Management */}
-        {dogs.length > 0 && activeDog ? (
-          <>
-            <AnimatedItem delay={0.1}>
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="section-header">
-                    {dogs.length > 1 ? t("home.myDogs") : t("home.myDog")}
-                  </h2>
-                  <Button variant="ghost" size="sm" onClick={() => navigate("/profile/add-dog")} className="text-primary rounded-xl">
-                    <Plus className="h-4 w-4 mr-1" />
-                    {t("profile.addDog")}
-                  </Button>
-                </div>
-                
-                {dogs.length > 1 ? (
-                  <DogSelector
-                    dogs={dogs}
-                    activeDogId={activeDogId!}
-                    onSelectDog={handleSelectDog}
-                  />
-                ) : (
-                  <DogCard
-                    name={activeDog.name}
-                    breed={activeDog.breed || t("common.mixedBreed")}
-                    photoUrl={activeDog.photo_url || ""}
-                    isLost={activeDog.is_lost}
-                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                    onClick={() => navigate(`/dog/${activeDog.id}`)}
-                  />
-                )}
-              </section>
-            </AnimatedItem>
-
-            {dogs.length > 1 && (
-              <AnimatedItem delay={0.15}>
-                <section>
-                  <DogCard
-                    name={activeDog.name}
-                    breed={activeDog.breed || t("common.mixedBreed")}
-                    photoUrl={activeDog.photo_url || ""}
-                    isLost={activeDog.is_lost}
-                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                    onClick={() => navigate(`/dog/${activeDog.id}`)}
-                  />
-                </section>
-              </AnimatedItem>
-            )}
-
-            <LostModeDialog
-              open={lostModeDialogOpen}
-              onOpenChange={setLostModeDialogOpen}
-              dog={{
-                id: activeDog.id,
-                name: activeDog.name,
-                breed: activeDog.breed,
-                photo_url: activeDog.photo_url,
-              }}
-              onSuccess={handleLostModeSuccess}
-            />
-
-            <AnimatedItem delay={0.2}>
-              <section>
-                <h2 className="section-header mb-3">{t("profile.quickActions")}</h2>
-                <QuickActions
-                  dogId={activeDog.id}
-                  isLost={activeDog.is_lost}
-                  onToggleLost={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                />
-              </section>
-            </AnimatedItem>
-
-            <AnimatedItem delay={0.25}>
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="section-header flex items-center gap-2">
-                    <Syringe className="h-4 w-4" />
-                    {t("profile.medicationRecords")}
-                  </h2>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => navigate("/create?type=meds")}
-                    className="text-primary rounded-xl"
-                  >
-                    {t("common.add")}
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-                {filteredMedRecords.length > 0 ? (
-                  <div className="space-y-3">
-                    {filteredMedRecords.map((record) => (
-                      <MedRecordCardReadOnly
-                        key={record.id}
-                        record={record}
-                        onEdit={setEditingMedRecord}
-                        onDelete={setDeletingMedRecord}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                    {t("profile.noMedRecordsYet")}
-                  </p>
-                )}
-              </section>
-            </AnimatedItem>
-
-            <AnimatedItem delay={0.3}>
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="section-header">{t("profile.recentLogs")}</h2>
-                  <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=log")} className="text-primary rounded-xl">
-                    <PlusCircle className="h-4 w-4 mr-1" />
-                    {t("common.add")}
-                  </Button>
-                </div>
-                {filteredLogs.length > 0 ? (
-                  <div className="space-y-3">
-                    {filteredLogs.slice(0, 5).map((log) => (
-                      <HealthLogCard
-                        key={log.id}
-                        id={log.id}
-                        type={log.log_type}
-                        value={log.value || ""}
-                        createdAt={new Date(log.created_at)}
-                        onDelete={setDeletingLogId}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                    {t("profile.noHealthLogsYet")}
-                  </p>
-                )}
-              </section>
-            </AnimatedItem>
-          </>
-        ) : (
-          <AnimatedItem delay={0.1}>
-            <EmptyState
-              icon={<Dog className="h-10 w-10 text-muted-foreground" />}
-              title={t("home.noDogProfile")}
-              description={t("home.addFurryFriend")}
-              action={{
-                label: t("home.addMyDog"),
-                onClick: () => navigate("/profile/add-dog"),
-              }}
-            />
-          </AnimatedItem>
-        )}
-
-        {/* User Account Card */}
-        <AnimatedItem delay={0.35}>
+        {/* Owner Profile (Collapsible) */}
+        <AnimatedItem delay={0.05}>
           <section>
             <button
               onClick={() => setShowOwnerProfile(!showOwnerProfile)}
@@ -816,6 +657,165 @@ export default function ProfilePage() {
             )}
           </section>
         </AnimatedItem>
+
+        {/* Expiration Notices */}
+        {activeDog && (
+          <AnimatedItem delay={0.1}>
+            <ExpirationNotices records={filteredMedRecords} />
+          </AnimatedItem>
+        )}
+
+        {/* My Dogs Section with Dog Management */}
+        {dogs.length > 0 && activeDog ? (
+          <>
+            <AnimatedItem delay={0.15}>
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="section-header">
+                    {dogs.length > 1 ? t("home.myDogs") : t("home.myDog")}
+                  </h2>
+                  <Button variant="ghost" size="sm" onClick={() => navigate("/profile/add-dog")} className="text-primary rounded-xl">
+                    <Plus className="h-4 w-4 mr-1" />
+                    {t("profile.addDog")}
+                  </Button>
+                </div>
+                
+                {dogs.length > 1 ? (
+                  <DogSelector
+                    dogs={dogs}
+                    activeDogId={activeDogId!}
+                    onSelectDog={handleSelectDog}
+                  />
+                ) : (
+                  <DogCard
+                    name={activeDog.name}
+                    breed={activeDog.breed || t("common.mixedBreed")}
+                    photoUrl={activeDog.photo_url || ""}
+                    isLost={activeDog.is_lost}
+                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
+                    onClick={() => navigate(`/dog/${activeDog.id}`)}
+                  />
+                )}
+              </section>
+            </AnimatedItem>
+
+            {dogs.length > 1 && (
+              <AnimatedItem delay={0.2}>
+                <section>
+                  <DogCard
+                    name={activeDog.name}
+                    breed={activeDog.breed || t("common.mixedBreed")}
+                    photoUrl={activeDog.photo_url || ""}
+                    isLost={activeDog.is_lost}
+                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
+                    onClick={() => navigate(`/dog/${activeDog.id}`)}
+                  />
+                </section>
+              </AnimatedItem>
+            )}
+
+            <LostModeDialog
+              open={lostModeDialogOpen}
+              onOpenChange={setLostModeDialogOpen}
+              dog={{
+                id: activeDog.id,
+                name: activeDog.name,
+                breed: activeDog.breed,
+                photo_url: activeDog.photo_url,
+              }}
+              onSuccess={handleLostModeSuccess}
+            />
+
+            <AnimatedItem delay={0.25}>
+              <section>
+                <h2 className="section-header mb-3">{t("profile.quickActions")}</h2>
+                <QuickActions
+                  dogId={activeDog.id}
+                  isLost={activeDog.is_lost}
+                  onToggleLost={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
+                />
+              </section>
+            </AnimatedItem>
+
+            <AnimatedItem delay={0.3}>
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="section-header flex items-center gap-2">
+                    <Syringe className="h-4 w-4" />
+                    {t("profile.medicationRecords")}
+                  </h2>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => navigate("/create?type=meds")}
+                    className="text-primary rounded-xl"
+                  >
+                    {t("common.add")}
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+                {filteredMedRecords.length > 0 ? (
+                  <div className="space-y-3">
+                    {filteredMedRecords.map((record) => (
+                      <MedRecordCardReadOnly
+                        key={record.id}
+                        record={record}
+                        onEdit={setEditingMedRecord}
+                        onDelete={setDeletingMedRecord}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
+                    {t("profile.noMedRecordsYet")}
+                  </p>
+                )}
+              </section>
+            </AnimatedItem>
+
+            <AnimatedItem delay={0.35}>
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="section-header">{t("profile.recentLogs")}</h2>
+                  <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=log")} className="text-primary rounded-xl">
+                    <PlusCircle className="h-4 w-4 mr-1" />
+                    {t("common.add")}
+                  </Button>
+                </div>
+                {filteredLogs.length > 0 ? (
+                  <div className="space-y-3">
+                    {filteredLogs.slice(0, 5).map((log) => (
+                      <HealthLogCard
+                        key={log.id}
+                        id={log.id}
+                        type={log.log_type}
+                        value={log.value || ""}
+                        createdAt={new Date(log.created_at)}
+                        onDelete={setDeletingLogId}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
+                    {t("profile.noHealthLogsYet")}
+                  </p>
+                )}
+              </section>
+            </AnimatedItem>
+          </>
+        ) : (
+          <AnimatedItem delay={0.15}>
+            <EmptyState
+              icon={<Dog className="h-10 w-10 text-muted-foreground" />}
+              title={t("home.noDogProfile")}
+              description={t("home.addFurryFriend")}
+              action={{
+                label: t("home.addMyDog"),
+                onClick: () => navigate("/profile/add-dog"),
+              }}
+            />
+          </AnimatedItem>
+        )}
 
         {/* My Care Requests */}
         <AnimatedItem delay={0.4}>
