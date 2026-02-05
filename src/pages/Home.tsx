@@ -1,108 +1,57 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog, PlusCircle, Loader2, Syringe, ChevronRight, Bell } from "lucide-react";
+import { Bell, Heart, MessageCircle, Share2, AlertTriangle, HandHeart, ChevronRight, Camera, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { DogSelector } from "@/components/dog/DogSelector";
-import { DogCard } from "@/components/dog/DogCard";
-import { QuickActions } from "@/components/dog/QuickActions";
-import { HealthLogCard } from "@/components/dog/HealthLogCard";
-import { EmptyState } from "@/components/ui/empty-state";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MedRecordCardReadOnly } from "@/components/med/MedRecordCardReadOnly";
-import { ExpirationNotices } from "@/components/med/ExpirationNotices";
-import { LostModeDialog } from "@/components/dog/LostModeDialog";
-import { MedRecordEditDialog } from "@/components/med/MedRecordEditDialog";
-import { PendingInvitesCard } from "@/components/dog/PendingInvitesCard";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AnimatedList, AnimatedItem } from "@/components/ui/animated-list";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
-import { enrichRecordWithStatus, MedRecordWithStatus } from "@/lib/medRecordUtils";
-import { checkMedicationNotifications } from "@/lib/notificationUtils";
+import { useViewerLocation } from "@/hooks/useViewerLocation";
+import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 
-const ACTIVE_DOG_STORAGE_KEY = "redpaw_active_dog_id";
-
-interface UserDog {
+interface LostAlert {
   id: string;
-  name: string;
-  breed: string | null;
-  photo_url: string | null;
-  is_lost: boolean;
-}
-
-interface HealthLog {
-  id: string;
-  dog_id: string;
-  log_type: "walk" | "food" | "meds" | "mood" | "symptom";
-  value: string | null;
+  title: string;
+  description: string;
+  photo_url: string;
   created_at: string;
+  dogs: { name: string; breed: string | null } | null;
 }
 
-interface MedRecordRaw {
+interface CareRequest {
   id: string;
-  dog_id: string;
-  name: string;
-  record_type: "vaccine" | "medication";
-  date_given: string;
-  expires_on: string;
-  duration_value: number;
-  duration_unit: "days" | "months" | "years";
-  notes: string | null;
+  care_type: string;
+  time_window: string;
+  location_text: string;
+  created_at: string;
+  dogs: { name: string; breed: string | null; photo_url: string | null } | null;
+  profiles: { display_name: string | null; avatar_url: string | null } | null;
 }
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const [dogs, setDogs] = useState<UserDog[]>([]);
-  const [activeDogId, setActiveDogId] = useState<string | null>(null);
-  const [logs, setLogs] = useState<HealthLog[]>([]);
-  const [medRecords, setMedRecords] = useState<MedRecordWithStatus[]>([]);
+  const [lostAlerts, setLostAlerts] = useState<LostAlert[]>([]);
+  const [careRequests, setCareRequests] = useState<CareRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lostModeDialogOpen, setLostModeDialogOpen] = useState(false);
-  
-  // Edit/Delete states
-  const [editingMedRecord, setEditingMedRecord] = useState<MedRecordWithStatus | null>(null);
-  const [deletingMedRecord, setDeletingMedRecord] = useState<MedRecordWithStatus | null>(null);
-  const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
-  
+  const [activeTab, setActiveTab] = useState("for-you");
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
   const { unreadCount: notificationCount } = useNotifications();
-
-  // Get the active dog object
-  const activeDog = dogs.find(d => d.id === activeDogId) || null;
-
-  // Filter logs and med records by active dog
-  const filteredLogs = logs.filter(l => l.dog_id === activeDogId);
-  const filteredMedRecords = medRecords.filter(r => r.dog_id === activeDogId);
-
-  // Handle dog selection with localStorage persistence
-  const handleSelectDog = useCallback((dogId: string) => {
-    setActiveDogId(dogId);
-    localStorage.setItem(ACTIVE_DOG_STORAGE_KEY, dogId);
-  }, []);
+  const { latitude, longitude } = useViewerLocation();
 
   useEffect(() => {
     if (user) {
       fetchData();
-      // Check for medication notifications on app open
-      checkMedicationNotifications(user.id);
     }
   }, [user]);
 
@@ -110,183 +59,49 @@ export default function HomePage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Fetch dogs the user owns
-      const { data: ownedDogs } = await supabase
-        .from("dogs")
-        .select("id, name, breed, photo_url, is_lost")
-        .eq("owner_id", user.id)
-        .order("created_at", { ascending: true });
+      // Fetch recent lost alerts
+      const { data: alertsData } = await supabase
+        .from("lost_alerts")
+        .select("id, title, description, photo_url, created_at, dogs (name, breed)")
+        .eq("status", "active")
+        .neq("owner_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
 
-      // Fetch dogs where user is an active co-parent
-      const { data: coParentedMemberships } = await supabase
-        .from("dog_members")
-        .select("dog_id")
-        .eq("user_id", user.id)
-        .eq("status", "active");
+      // Fetch recent care requests (not owned by user)
+      const { data: careData } = await supabase
+        .from("care_requests")
+        .select("id, care_type, time_window, location_text, created_at, dogs (name, breed, photo_url)")
+        .eq("status", "open")
+        .neq("owner_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
 
-      let coParentedDogs: UserDog[] = [];
-      if (coParentedMemberships && coParentedMemberships.length > 0) {
-        const dogIds = coParentedMemberships.map((m) => m.dog_id);
-        const { data: sharedDogs } = await supabase
-          .from("dogs")
-          .select("id, name, breed, photo_url, is_lost")
-          .in("id", dogIds)
-          .order("created_at", { ascending: true });
-        
-        coParentedDogs = (sharedDogs || []) as UserDog[];
-      }
-
-      // Combine and dedupe (user could be both owner and co-parent theoretically)
-      const allDogs = [...(ownedDogs || []), ...coParentedDogs];
-      const uniqueDogs = allDogs.filter(
-        (dog, index, self) => self.findIndex((d) => d.id === dog.id) === index
-      );
-      
-      setDogs(uniqueDogs);
-
-      // Determine active dog
-      if (uniqueDogs.length > 0) {
-        const savedDogId = localStorage.getItem(ACTIVE_DOG_STORAGE_KEY);
-        const savedDogExists = uniqueDogs.some(d => d.id === savedDogId);
-        
-        if (savedDogId && savedDogExists) {
-          setActiveDogId(savedDogId);
-        } else {
-          // Default to first dog
-          setActiveDogId(uniqueDogs[0].id);
-          localStorage.setItem(ACTIVE_DOG_STORAGE_KEY, uniqueDogs[0].id);
-        }
-      }
-
-      // Fetch all health logs and med records for all accessible dogs
-      if (uniqueDogs.length > 0) {
-        const dogIds = uniqueDogs.map((d) => d.id);
-        
-        const [logsResult, medResult] = await Promise.all([
-          supabase
-            .from("health_logs")
-            .select("id, dog_id, log_type, value, created_at")
-            .in("dog_id", dogIds)
-            .order("created_at", { ascending: false })
-            .limit(20),
-          supabase
-            .from("med_records")
-            .select("*")
-            .in("dog_id", dogIds)
-            .order("expires_on", { ascending: true }),
-        ]);
-
-        setLogs((logsResult.data || []) as HealthLog[]);
-        
-        const enrichedRecords = (medResult.data || []).map((r) =>
-          enrichRecordWithStatus(r as any)
-        );
-        setMedRecords(enrichedRecords);
-      }
+      setLostAlerts((alertsData as LostAlert[]) || []);
+      setCareRequests((careData as CareRequest[]) || []);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching feed data:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLostModeToggle = (dogId: string, currentlyLost: boolean) => {
-    if (currentlyLost) {
-      handleEndLostMode(dogId);
-    } else {
-      setLostModeDialogOpen(true);
-    }
-  };
-
-  const handleEndLostMode = async (dogId: string) => {
-    try {
-      const { error: dogError } = await supabase
-        .from("dogs")
-        .update({ is_lost: false })
-        .eq("id", dogId);
-
-      if (dogError) throw dogError;
-
-      await supabase
-        .from("lost_alerts")
-        .update({ status: "resolved" })
-        .eq("dog_id", dogId)
-        .eq("status", "active");
-
-      setDogs((prev) =>
-        prev.map((d) => (d.id === dogId ? { ...d, is_lost: false } : d))
-      );
-
-      toast({
-        title: t("home.lostModeDeactivated"),
-        description: t("home.gladPupSafe"),
-      });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    }
-  };
-
-  const handleLostModeSuccess = () => {
-    fetchData();
-  };
-
-  // Med Record handlers
-  const handleDeleteMedRecord = async () => {
-    if (!deletingMedRecord) return;
-    
-    try {
-      const { error } = await supabase
-        .from("med_records")
-        .delete()
-        .eq("id", deletingMedRecord.id);
-
-      if (error) throw error;
-
-      setMedRecords((prev) => prev.filter((r) => r.id !== deletingMedRecord.id));
-      toast({ title: t("home.recordDeleted") });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    } finally {
-      setDeletingMedRecord(null);
-    }
-  };
-
-  const handleMedRecordUpdated = () => {
-    fetchData();
-    setEditingMedRecord(null);
-  };
-
-  // Health Log handlers
-  const handleDeleteLog = async () => {
-    if (!deletingLogId) return;
-    
-    try {
-      const { error } = await supabase
-        .from("health_logs")
-        .delete()
-        .eq("id", deletingLogId);
-
-      if (error) throw error;
-
-      setLogs((prev) => prev.filter((l) => l.id !== deletingLogId));
-      toast({ title: t("home.logDeleted") });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    } finally {
-      setDeletingLogId(null);
-    }
+  const careTypeEmoji: Record<string, string> = {
+    walk: "🚶",
+    watch: "👀",
+    overnight: "🌙",
+    "check-in": "👋",
   };
 
   if (loading) {
     return (
       <MobileLayout>
         <PageHeader title={t("home.title")} subtitle={t("home.subtitle")} />
-        <div className="p-4 space-y-6">
-          <Skeleton className="h-48 w-full rounded-2xl" />
-          <Skeleton className="h-20 w-full rounded-2xl" />
-          <div className="space-y-3">
-            <Skeleton className="h-24 w-full rounded-2xl" />
-            <Skeleton className="h-24 w-full rounded-2xl" />
+        <div className="p-4 space-y-4">
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <div className="space-y-4">
+            <Skeleton className="h-72 w-full rounded-2xl" />
+            <Skeleton className="h-72 w-full rounded-2xl" />
           </div>
         </div>
       </MobileLayout>
@@ -299,233 +114,258 @@ export default function HomePage() {
         title={t("home.title")}
         subtitle={t("home.subtitle")}
         action={
-          <div className="flex items-center gap-1">
-            <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative rounded-xl">
-              <Bell className="h-5 w-5" />
-              {notificationCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs border-2 border-card"
-                >
-                  {notificationCount > 9 ? "9+" : notificationCount}
-                </Badge>
-              )}
-            </Button>
-            <Button size="icon" variant="ghost" onClick={() => navigate("/profile")} className="rounded-xl">
-              <Dog className="h-5 w-5" />
-            </Button>
-          </div>
+          <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative rounded-xl">
+            <Bell className="h-5 w-5" />
+            {notificationCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs border-2 border-card"
+              >
+                {notificationCount > 9 ? "9+" : notificationCount}
+              </Badge>
+            )}
+          </Button>
         }
       />
 
       <div className="p-4 space-y-6">
-        {/* Pending Invites */}
+        {/* Feed Tabs */}
         <AnimatedItem>
-          <PendingInvitesCard onInviteAccepted={fetchData} />
-        </AnimatedItem>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full glass-card-light rounded-xl p-1">
+              <TabsTrigger value="for-you" className="flex-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Sparkles className="h-4 w-4 mr-2" />
+                {t("home.forYou")}
+              </TabsTrigger>
+              <TabsTrigger value="following" className="flex-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Heart className="h-4 w-4 mr-2" />
+                {t("home.following")}
+              </TabsTrigger>
+            </TabsList>
 
-        {dogs.length > 0 && activeDog ? (
-          <>
-            {/* Expiration Notices for active dog */}
-            <AnimatedItem delay={0.1}>
-              <ExpirationNotices records={filteredMedRecords} />
-            </AnimatedItem>
-
-            {/* My Dogs Section */}
-            <AnimatedItem delay={0.15}>
-              <section>
-                <h2 className="section-header mb-3">
-                  {dogs.length > 1 ? t("home.myDogs") : t("home.myDog")}
-                </h2>
-                
-                {dogs.length > 1 ? (
-                  <DogSelector
-                    dogs={dogs}
-                    activeDogId={activeDogId!}
-                    onSelectDog={handleSelectDog}
-                  />
-                ) : (
-                  <DogCard
-                    name={activeDog.name}
-                    breed={activeDog.breed || t("common.mixedBreed")}
-                    photoUrl={activeDog.photo_url || ""}
-                    isLost={activeDog.is_lost}
-                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                    onClick={() => navigate(`/dog/${activeDog.id}`)}
-                  />
-                )}
-              </section>
-            </AnimatedItem>
-
-            {/* Active Dog Card (shown when multiple dogs) */}
-            {dogs.length > 1 && (
-              <AnimatedItem delay={0.2}>
+            <TabsContent value="for-you" className="mt-4 space-y-6">
+              {/* Lost Dogs Nearby Section */}
+              {lostAlerts.length > 0 && (
                 <section>
-                  <DogCard
-                    name={activeDog.name}
-                    breed={activeDog.breed || t("common.mixedBreed")}
-                    photoUrl={activeDog.photo_url || ""}
-                    isLost={activeDog.is_lost}
-                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                    onClick={() => navigate(`/dog/${activeDog.id}`)}
-                  />
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="section-header flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-lost" />
+                      {t("home.lostDogsNearby")}
+                    </h2>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => navigate("/community")}
+                      className="text-primary rounded-xl"
+                    >
+                      {t("home.seeAll")}
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                  <AnimatedList className="space-y-4">
+                    {lostAlerts.slice(0, 2).map((alert) => (
+                      <FeedCard
+                        key={alert.id}
+                        type="lost"
+                        title={alert.dogs?.name || "Lost Dog"}
+                        subtitle={alert.title}
+                        description={alert.description}
+                        imageUrl={alert.photo_url}
+                        timestamp={alert.created_at}
+                        onClick={() => navigate(`/lost-alert/${alert.id}`)}
+                      />
+                    ))}
+                  </AnimatedList>
                 </section>
+              )}
+
+              {/* Care Requests Section */}
+              {careRequests.length > 0 && (
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="section-header flex items-center gap-2">
+                      <HandHeart className="h-4 w-4 text-success" />
+                      {t("home.careRequestsNearby")}
+                    </h2>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => navigate("/community")}
+                      className="text-primary rounded-xl"
+                    >
+                      {t("home.seeAll")}
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                  <AnimatedList className="space-y-4">
+                    {careRequests.slice(0, 3).map((request) => (
+                      <GlassCard
+                        key={request.id}
+                        variant="light"
+                        hover
+                        className="overflow-hidden"
+                        onClick={() => navigate(`/care-request/${request.id}`)}
+                      >
+                        <div className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="h-12 w-12 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
+                              <span className="text-xl">{careTypeEmoji[request.care_type] || "🐕"}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-foreground">
+                                  {t(`care.${request.care_type === "check-in" ? "checkIn" : request.care_type}`)}
+                                </h3>
+                                <Badge variant="secondary" className="text-xs">
+                                  {t("common.open")}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {request.dogs?.name} • {request.time_window}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1 truncate">
+                                📍 {request.location_text}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
+                            </span>
+                            <Button size="sm" className="rounded-xl h-8">
+                              {t("common.apply")}
+                            </Button>
+                          </div>
+                        </div>
+                      </GlassCard>
+                    ))}
+                  </AnimatedList>
+                </section>
+              )}
+
+              {/* Empty State */}
+              {lostAlerts.length === 0 && careRequests.length === 0 && (
+                <AnimatedItem delay={0.1}>
+                  <GlassCard variant="light" className="p-8 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                        <Camera className="h-8 w-8 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg text-foreground mb-1">
+                          {t("home.noPostsYet")}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {t("home.beFirstToShare")}
+                        </p>
+                      </div>
+                      <Button className="rounded-xl" onClick={() => navigate("/community")}>
+                        {t("nav.community")}
+                      </Button>
+                    </div>
+                  </GlassCard>
+                </AnimatedItem>
+              )}
+            </TabsContent>
+
+            <TabsContent value="following" className="mt-4">
+              <AnimatedItem>
+                <GlassCard variant="light" className="p-8 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center">
+                      <Heart className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg text-foreground mb-1">
+                        Coming Soon
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Follow other pet parents to see their updates here!
+                      </p>
+                    </div>
+                  </div>
+                </GlassCard>
               </AnimatedItem>
-            )}
-
-            {/* Lost Mode Dialog */}
-            <LostModeDialog
-              open={lostModeDialogOpen}
-              onOpenChange={setLostModeDialogOpen}
-              dog={{
-                id: activeDog.id,
-                name: activeDog.name,
-                breed: activeDog.breed,
-                photo_url: activeDog.photo_url,
-              }}
-              onSuccess={handleLostModeSuccess}
-            />
-
-            {/* Quick Actions */}
-            <AnimatedItem delay={0.25}>
-              <section>
-                <h2 className="section-header mb-3">
-                  {t("home.quickActions")}
-                </h2>
-                <QuickActions
-                  dogId={activeDog.id}
-                  isLost={activeDog.is_lost}
-                  onToggleLost={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                />
-              </section>
-            </AnimatedItem>
-
-            {/* Medication Records for active dog */}
-            <AnimatedItem delay={0.3}>
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="section-header flex items-center gap-2">
-                    <Syringe className="h-4 w-4" />
-                    {t("home.medicationRecords")}
-                  </h2>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => navigate("/create?type=meds")}
-                    className="text-primary rounded-xl"
-                  >
-                    {t("common.add")}
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-                {filteredMedRecords.length > 0 ? (
-                  <div className="space-y-3">
-                    {filteredMedRecords.map((record) => (
-                      <MedRecordCardReadOnly
-                        key={record.id}
-                        record={record}
-                        onEdit={setEditingMedRecord}
-                        onDelete={setDeletingMedRecord}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                    {t("home.noMedRecordsYet")}
-                  </p>
-                )}
-              </section>
-            </AnimatedItem>
-
-            {/* Recent Logs for active dog */}
-            <AnimatedItem delay={0.35}>
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="section-header">
-                    {t("home.recentLogs")}
-                  </h2>
-                  <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=log")} className="text-primary rounded-xl">
-                    <PlusCircle className="h-4 w-4 mr-1" />
-                    {t("common.add")}
-                  </Button>
-                </div>
-                {filteredLogs.length > 0 ? (
-                  <div className="space-y-3">
-                    {filteredLogs.slice(0, 5).map((log) => (
-                      <HealthLogCard
-                        key={log.id}
-                        id={log.id}
-                        type={log.log_type}
-                        value={log.value || ""}
-                        createdAt={new Date(log.created_at)}
-                        onDelete={setDeletingLogId}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                    {t("home.noHealthLogsYet")}
-                  </p>
-                )}
-              </section>
-            </AnimatedItem>
-          </>
-        ) : (
-          <EmptyState
-            icon={<Dog className="h-10 w-10 text-muted-foreground" />}
-            title={t("home.noDogProfile")}
-            description={t("home.addFurryFriend")}
-            action={{
-              label: t("home.addMyDog"),
-              onClick: () => navigate("/profile/add-dog"),
-            }}
-          />
-        )}
+            </TabsContent>
+          </Tabs>
+        </AnimatedItem>
       </div>
-
-      {/* Edit Med Record Dialog */}
-      <MedRecordEditDialog
-        record={editingMedRecord}
-        open={!!editingMedRecord}
-        onOpenChange={(open) => !open && setEditingMedRecord(null)}
-        onSuccess={handleMedRecordUpdated}
-      />
-
-      {/* Delete Med Record Confirmation */}
-      <AlertDialog open={!!deletingMedRecord} onOpenChange={(open) => !open && setDeletingMedRecord(null)}>
-        <AlertDialogContent className="glass-card-modal rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("home.deleteRecord")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("home.deleteRecordConfirm", { name: deletingMedRecord?.name })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteMedRecord} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
-              {t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete Log Confirmation */}
-      <AlertDialog open={!!deletingLogId} onOpenChange={(open) => !open && setDeletingLogId(null)}>
-        <AlertDialogContent className="glass-card-modal rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("home.deleteLog")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("home.deleteLogConfirm")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
-              {t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </MobileLayout>
+  );
+}
+
+// Feed Card Component
+interface FeedCardProps {
+  type: "lost" | "found" | "post";
+  title: string;
+  subtitle?: string;
+  description?: string;
+  imageUrl?: string | null;
+  timestamp: string;
+  author?: { name: string; avatar?: string };
+  onClick?: () => void;
+}
+
+function FeedCard({ type, title, subtitle, description, imageUrl, timestamp, author, onClick }: FeedCardProps) {
+  const { t } = useTranslation();
+  
+  return (
+    <motion.div
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="cursor-pointer"
+    >
+      <GlassCard variant="light" hover className="overflow-hidden">
+        {/* Header Badge */}
+        <div className={cn(
+          "px-4 py-2",
+          type === "lost" ? "bg-gradient-to-r from-lost to-lost/80" : "bg-gradient-to-r from-success to-success/80"
+        )}>
+          <span className="text-xs font-bold text-white uppercase tracking-wide">
+            {type === "lost" ? `🚨 ${t("community.lostDog")}` : `✅ ${t("community.foundDog")}`}
+          </span>
+        </div>
+
+        {/* Image */}
+        {imageUrl && (
+          <div className="aspect-[4/3] bg-muted overflow-hidden">
+            <img 
+              src={imageUrl} 
+              alt={title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="p-4">
+          <h3 className="font-bold text-lg text-foreground">{title}</h3>
+          {subtitle && (
+            <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+          )}
+          {description && (
+            <p className="text-sm text-foreground mt-2 line-clamp-2">{description}</p>
+          )}
+
+          {/* Actions Row */}
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
+            <div className="flex items-center gap-4">
+              <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+                <Heart className="h-5 w-5" />
+              </button>
+              <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+                <MessageCircle className="h-5 w-5" />
+              </button>
+              <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+                <Share2 className="h-5 w-5" />
+              </button>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
+            </span>
+          </div>
+        </div>
+      </GlassCard>
+    </motion.div>
   );
 }
