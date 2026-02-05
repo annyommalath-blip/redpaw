@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Syringe, PlusCircle, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom"; 
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Syringe, PlusCircle, Bell, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
@@ -119,6 +119,7 @@ export default function ProfilePage() {
   const [editingMedRecord, setEditingMedRecord] = useState<MedRecordWithStatus | null>(null);
   const [deletingMedRecord, setDeletingMedRecord] = useState<MedRecordWithStatus | null>(null);
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
+  const [showOwnerProfile, setShowOwnerProfile] = useState(false);
   const [editForm, setEditForm] = useState({
     first_name: "",
     last_name: "",
@@ -628,167 +629,192 @@ export default function ProfilePage() {
 
         {/* User Account Card */}
         <AnimatedItem delay={0.35}>
-          <GlassCard variant="light">
-            <CardContent className="p-4 space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={profile?.avatar_url || ""} />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      <User className="h-8 w-8" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full"
-                  >
-                    <Camera className="h-3 w-3" />
-                  </Button>
+          <section>
+            <button
+              onClick={() => setShowOwnerProfile(!showOwnerProfile)}
+              className="w-full flex items-center justify-between px-4 py-3 glass-card rounded-2xl hover:bg-white/80 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={profile?.avatar_url || ""} />
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-left">
+                  <p className="text-sm font-medium text-foreground">
+                    {profile?.display_name || user?.email?.split("@")[0] || t("profile.ownerProfile")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t("profile.viewOwnerProfile")}</p>
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-foreground">
-                    {profile?.display_name || user?.email?.split("@")[0] || "Dog Lover"}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => setIsEditing(!isEditing)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
               </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${showOwnerProfile ? "rotate-180" : ""}`} />
+            </button>
 
-              <Separator />
-
-              {isEditing ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="first_name" className="text-xs text-muted-foreground">
-                        {t("profile.firstName")}
-                      </Label>
-                      <Input
-                        id="first_name"
-                        value={editForm.first_name}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
-                        placeholder={t("profile.firstName")}
-                        className="h-9"
-                      />
+            {showOwnerProfile && (
+              <GlassCard variant="light" className="mt-3">
+                <CardContent className="p-4 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={profile?.avatar_url || ""} />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          <User className="h-8 w-8" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full"
+                      >
+                        <Camera className="h-3 w-3" />
+                      </Button>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="last_name" className="text-xs text-muted-foreground">
-                        {t("profile.lastName")}
-                      </Label>
-                      <Input
-                        id="last_name"
-                        value={editForm.last_name}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
-                        placeholder={t("profile.lastName")}
-                        className="h-9"
-                      />
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold text-foreground">
+                        {profile?.display_name || user?.email?.split("@")[0] || "Dog Lover"}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">{user?.email}</p>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="city" className="text-xs text-muted-foreground">
-                        {t("profile.city")}
-                      </Label>
-                      <Input
-                        id="city"
-                        value={editForm.city}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, city: e.target.value }))}
-                        placeholder="Seattle"
-                        className="h-9"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="postal_code" className="text-xs text-muted-foreground">
-                        {t("profile.postalCode")}
-                      </Label>
-                      <Input
-                        id="postal_code"
-                        value={editForm.postal_code}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, postal_code: e.target.value }))}
-                        placeholder="98125"
-                        className="h-9"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveProfile} disabled={saving} className="flex-1" size="sm">
-                      {saving ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          {t("profile.saving")}
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-2" />
-                          {t("profile.saveProfile")}
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsEditing(false);
-                        setEditForm({
-                          first_name: profile?.first_name || "",
-                          last_name: profile?.last_name || "",
-                          city: profile?.city || "",
-                          postal_code: profile?.postal_code || "",
-                        });
-                      }}
-                    >
-                      {t("common.cancel")}
+                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(!isEditing)}>
+                      <Edit className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {formatName() && (
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        <span className="text-muted-foreground">{t("profile.name")}: </span>
-                        <span className="font-medium text-foreground">{formatName()}</span>
-                      </span>
-                    </div>
-                  )}
-                  {formatLocation() && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        <span className="text-muted-foreground">{t("profile.location")}: </span>
-                        <span className="font-medium text-foreground">{formatLocation()}</span>
-                      </span>
-                    </div>
-                  )}
-                  {dogs.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <Dog className="h-4 w-4 text-muted-foreground mt-0.5" />
-                      <div className="flex-1">
-                        <span className="text-sm text-muted-foreground">{t("profile.ownerOf")}: </span>
-                        <div className="flex flex-wrap gap-1.5 mt-1">
-                          {dogs.map((dog) => (
-                            <span
-                              key={dog.id}
-                              className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
-                            >
-                              {dog.name} {dog.breed ? `(${dog.breed})` : ""}
-                            </span>
-                          ))}
+
+                  <Separator />
+
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="first_name" className="text-xs text-muted-foreground">
+                            {t("profile.firstName")}
+                          </Label>
+                          <Input
+                            id="first_name"
+                            value={editForm.first_name}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
+                            placeholder={t("profile.firstName")}
+                            className="h-9"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="last_name" className="text-xs text-muted-foreground">
+                            {t("profile.lastName")}
+                          </Label>
+                          <Input
+                            id="last_name"
+                            value={editForm.last_name}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
+                            placeholder={t("profile.lastName")}
+                            className="h-9"
+                          />
                         </div>
                       </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="city" className="text-xs text-muted-foreground">
+                            {t("profile.city")}
+                          </Label>
+                          <Input
+                            id="city"
+                            value={editForm.city}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, city: e.target.value }))}
+                            placeholder="Seattle"
+                            className="h-9"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="postal_code" className="text-xs text-muted-foreground">
+                            {t("profile.postalCode")}
+                          </Label>
+                          <Input
+                            id="postal_code"
+                            value={editForm.postal_code}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, postal_code: e.target.value }))}
+                            placeholder="98125"
+                            className="h-9"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={handleSaveProfile} disabled={saving} className="flex-1" size="sm">
+                          {saving ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              {t("profile.saving")}
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              {t("profile.saveProfile")}
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsEditing(false);
+                            setEditForm({
+                              first_name: profile?.first_name || "",
+                              last_name: profile?.last_name || "",
+                              city: profile?.city || "",
+                              postal_code: profile?.postal_code || "",
+                            });
+                          }}
+                        >
+                          {t("common.cancel")}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {formatName() && (
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            <span className="text-muted-foreground">{t("profile.name")}: </span>
+                            <span className="font-medium text-foreground">{formatName()}</span>
+                          </span>
+                        </div>
+                      )}
+                      {formatLocation() && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            <span className="text-muted-foreground">{t("profile.location")}: </span>
+                            <span className="font-medium text-foreground">{formatLocation()}</span>
+                          </span>
+                        </div>
+                      )}
+                      {dogs.length > 0 && (
+                        <div className="flex items-start gap-2">
+                          <Dog className="h-4 w-4 text-muted-foreground mt-0.5" />
+                          <div className="flex-1">
+                            <span className="text-sm text-muted-foreground">{t("profile.ownerOf")}: </span>
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                              {dogs.map((dog) => (
+                                <span
+                                  key={dog.id}
+                                  className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                                >
+                                  {dog.name} {dog.breed ? `(${dog.breed})` : ""}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {!formatName() && !formatLocation() && (
+                        <p className="text-sm text-muted-foreground italic">{t("profile.editHint")}</p>
+                      )}
                     </div>
                   )}
-                  {!formatName() && !formatLocation() && (
-                    <p className="text-sm text-muted-foreground italic">{t("profile.editHint")}</p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </GlassCard>
+                </CardContent>
+              </GlassCard>
+            )}
+          </section>
         </AnimatedItem>
 
         {/* My Care Requests */}
