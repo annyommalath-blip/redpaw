@@ -261,7 +261,7 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
 For each genuine match, format as:
 **#N - [Location] — [Found date]**
 Reason: [explain color/size/breed similarity]
-👉 [Open Post](/found/POST_ID) · [Message Reporter](/messages)
+👉 [Open Post](/found-dog/POST_ID) · [Message Reporter](/messages)
 
 If the post has a cover_photo_url, show it as: ![Found dog](cover_photo_url)`,
   };
@@ -300,16 +300,16 @@ PHOTO MATCH FEATURE:
   4. Return ONLY genuine matches ranked by similarity with:
      - Match reason (e.g., "Similar brown coat + small size + matches Pomeranian description")
      - Found location + time
-     - Links: [Open Post](/found/POST_ID) and [Message Reporter](/messages)
+     - Links: [Open Post](/found-dog/POST_ID) and [Message Reporter](/messages)
   5. If confidence is low for all matches, say so honestly and suggest widening the search or checking back later
   6. If NO matches found, reassure the user and suggest posting a Lost alert
 
-DEEP LINKS FORMAT:
+DEEP LINKS FORMAT (use EXACT route paths):
 - Always use relative paths starting with / for in-app links
 - Dog profile: [Dog Name](/dog/DOG_ID)
-- Found dog post: [Open Post](/found/POST_ID)
-- Lost alert: [View Alert](/lost/ALERT_ID)
-- Care request: [View Request](/care/REQUEST_ID)
+- Found dog post: [Open Post](/found-dog/POST_ID)  ← NOTE: /found-dog/ not /found/
+- Lost alert: [View Alert](/lost-alert/ALERT_ID)  ← NOTE: /lost-alert/ not /lost/
+- Care request: [View Request](/care-request/REQUEST_ID)  ← NOTE: /care-request/ not /care/
 - Messages: [Message](/messages)
 - NEVER use full URLs for app pages
 
