@@ -25,6 +25,30 @@ interface Message {
 
 const AI_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
 const MAX_IMAGES = 3;
+const STORAGE_KEY = "redpaw_ai_chat";
+const TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function loadMessages(): Message[] | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const { ts, msgs } = JSON.parse(raw);
+    if (Date.now() - ts > TTL_MS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return msgs.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
+}
+
+function saveMessages(msgs: Message[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ts: Date.now(), msgs }));
+  } catch { /* quota exceeded – ignore */ }
+}
 
 function getTextContent(content: string | MessageContent[]): string {
   if (typeof content === "string") return content;
@@ -87,14 +111,17 @@ export default function AIChatPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content: "Hi there! 🐕 I'm RedPaw AI. I can help you with:\n\n• **Your dogs & health records** - vaccines, medications, expiration alerts\n• **Care requests** - sitter jobs, scheduling\n• **Lost & Found** - alerts, sightings\n• **📸 Photo Match** - Upload a photo of your dog and I'll search Found Dog posts for matches!\n• **General pet advice**\n\nTry asking me: \"When is my dog's rabies vaccine due?\" or upload a photo and say \"Help me find my dog\"",
-      timestamp: new Date(),
-    }
-  ]);
+  const welcomeMessage: Message = {
+    id: "welcome",
+    role: "assistant",
+    content: "Hi there! 🐕 I'm RedPaw AI. I can help you with:\n\n• **Your dogs & health records** - vaccines, medications, expiration alerts\n• **Care requests** - sitter jobs, scheduling\n• **Lost & Found** - alerts, sightings\n• **📸 Photo Match** - Upload a photo of your dog and I'll search Found Dog posts for matches!\n• **General pet advice**\n\nTry asking me: \"When is my dog's rabies vaccine due?\" or upload a photo and say \"Help me find my dog\"",
+    timestamp: new Date(),
+  };
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = loadMessages();
+    return saved && saved.length > 0 ? saved : [welcomeMessage];
+  });
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
@@ -105,6 +132,16 @@ export default function AIChatPage() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+  }, [messages]);
+
+  // Persist messages to localStorage (excluding base64 images to save space)
+  useEffect(() => {
+    const toSave = messages.map(m => ({
+      ...m,
+      content: typeof m.content === "string" ? m.content
+        : (m.content as MessageContent[]).filter(c => c.type === "text"),
+    }));
+    saveMessages(toSave);
   }, [messages]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
