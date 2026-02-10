@@ -117,6 +117,10 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        "typing-dot": {
+          "0%, 80%, 100%": { opacity: "0.3", transform: "scale(0.8)" },
+          "40%": { opacity: "1", transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",

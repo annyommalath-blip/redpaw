@@ -419,10 +419,10 @@ export default function AIChatPage() {
 
         {isLoading && messages[messages.length - 1]?.content === "" && (
           <div className="flex justify-start">
-            <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-              <span className="h-2 w-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-              <span className="h-2 w-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+            <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2">
+              <span className="h-[7px] w-[7px] rounded-full bg-muted-foreground/70 animate-[typing-dot_1.4s_ease-in-out_infinite]" />
+              <span className="h-[7px] w-[7px] rounded-full bg-muted-foreground/70 animate-[typing-dot_1.4s_ease-in-out_0.2s_infinite]" />
+              <span className="h-[7px] w-[7px] rounded-full bg-muted-foreground/70 animate-[typing-dot_1.4s_ease-in-out_0.4s_infinite]" />
             </div>
           </div>
         )}
