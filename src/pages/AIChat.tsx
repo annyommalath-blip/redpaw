@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
+import { isHeicFile } from "@/lib/imageUtils";
 
 interface MessageContent {
   type: "text" | "image_url";
@@ -35,12 +36,48 @@ function getImageUrls(content: string | MessageContent[]): string[] {
   return content.filter(c => c.type === "image_url").map(c => c.image_url!.url);
 }
 
-async function fileToBase64(file: File): Promise<string> {
+async function processFileToBase64(file: File): Promise<string> {
+  let blob: Blob = file;
+
+  // Convert HEIC/HEIF to JPEG first
+  if (isHeicFile(file)) {
+    const heic2anyModule = await import("heic2any");
+    const heic2any = heic2anyModule.default;
+    const result = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+    blob = Array.isArray(result) ? result[0] : result;
+  }
+
+  // Resize large images via canvas to keep base64 manageable
+  const img = await createImageBitmap(blob);
+  const MAX_DIM = 1200;
+  let { width, height } = img;
+  if (width > MAX_DIM || height > MAX_DIM) {
+    if (width > height) {
+      height = Math.round((height / width) * MAX_DIM);
+      width = MAX_DIM;
+    } else {
+      width = Math.round((width / height) * MAX_DIM);
+      height = MAX_DIM;
+    }
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, width, height);
+
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    canvas.toBlob(
+      (b) => {
+        if (!b) return reject(new Error("Canvas toBlob failed"));
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(b);
+      },
+      "image/jpeg",
+      0.85
+    );
   });
 }
 
@@ -82,7 +119,7 @@ export default function AIChatPage() {
 
     const toProcess = Array.from(files).slice(0, remaining);
     try {
-      const base64Images = await Promise.all(toProcess.map(fileToBase64));
+      const base64Images: string[] = await Promise.all(toProcess.map(processFileToBase64));
       setAttachedImages(prev => [...prev, ...base64Images]);
     } catch {
       toast({ variant: "destructive", title: "Error", description: "Failed to load image(s)." });
@@ -377,7 +414,7 @@ export default function AIChatPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif"
             multiple
             className="hidden"
             onChange={handleImageUpload}
