@@ -484,7 +484,7 @@ export default function AIChatPage() {
             disabled={isLoading}
           />
           <Button onClick={handleSend} disabled={(!newMessage.trim() && attachedImages.length === 0) || isLoading}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            <Send className="h-4 w-4" />
           </Button>
         </div>
       </div>
