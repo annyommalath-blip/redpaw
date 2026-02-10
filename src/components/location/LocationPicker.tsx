@@ -9,17 +9,23 @@ import { cn } from "@/lib/utils";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix for default marker icon in Leaflet with bundlers
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
+// Custom Mapbox-style pin marker
+const mapboxPinSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
+  <defs>
+    <filter id="shadow" x="-20%" y="-10%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.268 21.732 0 14 0z" fill="hsl(221, 83%, 53%)" filter="url(#shadow)"/>
+  <circle cx="14" cy="14" r="6" fill="white"/>
+</svg>`;
 
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
+const mapboxPinIcon = L.divIcon({
+  html: mapboxPinSvg,
+  className: "",
+  iconSize: [28, 40],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -40],
 });
 
 interface LocationPickerProps {
@@ -86,7 +92,7 @@ export const LocationPicker = forwardRef<HTMLDivElement, LocationPickerProps>(fu
     }).addTo(map);
 
     // Add draggable marker
-    const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+    const marker = L.marker([defaultLat, defaultLng], { draggable: true, icon: mapboxPinIcon }).addTo(map);
     
     // Handle marker drag end
     marker.on("dragend", async () => {
