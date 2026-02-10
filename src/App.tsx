@@ -22,6 +22,7 @@ import CareRequestDetail from "./pages/CareRequestDetail";
 import LostAlertDetail from "./pages/LostAlertDetail";
 import FoundDogDetail from "./pages/FoundDogDetail";
 import Settings from "./pages/Settings";
+import UserProfilePage from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/profile/add-dog" element={<ProtectedRoute><AddDog /></ProtectedRoute>} />
             <Route path="/profile/edit-dog/:dogId" element={<ProtectedRoute><EditDog /></ProtectedRoute>} />
             <Route path="/dog/:dogId" element={<ProtectedRoute><DogDetail /></ProtectedRoute>} />
+            <Route path="/user/:userId" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

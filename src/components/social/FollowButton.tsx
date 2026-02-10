@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 interface FollowButtonProps {
   targetUserId: string;
-  size?: "xs" | "sm";
+  size?: "xs" | "sm" | "default";
   className?: string;
 }
 
@@ -66,36 +66,43 @@ export function FollowButton({ targetUserId, size = "xs", className }: FollowBut
 
   if (loading || isOwnUser) return null;
 
+  const btnSize = size === "default" ? "default" : "sm";
+  const textClass = size === "default" ? "text-sm" : "text-xs";
+  const heightClass = size === "default" ? "h-9 px-4" : "h-7 px-2";
+  const iconClass = size === "default" ? "h-4 w-4" : "h-3 w-3";
+
   if (isFollowing) {
     return (
       <Button
         variant="ghost"
-        size="sm"
+        size={btnSize}
         onClick={handleToggle}
         disabled={toggling}
         className={cn(
-          "h-7 px-2 text-xs rounded-full text-muted-foreground hover:text-destructive gap-1",
+          `${heightClass} ${textClass} rounded-full text-muted-foreground hover:text-destructive gap-1`,
           className
         )}
       >
-        {toggling ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserCheck className="h-3 w-3" />}
-        <span className="hidden sm:inline">Following</span>
+        {toggling ? <Loader2 className={`${iconClass} animate-spin`} /> : <UserCheck className={iconClass} />}
+        <span className={size === "default" ? "" : "hidden sm:inline"}>Following</span>
       </Button>
     );
   }
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      variant={size === "default" ? "default" : "ghost"}
+      size={btnSize}
       onClick={handleToggle}
       disabled={toggling}
       className={cn(
-        "h-7 px-2 text-xs rounded-full text-primary hover:text-primary gap-1 font-semibold",
+        size === "default"
+          ? `${heightClass} ${textClass} rounded-full gap-1 font-semibold`
+          : `${heightClass} ${textClass} rounded-full text-primary hover:text-primary gap-1 font-semibold`,
         className
       )}
     >
-      {toggling ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserPlus className="h-3 w-3" />}
+      {toggling ? <Loader2 className={`${iconClass} animate-spin`} /> : <UserPlus className={iconClass} />}
       Follow
     </Button>
   );
