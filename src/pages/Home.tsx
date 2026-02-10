@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Plus, Camera } from "lucide-react";
+import { Bell, Camera } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -150,13 +150,6 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* FAB */}
-      <button
-        onClick={() => setShowCreate(true)}
-        className="fixed bottom-24 right-5 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center z-40 hover:scale-105 transition-transform active:scale-95"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
 
       <CreatePostSheet
         open={showCreate}
