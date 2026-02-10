@@ -163,6 +163,7 @@ export default function HomePage() {
         onOpenChange={(open) => !open && setSharePost(null)}
         postCaption={sharePost?.caption || sharePost?.original_post?.caption || null}
         postPhotoUrl={sharePost?.photo_url || sharePost?.original_post?.photo_url || null}
+        postPhotoUrls={sharePost?.photo_urls || sharePost?.original_post?.photo_urls || null}
       />
     </MobileLayout>
   );

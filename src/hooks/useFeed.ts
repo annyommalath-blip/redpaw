@@ -16,7 +16,7 @@ export function useFeed() {
       // Fetch posts
       const { data: postsData, error } = await supabase
         .from("posts")
-        .select("id, user_id, caption, photo_url, repost_id, created_at, visibility")
+        .select("id, user_id, caption, photo_url, photo_urls, repost_id, created_at, visibility")
         .order("created_at", { ascending: false })
         .limit(50);
 
@@ -34,7 +34,7 @@ export function useFeed() {
       if (repostIds.length > 0) {
         const { data: originals } = await supabase
           .from("posts")
-          .select("id, user_id, caption, photo_url, created_at")
+          .select("id, user_id, caption, photo_url, photo_urls, created_at")
           .in("id", repostIds);
         if (originals) {
           originals.forEach((p) => originalPostsMap.set(p.id, p));
