@@ -64,10 +64,10 @@ export default function PostPhotoCarousel({ photos, className }: PostPhotoCarous
             key={i}
             onClick={() => emblaApi?.scrollTo(i)}
             className={cn(
-              "rounded-full transition-all duration-200",
+              "w-1.5 h-1.5 rounded-full transition-colors duration-200",
               i === activeIndex
-                ? "w-2 h-2 bg-white shadow-md"
-                : "w-1.5 h-1.5 bg-white/50"
+                ? "bg-white"
+                : "bg-white/40"
             )}
           />
         ))}
