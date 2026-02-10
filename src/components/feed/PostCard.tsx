@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2, Globe, Users, Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { FollowButton } from "@/components/social/FollowButton";
 import { motion } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -112,6 +113,9 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
             )}
           </div>
         </div>
+        {!isOwn && displayPost.author && (
+          <FollowButton targetUserId={displayPost.author.user_id} />
+        )}
         {isOwn && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

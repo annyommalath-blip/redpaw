@@ -9,6 +9,7 @@ import { LocationLink } from "@/components/location/LocationLink";
 import { getDistanceLabel } from "@/lib/distanceUtils";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { FollowButton } from "@/components/social/FollowButton";
 
 interface LostAlertCardProps {
   id: string;
@@ -27,6 +28,7 @@ interface LostAlertCardProps {
   viewerLongitude?: number | null;
   createdAt: Date;
   status: "active" | "resolved";
+  ownerId?: string;
   onContact: () => void;
   onReportSighting?: () => void;
 }
@@ -48,6 +50,7 @@ export function LostAlertCard({
   viewerLongitude,
   createdAt,
   status,
+  ownerId,
   onContact,
 }: LostAlertCardProps) {
   const { t } = useTranslation();
@@ -125,7 +128,10 @@ export function LostAlertCard({
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-foreground">{dogName}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-foreground">{dogName}</h3>
+              {ownerId && <FollowButton targetUserId={ownerId} />}
+            </div>
             <p className="text-sm text-muted-foreground">{breed}</p>
             
             {/* Age & Weight */}
