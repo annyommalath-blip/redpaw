@@ -15,10 +15,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 import PostComments from "./PostComments";
+import PostPhotoCarousel from "./PostPhotoCarousel";
 
 interface PostAuthor {
   user_id: string;
@@ -35,6 +34,7 @@ export interface PostData {
   user_id: string;
   caption: string | null;
   photo_url: string | null;
+  photo_urls?: string[] | null;
   repost_id: string | null;
   created_at: string;
   visibility?: PostVisibility;
@@ -43,7 +43,6 @@ export interface PostData {
   comment_count: number;
   repost_count: number;
   is_liked: boolean;
-  // For reposts
   original_post?: PostData | null;
 }
 
@@ -79,6 +78,14 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
     : "";
 
   const initials = authorName.slice(0, 2).toUpperCase();
+
+  // Get photos array - prefer photo_urls, fallback to photo_url
+  const photos = (() => {
+    const urls = displayPost.photo_urls;
+    if (urls && urls.length > 0) return urls;
+    if (displayPost.photo_url) return [displayPost.photo_url];
+    return [];
+  })();
 
   const handleLike = () => {
     setLikeAnimating(true);
@@ -138,16 +145,9 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
         <p className="px-4 pb-2 text-sm text-foreground whitespace-pre-line">{displayPost.caption}</p>
       )}
 
-      {/* Photo */}
-      {displayPost.photo_url && (
-        <div className="w-full bg-muted">
-          <img
-            src={displayPost.photo_url}
-            alt="Post"
-            className="w-full object-cover max-h-[500px]"
-            loading="lazy"
-          />
-        </div>
+      {/* Photos - carousel or single */}
+      {photos.length > 0 && (
+        <PostPhotoCarousel photos={photos} />
       )}
 
       {/* Action bar */}

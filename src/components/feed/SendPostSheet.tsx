@@ -21,9 +21,10 @@ interface SendPostSheetProps {
   onOpenChange: (open: boolean) => void;
   postCaption: string | null;
   postPhotoUrl: string | null;
+  postPhotoUrls?: string[] | null;
 }
 
-export default function SendPostSheet({ open, onOpenChange, postCaption, postPhotoUrl }: SendPostSheetProps) {
+export default function SendPostSheet({ open, onOpenChange, postCaption, postPhotoUrl, postPhotoUrls }: SendPostSheetProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -71,8 +72,10 @@ export default function SendPostSheet({ open, onOpenChange, postCaption, postPho
       if (postCaption) {
         messageText += `:\n"${postCaption.slice(0, 200)}${postCaption.length > 200 ? "..." : ""}"`;
       }
-      if (postPhotoUrl) {
-        messageText += `\n📷 ${postPhotoUrl}`;
+      const photos = postPhotoUrls?.length ? postPhotoUrls : postPhotoUrl ? [postPhotoUrl] : [];
+      if (photos.length > 0) {
+        messageText += `\n📷 ${photos[0]}`;
+        if (photos.length > 1) messageText += ` (+${photos.length - 1} more)`;
       }
 
       // Send message

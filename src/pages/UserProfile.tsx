@@ -64,7 +64,7 @@ export default function UserProfile() {
       // Fetch user's posts (only public ones visible to viewer)
       const { data: postsData } = await supabase
         .from("posts")
-        .select("id, user_id, caption, photo_url, repost_id, created_at, visibility")
+        .select("id, user_id, caption, photo_url, photo_urls, repost_id, created_at, visibility")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -86,7 +86,7 @@ export default function UserProfile() {
       if (repostIds.length > 0) {
         const { data: originals } = await supabase
           .from("posts")
-          .select("id, user_id, caption, photo_url, created_at")
+          .select("id, user_id, caption, photo_url, photo_urls, created_at")
           .in("id", repostIds);
         if (originals) {
           originals.forEach(p => originalPostsMap.set(p.id, p));
