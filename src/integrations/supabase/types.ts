@@ -879,22 +879,6 @@ export type Database = {
           last_name: string | null
           user_id: string | null
         }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          display_name?: string | null
-          first_name?: string | null
-          last_name?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          display_name?: string | null
-          first_name?: string | null
-          last_name?: string | null
-          user_id?: string | null
-        }
         Relationships: []
       }
     }
@@ -920,6 +904,7 @@ export type Database = {
         Args: never
         Returns: {
           avatar_url: string
+          bio: string
           display_name: string
           first_name: string
           last_name: string
