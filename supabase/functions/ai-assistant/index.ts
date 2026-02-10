@@ -226,10 +226,9 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
   if (!data || data.length === 0) return { message: "No active found dog posts in the last " + daysBack + " days.", matches: [] };
 
   // Build search context for the AI to rank
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const posts = data.map((fd: any) => {
     const coverPhoto = fd.photo_urls && fd.photo_urls.length > 0
-      ? `${supabaseUrl}/storage/v1/object/public/found-dog-photos/${fd.photo_urls[0]}`
+      ? fd.photo_urls[0]
       : null;
     return {
       id: fd.id,
