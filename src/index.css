@@ -5,6 +5,12 @@
 /* Leaflet map styling fixes for mobile */
 @import 'leaflet/dist/leaflet.css';
 
+/* Override Leaflet default div-icon styling */
+.leaflet-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
 /* ===================================================
    RedPaw Premium Design System
    Pet-lover friendly with glassmorphism accents
