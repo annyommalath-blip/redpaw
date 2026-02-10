@@ -273,9 +273,11 @@ export default function CommunityPage() {
         {/* Search bar */}
         <button
           onClick={() => navigate("/search")}
-          className="w-full flex items-center gap-2 px-4 py-2.5 mb-4 rounded-xl bg-muted/50 text-muted-foreground text-sm transition-colors hover:bg-muted"
+          className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-2xl bg-card border shadow-sm text-muted-foreground text-sm transition-all hover:shadow-md active:scale-[0.98]"
         >
-          <Search className="h-4 w-4" />
+          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Search className="h-4 w-4 text-primary" />
+          </div>
           <span>{t("search.placeholder", "Search care, lost, found, or people...")}</span>
         </button>
 
