@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, HandHeart, Dog, Loader2 } from "lucide-react";
+import { AlertTriangle, HandHeart, Dog, Loader2, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -270,8 +270,14 @@ export default function CommunityPage() {
       <PageHeader title={t("community.title")} subtitle={t("community.subtitle")} />
 
       <div className="p-4">
-
-
+        {/* Search bar */}
+        <button
+          onClick={() => navigate("/search")}
+          className="w-full flex items-center gap-2 px-4 py-2.5 mb-4 rounded-xl bg-muted/50 text-muted-foreground text-sm transition-colors hover:bg-muted"
+        >
+          <Search className="h-4 w-4" />
+          <span>{t("search.placeholder", "Search care, lost, found, or people...")}</span>
+        </button>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4 glass-card-light p-1 rounded-2xl">

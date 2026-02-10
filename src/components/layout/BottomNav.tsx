@@ -1,4 +1,4 @@
-import { Home, Users, PlusCircle, MessageCircle, User, Search } from "lucide-react";
+import { Home, Users, PlusCircle, MessageCircle, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Badge } from "@/components/ui/badge";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -14,7 +14,6 @@ export function BottomNav() {
     { to: "/", icon: Home, label: t("nav.home") },
     { to: "/community", icon: Users, label: t("nav.community") },
     { to: "/create", icon: PlusCircle, label: t("nav.create"), isCreate: true },
-    { to: "/search", icon: Search, label: t("nav.search", "Search") },
     { to: "/messages", icon: MessageCircle, label: t("nav.messages") },
     { to: "/profile", icon: User, label: t("nav.profile") },
   ];
