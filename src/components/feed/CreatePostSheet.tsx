@@ -1,14 +1,21 @@
 import { useState, useRef } from "react";
-import { Camera, X, Loader2 } from "lucide-react";
+import { Camera, X, Loader2, Globe, Users, Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { processImageFile } from "@/lib/imageUtils";
+import type { PostVisibility } from "@/components/feed/PostCard";
 
 interface CreatePostSheetProps {
   open: boolean;
@@ -23,6 +30,7 @@ export default function CreatePostSheet({ open, onOpenChange, onPostCreated, use
   const [caption, setCaption] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [visibility, setVisibility] = useState<PostVisibility>("public");
   const [posting, setPosting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -64,7 +72,8 @@ export default function CreatePostSheet({ open, onOpenChange, onPostCreated, use
         user_id: user.id,
         caption: caption.trim() || null,
         photo_url: photoUrl,
-      });
+        visibility,
+      } as any);
 
       if (error) throw error;
 
@@ -129,11 +138,48 @@ export default function CreatePostSheet({ open, onOpenChange, onPostCreated, use
 
           {/* Actions */}
           <div className="flex items-center justify-between pt-2">
-            <Button variant="ghost" size="sm" className="rounded-xl gap-2" onClick={() => fileRef.current?.click()}>
-              <Camera className="h-4 w-4" />
-              {t("home.sharePhoto")}
-            </Button>
-            <input ref={fileRef} type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handlePhotoSelect} />
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" className="rounded-xl gap-2" onClick={() => fileRef.current?.click()}>
+                <Camera className="h-4 w-4" />
+                {t("home.sharePhoto")}
+              </Button>
+              <input ref={fileRef} type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handlePhotoSelect} />
+
+              {/* Visibility picker */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="rounded-xl gap-1.5 text-muted-foreground">
+                    {visibility === "public" && <Globe className="h-3.5 w-3.5" />}
+                    {visibility === "friends" && <Users className="h-3.5 w-3.5" />}
+                    {visibility === "private" && <Lock className="h-3.5 w-3.5" />}
+                    <span className="text-xs capitalize">{t(`home.visibility.${visibility}`)}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem onClick={() => setVisibility("public")} className="gap-2">
+                    <Globe className="h-4 w-4" />
+                    <div>
+                      <p className="font-medium text-sm">{t("home.visibility.public")}</p>
+                      <p className="text-xs text-muted-foreground">{t("home.visibility.publicDesc")}</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setVisibility("friends")} className="gap-2">
+                    <Users className="h-4 w-4" />
+                    <div>
+                      <p className="font-medium text-sm">{t("home.visibility.friends")}</p>
+                      <p className="text-xs text-muted-foreground">{t("home.visibility.friendsDesc")}</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setVisibility("private")} className="gap-2">
+                    <Lock className="h-4 w-4" />
+                    <div>
+                      <p className="font-medium text-sm">{t("home.visibility.private")}</p>
+                      <p className="text-xs text-muted-foreground">{t("home.visibility.privateDesc")}</p>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
             <Button onClick={handlePost} disabled={posting || (!caption.trim() && !photoFile)} className="rounded-xl gap-2">
               {posting && <Loader2 className="h-4 w-4 animate-spin" />}

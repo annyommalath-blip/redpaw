@@ -115,6 +115,14 @@
     "sharePhoto": "Share a photo",
     "writeCaption": "Write a caption...",
     "postShared": "Post shared! 🐾",
+    "visibility": {
+      "public": "Public",
+      "friends": "Followers",
+      "private": "Only me",
+      "publicDesc": "Anyone can see",
+      "friendsDesc": "Only your followers",
+      "privateDesc": "Only you can see"
+    },
     "likePost": "Like",
     "commentPost": "Comment",
     "sharePost": "Share",

@@ -16,7 +16,7 @@ export function useFeed() {
       // Fetch posts
       const { data: postsData, error } = await supabase
         .from("posts")
-        .select("id, user_id, caption, photo_url, repost_id, created_at")
+        .select("id, user_id, caption, photo_url, repost_id, created_at, visibility")
         .order("created_at", { ascending: false })
         .limit(50);
 
