@@ -310,6 +310,7 @@ export default function AIChatPage() {
                 {message.role === "assistant" ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     <ReactMarkdown
+                      urlTransform={(url) => url}
                       components={{
                         p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                         ul: ({ children }) => <ul className="mb-2 ml-4 list-disc">{children}</ul>,
