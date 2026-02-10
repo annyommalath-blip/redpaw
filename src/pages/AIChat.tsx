@@ -308,9 +308,17 @@ export default function AIChatPage() {
     }
   };
 
+  const normalizeAppLink = (href: string): string => {
+    // Fix common AI-generated wrong routes
+    return href
+      .replace(/^\/found\/(?!dog)/, "/found-dog/")
+      .replace(/^\/lost\//, "/lost-alert/")
+      .replace(/^\/care\//, "/care-request/");
+  };
+
   const renderLink = ({ href, children }: { href?: string; children?: React.ReactNode }) => {
     if (href?.startsWith("/")) {
-      return <Link to={href} className="text-primary underline hover:text-primary/80">{children}</Link>;
+      return <Link to={normalizeAppLink(href)} className="text-primary underline hover:text-primary/80">{children}</Link>;
     }
     return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">{children}</a>;
   };
