@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Community from "./pages/Community";
+import Search from "./pages/Search";
 import Create from "./pages/Create";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+            <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
             <Route path="/care-request/:requestId" element={<ProtectedRoute><CareRequestDetail /></ProtectedRoute>} />
             <Route path="/lost-alert/:id" element={<ProtectedRoute><LostAlertDetail /></ProtectedRoute>} />
             <Route path="/found-dog/:id" element={<ProtectedRoute><FoundDogDetail /></ProtectedRoute>} />
