@@ -137,7 +137,8 @@ export default function SearchPage() {
         .select("*")
         .or(`display_name.ilike.${term},first_name.ilike.${term},last_name.ilike.${term},bio.ilike.${term}`);
       
-      setUsers((userData || []) as UserResult[]);
+      // Filter out current user
+      setUsers((userData || []).filter((u: any) => u.user_id !== user?.id) as UserResult[]);
 
       // Search care requests via dog name/breed
       const { data: careData } = await supabase
