@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, HandHeart, Dog, Loader2, MapPin, RefreshCw } from "lucide-react";
+import { AlertTriangle, HandHeart, Dog, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -270,39 +270,8 @@ export default function CommunityPage() {
       <PageHeader title={t("community.title")} subtitle={t("community.subtitle")} />
 
       <div className="p-4">
-        {/* Location permission banner */}
-        {viewerLocation.permissionDenied && (
-          <div className="mb-4 p-3 glass-card-light rounded-2xl flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>{t("common.enableLocationToSeeDistance")}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={viewerLocation.requestLocation}
-              className="text-primary rounded-xl"
-            >
-              {t("common.enable")}
-            </Button>
-          </div>
-        )}
-        
-        {/* Refresh location button */}
-        {viewerLocation.hasLocation && (
-          <div className="mb-3 flex justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={viewerLocation.refreshLocation}
-              disabled={viewerLocation.loading}
-              className="text-xs text-muted-foreground rounded-xl"
-            >
-              <RefreshCw className={`h-3 w-3 mr-1 ${viewerLocation.loading ? 'animate-spin' : ''}`} />
-              {t("common.updateLocation")}
-            </Button>
-          </div>
-        )}
+
+
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4 glass-card-light p-1 rounded-2xl">
