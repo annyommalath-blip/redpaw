@@ -80,11 +80,15 @@ interface FoundResult {
 }
 
 function UserCard({ user }: { user: UserResult }) {
+  const navigate = useNavigate();
   const name = user.display_name || [user.first_name, user.last_name].filter(Boolean).join(" ") || "User";
   const initials = (user.first_name?.[0] || "") + (user.last_name?.[0] || "") || name[0] || "?";
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-2xl bg-card border">
+    <div
+      className="flex items-center gap-3 p-3 rounded-2xl bg-card border cursor-pointer transition-colors hover:bg-muted/50 active:scale-[0.98]"
+      onClick={() => navigate(`/user/${user.user_id}`)}
+    >
       <Avatar className="h-12 w-12">
         <AvatarImage src={user.avatar_url || undefined} />
         <AvatarFallback className="bg-muted text-muted-foreground font-semibold">
@@ -97,7 +101,9 @@ function UserCard({ user }: { user: UserResult }) {
           <p className="text-xs text-muted-foreground line-clamp-2">{user.bio}</p>
         )}
       </div>
-      <FollowButton targetUserId={user.user_id} size="sm" />
+      <div onClick={(e) => e.stopPropagation()}>
+        <FollowButton targetUserId={user.user_id} size="sm" />
+      </div>
     </div>
   );
 }
