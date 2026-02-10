@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2, Globe, Users, Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -27,6 +27,8 @@ interface PostAuthor {
   avatar_url: string | null;
 }
 
+export type PostVisibility = "public" | "friends" | "private";
+
 export interface PostData {
   id: string;
   user_id: string;
@@ -34,6 +36,7 @@ export interface PostData {
   photo_url: string | null;
   repost_id: string | null;
   created_at: string;
+  visibility?: PostVisibility;
   author?: PostAuthor;
   like_count: number;
   comment_count: number;
@@ -100,9 +103,14 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
         </Avatar>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-foreground leading-tight">{authorName}</p>
-          <p className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(displayPost.created_at), { addSuffix: true })}
-          </p>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span>{formatDistanceToNow(new Date(displayPost.created_at), { addSuffix: true })}</span>
+            {isOwn && post.visibility && post.visibility !== "public" && (
+              post.visibility === "friends"
+                ? <Users className="h-3 w-3" />
+                : <Lock className="h-3 w-3" />
+            )}
+          </div>
         </div>
         {isOwn && (
           <DropdownMenu>

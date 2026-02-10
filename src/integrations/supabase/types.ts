@@ -681,6 +681,7 @@ export type Database = {
           repost_id: string | null
           updated_at: string
           user_id: string
+          visibility: Database["public"]["Enums"]["post_visibility"]
         }
         Insert: {
           caption?: string | null
@@ -690,6 +691,7 @@ export type Database = {
           repost_id?: string | null
           updated_at?: string
           user_id: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
         }
         Update: {
           caption?: string | null
@@ -699,6 +701,7 @@ export type Database = {
           repost_id?: string | null
           updated_at?: string
           user_id?: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
         }
         Relationships: [
           {
@@ -841,6 +844,27 @@ export type Database = {
           },
         ]
       }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       profiles_public: {
@@ -891,6 +915,10 @@ export type Database = {
         Args: { p_dog_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_following: {
+        Args: { p_follower_id: string; p_following_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       alert_status: "active" | "resolved"
@@ -916,6 +944,7 @@ export type Database = {
         | "dog_invite"
         | "dog_invite_accepted"
         | "dog_invite_declined"
+      post_visibility: "public" | "friends" | "private"
       request_status: "open" | "closed"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
     }
@@ -1069,6 +1098,7 @@ export const Constants = {
         "dog_invite_accepted",
         "dog_invite_declined",
       ],
+      post_visibility: ["public", "friends", "private"],
       request_status: ["open", "closed"],
       sitter_log_type: ["walk", "meal", "potty", "play", "note"],
     },
