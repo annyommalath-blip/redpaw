@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Repeat2, MoreHorizontal, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -172,7 +172,7 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
           </button>
 
           <button onClick={() => onShare(post)} className="group">
-            <Share2 className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            <Send className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
           </button>
         </div>
       </div>

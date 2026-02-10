@@ -15,7 +15,9 @@ import { useFeed } from "@/hooks/useFeed";
 import { supabase } from "@/integrations/supabase/client";
 import PostCard from "@/components/feed/PostCard";
 import CreatePostSheet from "@/components/feed/CreatePostSheet";
+import SendPostSheet from "@/components/feed/SendPostSheet";
 import { toast } from "sonner";
+import type { PostData } from "@/components/feed/PostCard";
 
 export default function HomePage() {
   const { t } = useTranslation();
@@ -24,6 +26,7 @@ export default function HomePage() {
   const { unreadCount: notificationCount } = useNotifications();
   const { posts, loading, fetchPosts, toggleLike, repost, deletePost } = useFeed();
   const [showCreate, setShowCreate] = useState(false);
+  const [sharePost, setSharePost] = useState<PostData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -37,15 +40,8 @@ export default function HomePage() {
     }
   }, [user]);
 
-  const handleShare = async (post: any) => {
-    // Share to inbox — copy link for now
-    const url = `${window.location.origin}/`;
-    try {
-      await navigator.share?.({ title: post.caption || "Check this out!", url });
-    } catch {
-      await navigator.clipboard?.writeText(url);
-      toast.success("Link copied!");
-    }
+  const handleShare = (post: PostData) => {
+    setSharePost(post);
   };
 
   const handleDelete = async (postId: string) => {
@@ -167,6 +163,13 @@ export default function HomePage() {
         onOpenChange={setShowCreate}
         onPostCreated={fetchPosts}
         userProfile={userProfile}
+      />
+
+      <SendPostSheet
+        open={!!sharePost}
+        onOpenChange={(open) => !open && setSharePost(null)}
+        postCaption={sharePost?.caption || sharePost?.original_post?.caption || null}
+        postPhotoUrl={sharePost?.photo_url || sharePost?.original_post?.photo_url || null}
       />
     </MobileLayout>
   );
