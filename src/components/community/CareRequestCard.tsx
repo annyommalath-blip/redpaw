@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Clock, Dog, Check, ChevronRight, Banknote, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { FollowButton } from "@/components/social/FollowButton";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ interface CareRequestCardProps {
   onClick?: () => void;
   dogs?: DogInfo[];
   isOwner?: boolean;
+  ownerId?: string;
   requestData?: {
     id: string;
     dog_id: string;
@@ -88,6 +90,7 @@ export function CareRequestCard({
   onClick,
   dogs,
   isOwner,
+  ownerId,
   requestData,
   viewerLatitude,
   viewerLongitude,
@@ -254,7 +257,10 @@ export function CareRequestCard({
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-foreground">{displayDogs[0].name || t("common.unknownBreed")}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-foreground">{displayDogs[0].name || t("common.unknownBreed")}</h3>
+                  {!isOwner && ownerId && <FollowButton targetUserId={ownerId} />}
+                </div>
                 <p className="text-sm text-muted-foreground">{displayDogs[0].breed || t("common.unknownBreed")}</p>
               </div>
               {onClick && (

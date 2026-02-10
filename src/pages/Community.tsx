@@ -338,6 +338,7 @@ export default function CommunityPage() {
                     onClick={() => handleCareRequestClick(request.id)}
                     dogs={request.allDogs}
                     isOwner={user?.id === request.owner_id}
+                    ownerId={request.owner_id}
                     requestData={{
                       id: request.id,
                       dog_id: request.dog_id,
@@ -414,6 +415,7 @@ export default function CommunityPage() {
                       viewerLongitude={viewerLocation.longitude}
                       createdAt={new Date((item.data as LostAlert).created_at)}
                       status={(item.data as LostAlert).status}
+                      ownerId={(item.data as LostAlert).owner_id}
                       onContact={() => handleContactOwner(item.data.id)}
                       onReportSighting={() => handleReportSighting(item.data.id)}
                     />
