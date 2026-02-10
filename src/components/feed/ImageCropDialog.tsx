@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -17,7 +16,6 @@ interface ImageCropDialogProps {
 }
 
 export default function ImageCropDialog({ open, imageSrc, onConfirm, onCancel }: ImageCropDialogProps) {
-  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -26,75 +24,71 @@ export default function ImageCropDialog({ open, imageSrc, onConfirm, onCancel }:
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
+  const [ready, setReady] = useState(false);
 
-  // Load image
+  // Reset state when dialog opens
   useEffect(() => {
-    if (!open || !imageSrc) return;
+    if (!open) {
+      setReady(false);
+      imgRef.current = null;
+      return;
+    }
+    if (!imageSrc) return;
+
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    // Don't set crossOrigin for blob/data URLs
+    if (!imageSrc.startsWith("blob:") && !imageSrc.startsWith("data:")) {
+      img.crossOrigin = "anonymous";
+    }
     img.onload = () => {
       imgRef.current = img;
-      setImgLoaded(true);
       setZoom(1);
       setOffset({ x: 0, y: 0 });
+      setReady(true);
+    };
+    img.onerror = () => {
+      console.error("[ImageCropDialog] Failed to load image:", imageSrc.slice(0, 100));
     };
     img.src = imageSrc;
-    return () => { imgRef.current = null; setImgLoaded(false); };
   }, [open, imageSrc]);
 
-  // Measure container
-  useEffect(() => {
-    if (!containerRef.current || !open) return;
-    const obs = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      setContainerSize({ w: width, h: height });
-    });
-    obs.observe(containerRef.current);
-    return () => obs.disconnect();
-  }, [open]);
-
-  // Compute display dimensions
-  const getCropArea = useCallback(() => {
-    const { w, h } = containerSize;
-    if (!w || !h) return { cropW: 0, cropH: 0, cropX: 0, cropY: 0 };
-    let cropW: number, cropH: number;
-    if (w / h > ASPECT_RATIO) {
-      cropH = h;
-      cropW = h * ASPECT_RATIO;
-    } else {
-      cropW = w;
-      cropH = w / ASPECT_RATIO;
-    }
-    return { cropW, cropH, cropX: (w - cropW) / 2, cropY: (h - cropH) / 2 };
-  }, [containerSize]);
-
-  // Draw preview
-  useEffect(() => {
-    if (!canvasRef.current || !imgRef.current || !imgLoaded) return;
+  // Draw canvas whenever state changes
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const container = containerRef.current;
+    const img = imgRef.current;
+    if (!canvas || !container || !img || !ready) return;
 
-    const { w, h } = containerSize;
+    const rect = container.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
     if (!w || !h) return;
-    canvas.width = w * 2;
-    canvas.height = h * 2;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
-    ctx.scale(2, 2);
 
-    const img = imgRef.current;
-    const { cropW, cropH, cropX, cropY } = getCropArea();
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(dpr, dpr);
 
-    // Compute scaled image to fill the crop area at zoom=1
+    // Crop area fills the container (it's already 4:5 aspect)
+    const cropW = w;
+    const cropH = h;
+    const cropX = 0;
+    const cropY = 0;
+
+    // Scale image to cover the crop area
     const imgAspect = img.width / img.height;
     let drawW: number, drawH: number;
     if (imgAspect > ASPECT_RATIO) {
+      // Image is wider: fit height, overflow width
       drawH = cropH * zoom;
       drawW = drawH * imgAspect;
     } else {
+      // Image is taller: fit width, overflow height
       drawW = cropW * zoom;
       drawH = drawW / imgAspect;
     }
@@ -102,41 +96,41 @@ export default function ImageCropDialog({ open, imageSrc, onConfirm, onCancel }:
     const drawX = cropX + (cropW - drawW) / 2 + offset.x;
     const drawY = cropY + (cropH - drawH) / 2 + offset.y;
 
-    // Clear & draw
+    // Clear & draw image
     ctx.clearRect(0, 0, w, h);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(cropX, cropY, cropW, cropH);
-    ctx.clip();
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
-    ctx.restore();
-
-    // Dim outside crop area
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    ctx.fillRect(0, 0, w, cropY);
-    ctx.fillRect(0, cropY + cropH, w, h - cropY - cropH);
-    ctx.fillRect(0, cropY, cropX, cropH);
-    ctx.fillRect(cropX + cropW, cropY, w - cropX - cropW, cropH);
 
     // Grid lines (rule of thirds)
-    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.strokeStyle = "rgba(255,255,255,0.35)";
     ctx.lineWidth = 0.5;
     for (let i = 1; i <= 2; i++) {
       ctx.beginPath();
-      ctx.moveTo(cropX + (cropW * i) / 3, cropY);
-      ctx.lineTo(cropX + (cropW * i) / 3, cropY + cropH);
+      ctx.moveTo((cropW * i) / 3, 0);
+      ctx.lineTo((cropW * i) / 3, cropH);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(cropX, cropY + (cropH * i) / 3);
-      ctx.lineTo(cropX + cropW, cropY + (cropH * i) / 3);
+      ctx.moveTo(0, (cropH * i) / 3);
+      ctx.lineTo(cropW, (cropH * i) / 3);
       ctx.stroke();
     }
 
     // Border
-    ctx.strokeStyle = "rgba(255,255,255,0.6)";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(cropX, cropY, cropW, cropH);
-  }, [imgLoaded, zoom, offset, containerSize, getCropArea]);
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(1, 1, w - 2, h - 2);
+  }, [ready, zoom, offset]);
+
+  // Redraw on state changes
+  useEffect(() => {
+    draw();
+  }, [draw]);
+
+  // Also redraw after a short delay to catch layout settling
+  useEffect(() => {
+    if (!ready) return;
+    const timer = setTimeout(draw, 50);
+    return () => clearTimeout(timer);
+  }, [ready, draw]);
 
   // Drag handlers
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -152,45 +146,43 @@ export default function ImageCropDialog({ open, imageSrc, onConfirm, onCancel }:
 
   const handlePointerUp = () => setDragging(false);
 
-  const handleConfirm = async () => {
-    if (!imgRef.current) return;
+  const handleConfirm = () => {
+    const container = containerRef.current;
     const img = imgRef.current;
-    const { cropW, cropH, cropX, cropY } = getCropArea();
+    if (!img || !container) return;
 
-    // Compute source crop rectangle on original image
+    const rect = container.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+
     const imgAspect = img.width / img.height;
     let drawW: number, drawH: number;
     if (imgAspect > ASPECT_RATIO) {
-      drawH = cropH * zoom;
+      drawH = h * zoom;
       drawW = drawH * imgAspect;
     } else {
-      drawW = cropW * zoom;
+      drawW = w * zoom;
       drawH = drawW / imgAspect;
     }
 
-    const drawX = cropX + (cropW - drawW) / 2 + offset.x;
-    const drawY = cropY + (cropH - drawH) / 2 + offset.y;
+    const drawX = (w - drawW) / 2 + offset.x;
+    const drawY = (h - drawH) / 2 + offset.y;
 
-    // Map crop area back to image coordinates
+    // Map visible area back to image coordinates
     const scaleX = img.width / drawW;
     const scaleY = img.height / drawH;
-    const srcX = (cropX - drawX) * scaleX;
-    const srcY = (cropY - drawY) * scaleY;
-    const srcW = cropW * scaleX;
-    const srcH = cropH * scaleY;
+    const srcX = Math.max(0, -drawX * scaleX);
+    const srcY = Math.max(0, -drawY * scaleY);
+    const srcW = Math.min(w * scaleX, img.width - srcX);
+    const srcH = Math.min(h * scaleY, img.height - srcY);
 
-    // Draw final output
     const outCanvas = document.createElement("canvas");
     outCanvas.width = TARGET_WIDTH;
     outCanvas.height = TARGET_HEIGHT;
     const ctx = outCanvas.getContext("2d")!;
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(img,
-      Math.max(0, srcX), Math.max(0, srcY),
-      Math.min(srcW, img.width), Math.min(srcH, img.height),
-      0, 0, TARGET_WIDTH, TARGET_HEIGHT
-    );
+    ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, TARGET_WIDTH, TARGET_HEIGHT);
 
     outCanvas.toBlob((blob) => {
       if (blob) onConfirm(blob);
@@ -211,14 +203,17 @@ export default function ImageCropDialog({ open, imageSrc, onConfirm, onCancel }:
 
         <div
           ref={containerRef}
-          className="relative w-full bg-black touch-none select-none"
-          style={{ aspectRatio: "4/5", maxHeight: "60vh" }}
+          className="relative w-full bg-black touch-none select-none overflow-hidden"
+          style={{ aspectRatio: "4/5" }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
         >
-          <canvas ref={canvasRef} className="w-full h-full" />
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full"
+          />
         </div>
 
         <div className="px-4 py-3 space-y-3">
