@@ -22,7 +22,7 @@ export function BottomNav() {
     <motion.nav 
       initial={{ y: 100 }}
       animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      transition={{ duration: 0.15 }}
       className="fixed bottom-4 left-4 right-4 z-50 glass-card-modal rounded-2xl safe-area-bottom"
     >
       <div className="flex items-center justify-around px-2 py-2">
