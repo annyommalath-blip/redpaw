@@ -13,20 +13,20 @@ const containerVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
+      staggerChildren: 0.03,
+      delayChildren: 0.02,
     },
   },
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 8 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.4,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      duration: 0.15,
+      ease: "easeOut",
     },
   },
 };
@@ -57,9 +57,9 @@ interface AnimatedItemProps {
 export function AnimatedItem({ children, className, delay = 0 }: AnimatedItemProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94], delay }}
+      transition={{ duration: 0.15, ease: "easeOut", delay }}
       className={className}
     >
       {children}
@@ -72,7 +72,7 @@ export function FadeIn({ children, className, delay = 0 }: AnimatedItemProps) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94], delay }}
+      transition={{ duration: 0.12, ease: "easeOut", delay }}
       className={className}
     >
       {children}
@@ -83,9 +83,9 @@ export function FadeIn({ children, className, delay = 0 }: AnimatedItemProps) {
 export function SlideUp({ children, className, delay = 0 }: AnimatedItemProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94], delay }}
+      transition={{ duration: 0.18, ease: "easeOut", delay }}
       className={className}
     >
       {children}
@@ -96,9 +96,9 @@ export function SlideUp({ children, className, delay = 0 }: AnimatedItemProps) {
 export function ScaleIn({ children, className, delay = 0 }: AnimatedItemProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94], delay }}
+      transition={{ duration: 0.12, ease: "easeOut", delay }}
       className={className}
     >
       {children}
