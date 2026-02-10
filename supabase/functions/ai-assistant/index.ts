@@ -213,7 +213,6 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysBack);
 
-  // Fetch all active found dogs from the time period
   const { data, error } = await supabase
     .from("found_dogs")
     .select("id, description, location_label, found_at, status, created_at, photo_urls, latitude, longitude")
@@ -225,10 +224,11 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { message: "No active found dog posts in the last " + daysBack + " days.", matches: [] };
 
-  // Build search context for the AI to rank
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+
   const posts = data.map((fd: any) => {
     const coverPhoto = fd.photo_urls && fd.photo_urls.length > 0
-      ? fd.photo_urls[0]
+      ? (fd.photo_urls[0].startsWith("http") ? fd.photo_urls[0] : `${supabaseUrl}/storage/v1/object/public/found-dog-photos/${fd.photo_urls[0]}`)
       : null;
     return {
       id: fd.id,
@@ -239,7 +239,6 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
       cover_photo_url: coverPhoto,
       latitude: fd.latitude,
       longitude: fd.longitude,
-      deep_link: `/found/${fd.id}`,
     };
   });
 
@@ -252,7 +251,19 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
     },
     posts,
     count: posts.length,
-    instruction: "Compare each post's description against the search criteria. Rank by similarity. For each match, explain WHY it could be a match based on the description. Include the deep_link and cover_photo_url in your response. Format results as a numbered list with photo thumbnails.",
+    instruction: `CRITICAL MATCHING RULES:
+- Color is the MOST important attribute. If the user's dog is brown, do NOT match white/black/other colored dogs. Color mismatch = NO match.
+- Size mismatch = NO match.
+- Breed similarity is secondary to color match.
+- Only return posts that genuinely match the uploaded photo's color AND size.
+- If NO posts match, say "No matching found dogs right now" — do NOT force bad matches.
+
+For each genuine match, format as:
+**#N - [Location] — [Found date]**
+Reason: [explain color/size/breed similarity]
+👉 [Open Post](/found/POST_ID) · [Message Reporter](/messages)
+
+If the post has a cover_photo_url, show it as: ![Found dog](cover_photo_url)`,
   };
 }
 
@@ -285,13 +296,22 @@ PHOTO MATCH FEATURE:
 - When a user uploads a photo of a dog (especially with messages like "help me find", "my dog is lost", "have you seen", "match this dog"), you MUST:
   1. ANALYZE the photo carefully: identify breed/type, coat color/pattern, size estimate, markings, collar/harness details
   2. Call search_found_dogs_by_attributes with the extracted attributes
-  3. Compare the photo against each returned post's description
-  4. Return the TOP matches ranked by similarity with:
+  3. STRICT COLOR MATCHING: The dog's color is the #1 filter. If the user's dog is brown, do NOT match white or black dogs. Different color = NOT a match. Never force matches.
+  4. Return ONLY genuine matches ranked by similarity with:
      - Match reason (e.g., "Similar brown coat + small size + matches Pomeranian description")
      - Found location + time
-     - Links: **[Open Post](deep_link)** and **[Message Reporter](/messages)** 
+     - Links: [Open Post](/found/POST_ID) and [Message Reporter](/messages)
   5. If confidence is low for all matches, say so honestly and suggest widening the search or checking back later
   6. If NO matches found, reassure the user and suggest posting a Lost alert
+
+DEEP LINKS FORMAT:
+- Always use relative paths starting with / for in-app links
+- Dog profile: [Dog Name](/dog/DOG_ID)
+- Found dog post: [Open Post](/found/POST_ID)
+- Lost alert: [View Alert](/lost/ALERT_ID)
+- Care request: [View Request](/care/REQUEST_ID)
+- Messages: [Message](/messages)
+- NEVER use full URLs for app pages
 
 CAPABILITIES:
 - get_my_dogs, get_dog_details, get_medication_records, get_care_requests, get_lost_alerts, get_sitter_logs, get_found_dogs_nearby
@@ -301,7 +321,6 @@ RESPONSE FORMAT:
 - Be friendly, concise, and helpful 🐕
 - Use markdown for formatting
 - Include specific data from tool results
-- Suggest actions with deep links like: "**[Open Mochi's Profile](/dog/DOG_ID)**"
 
 PRIVACY:
 - Only share the user's own data
