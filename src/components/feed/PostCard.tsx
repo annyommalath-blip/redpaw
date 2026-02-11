@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2, Globe, Users, Lock } from "lucide-react";
+import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2, Globe, Users, Lock, Bookmark } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { FollowButton } from "@/components/social/FollowButton";
 import { motion } from "framer-motion";
@@ -189,6 +189,10 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
             <Send className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
           </button>
         </div>
+
+        <button className="group">
+          <Bookmark className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+        </button>
       </div>
 
       {/* Comments section */}
