@@ -161,6 +161,7 @@ export default function HomePage() {
       <SendPostSheet
         open={!!sharePost}
         onOpenChange={(open) => !open && setSharePost(null)}
+        postId={sharePost?.id}
         postCaption={sharePost?.caption || sharePost?.original_post?.caption || null}
         postPhotoUrl={sharePost?.photo_url || sharePost?.original_post?.photo_url || null}
         postPhotoUrls={sharePost?.photo_urls || sharePost?.original_post?.photo_urls || null}

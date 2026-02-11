@@ -955,6 +955,17 @@ export type Database = {
         Returns: undefined
       }
       generate_participant_key: { Args: { p_ids: string[] }; Returns: string }
+      get_mention_suggestions: {
+        Args: { p_limit?: number; p_query?: string; p_user_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          match_type: string
+          score: number
+          user_id: string
+          username: string
+        }[]
+      }
       get_or_create_conversation: {
         Args: {
           p_context_id?: string
@@ -977,6 +988,16 @@ export type Database = {
           avatar_url: string
           bio: string
           display_name: string
+          user_id: string
+          username: string
+        }[]
+      }
+      get_share_suggestions: {
+        Args: { p_limit?: number; p_query?: string; p_user_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          score: number
           user_id: string
           username: string
         }[]
