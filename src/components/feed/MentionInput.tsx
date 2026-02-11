@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { buildMentionToken, extractMentionedUserIds } from "@/lib/mentionUtils";
 
 export interface MentionUser {
   user_id: string;
@@ -21,21 +22,9 @@ interface MentionInputProps {
   className?: string;
 }
 
-export function parseMentions(text: string, users: MentionUser[]): string[] {
-  const mentionPattern = /@([\w\s]+?)(?=\s@|\s|$)/g;
-  const mentionedIds: string[] = [];
-  let match;
-
-  while ((match = mentionPattern.exec(text)) !== null) {
-    const mentionText = match[1].trim().toLowerCase();
-    const found = users.find((u) => {
-      const name = getName(u).toLowerCase();
-      return name === mentionText;
-    });
-    if (found) mentionedIds.push(found.user_id);
-  }
-
-  return [...new Set(mentionedIds)];
+/** Extract mentioned user IDs from structured mention tokens */
+export function parseMentions(text: string): string[] {
+  return extractMentionedUserIds(text);
 }
 
 function getName(u: MentionUser): string {
@@ -68,22 +57,33 @@ export default function MentionInput({
 
   const checkForMention = useCallback(
     (text: string) => {
-      // Find the last @ that might be an active mention
       const cursorPos = inputRef.current?.selectionStart || text.length;
       const beforeCursor = text.slice(0, cursorPos);
-      const atIndex = beforeCursor.lastIndexOf("@");
 
-      if (atIndex === -1 || (atIndex > 0 && beforeCursor[atIndex - 1] !== " " && beforeCursor[atIndex - 1] !== undefined && atIndex !== 0)) {
-        // @ must be at start or preceded by space
-        if (atIndex > 0 && beforeCursor[atIndex - 1] !== " ") {
+      // Check if cursor is inside a completed mention token @[...](...)
+      // If so, don't show dropdown
+      const tokenRe = /@\[[^\]]*\]\([a-f0-9-]{36}\)/g;
+      let m;
+      while ((m = tokenRe.exec(beforeCursor)) !== null) {
+        if (cursorPos >= m.index && cursorPos <= m.index + m[0].length) {
+          setShowDropdown(false);
+          return;
+        }
+      }
+
+      // Strip completed tokens to find bare @ triggers
+      const stripped = beforeCursor.replace(/@\[[^\]]*\]\([a-f0-9-]{36}\)/g, "X".repeat(38));
+      const atIndex = stripped.lastIndexOf("@");
+
+      if (atIndex === -1 || (atIndex > 0 && stripped[atIndex - 1] !== " " && atIndex !== 0)) {
+        if (atIndex > 0 && stripped[atIndex - 1] !== " ") {
           setShowDropdown(false);
           return;
         }
       }
 
       if (atIndex >= 0) {
-        const query = beforeCursor.slice(atIndex + 1).toLowerCase();
-        // Don't show if there's a space after completing a name then more text
+        const query = stripped.slice(atIndex + 1).toLowerCase();
         if (query.length > 30) {
           setShowDropdown(false);
           return;
@@ -115,14 +115,15 @@ export default function MentionInput({
     const afterCursor = value.slice(cursorPos);
 
     const name = getName(user);
-    const newValue = beforeCursor.slice(0, atIndex) + `@${name} ` + afterCursor;
+    const token = buildMentionToken(name, user.user_id);
+    const newValue = beforeCursor.slice(0, atIndex) + token + " " + afterCursor;
     onChange(newValue);
     setShowDropdown(false);
 
     // Refocus input
     setTimeout(() => {
       inputRef.current?.focus();
-      const newPos = atIndex + name.length + 2;
+      const newPos = atIndex + token.length + 1;
       inputRef.current?.setSelectionRange(newPos, newPos);
     }, 0);
   };
