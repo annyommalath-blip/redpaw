@@ -222,7 +222,13 @@ export default function UserProfilePage() {
                   </div>
                   {!isOwnProfile && (
                     <div className="mt-1.5">
-                      <FollowButton targetUserId={profile.user_id} size="sm" />
+                      <FollowButton
+                        targetUserId={profile.user_id}
+                        size="sm"
+                        onToggle={(isNowFollowing) => {
+                          setFollowersCount(prev => prev + (isNowFollowing ? 1 : -1));
+                        }}
+                      />
                     </div>
                   )}
                 </div>
