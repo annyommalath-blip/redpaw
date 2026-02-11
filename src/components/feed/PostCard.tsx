@@ -131,7 +131,7 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">{initials}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-foreground leading-tight">{authorName}</p>
+          <button onClick={() => displayPost.author && navigate(`/user/${displayPost.author.user_id}`)} className="font-semibold text-sm text-foreground leading-tight hover:underline text-left">{authorName}</button>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <span>{formatDistanceToNow(new Date(displayPost.created_at), { addSuffix: true })}</span>
             {isOwn && post.visibility && post.visibility !== "public" && (
