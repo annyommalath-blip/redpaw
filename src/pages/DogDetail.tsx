@@ -1,16 +1,31 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Dog, Edit, Calendar, Scale, FileText, Camera, Loader2, ArrowLeft, Cpu } from "lucide-react";
+import { Dog, Edit, Calendar, Scale, FileText, Camera, Loader2, ArrowLeft, Cpu, Syringe, ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { CoParentSection } from "@/components/dog/CoParentSection";
+import { HealthLogCard } from "@/components/dog/HealthLogCard";
+import { MedRecordCardReadOnly } from "@/components/med/MedRecordCardReadOnly";
+import { ExpirationNotices } from "@/components/med/ExpirationNotices";
+import { MedRecordEditDialog } from "@/components/med/MedRecordEditDialog";
+import { enrichRecordWithStatus, MedRecordWithStatus } from "@/lib/medRecordUtils";
 
 interface DogData {
   id: string;
@@ -28,6 +43,14 @@ interface DogData {
   owner_id: string;
 }
 
+interface HealthLog {
+  id: string;
+  dog_id: string;
+  log_type: "walk" | "food" | "meds" | "mood" | "symptom";
+  value: string | null;
+  created_at: string;
+}
+
 export default function DogDetailPage() {
   const { dogId } = useParams<{ dogId: string }>();
   const navigate = useNavigate();
@@ -36,10 +59,18 @@ export default function DogDetailPage() {
   const { t } = useTranslation();
   const [dog, setDog] = useState<DogData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [logs, setLogs] = useState<HealthLog[]>([]);
+  const [medRecords, setMedRecords] = useState<MedRecordWithStatus[]>([]);
+  const [showMedRecords, setShowMedRecords] = useState(false);
+  const [showRecentLogs, setShowRecentLogs] = useState(false);
+  const [editingMedRecord, setEditingMedRecord] = useState<MedRecordWithStatus | null>(null);
+  const [deletingMedRecord, setDeletingMedRecord] = useState<MedRecordWithStatus | null>(null);
+  const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
 
   useEffect(() => {
     if (dogId && user) {
       fetchDog();
+      fetchLogsAndMeds();
     }
   }, [dogId, user]);
 
@@ -47,7 +78,6 @@ export default function DogDetailPage() {
     if (!dogId || !user) return;
     setLoading(true);
     try {
-      // Fetch dog - RLS now allows access for co-parents too
       const { data, error } = await supabase
         .from("dogs")
         .select("*")
@@ -67,6 +97,67 @@ export default function DogDetailPage() {
       navigate("/");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLogsAndMeds = async () => {
+    if (!dogId) return;
+    const [logsResult, medResult] = await Promise.all([
+      supabase
+        .from("health_logs")
+        .select("id, dog_id, log_type, value, created_at")
+        .eq("dog_id", dogId)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("med_records")
+        .select("*")
+        .eq("dog_id", dogId)
+        .order("expires_on", { ascending: true }),
+    ]);
+    setLogs((logsResult.data || []) as HealthLog[]);
+    const enrichedRecords = (medResult.data || []).map((r) =>
+      enrichRecordWithStatus(r as any)
+    );
+    setMedRecords(enrichedRecords);
+  };
+
+  const handleDeleteMedRecord = async () => {
+    if (!deletingMedRecord) return;
+    try {
+      const { error } = await supabase
+        .from("med_records")
+        .delete()
+        .eq("id", deletingMedRecord.id);
+      if (error) throw error;
+      setMedRecords((prev) => prev.filter((r) => r.id !== deletingMedRecord.id));
+      toast({ title: t("home.recordDeleted") });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setDeletingMedRecord(null);
+    }
+  };
+
+  const handleMedRecordUpdated = () => {
+    fetchLogsAndMeds();
+    setEditingMedRecord(null);
+  };
+
+  const handleDeleteLog = async () => {
+    if (!deletingLogId) return;
+    try {
+      const { error } = await supabase
+        .from("health_logs")
+        .delete()
+        .eq("id", deletingLogId);
+      if (error) throw error;
+      setLogs((prev) => prev.filter((l) => l.id !== deletingLogId));
+      toast({ title: t("home.logDeleted") });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setDeletingLogId(null);
     }
   };
 
@@ -245,6 +336,91 @@ export default function DogDetailPage() {
           </section>
         )}
 
+        {/* Expiration Notices */}
+        <ExpirationNotices records={medRecords} />
+
+        {/* Medication Records - Collapsible */}
+        <section>
+          <button
+            onClick={() => setShowMedRecords(!showMedRecords)}
+            className="w-full flex items-center justify-between mb-3"
+          >
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <Syringe className="h-4 w-4" />
+              {t("profile.medicationRecords")}
+            </h2>
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={(e) => { e.stopPropagation(); navigate("/create?type=meds"); }}
+                className="text-primary rounded-xl"
+              >
+                {t("common.add")}
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showMedRecords ? "rotate-180" : ""}`} />
+            </div>
+          </button>
+          {showMedRecords && (
+            medRecords.length > 0 ? (
+              <div className="space-y-3">
+                {medRecords.map((record) => (
+                  <MedRecordCardReadOnly
+                    key={record.id}
+                    record={record}
+                    onEdit={setEditingMedRecord}
+                    onDelete={setDeletingMedRecord}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
+                {t("profile.noMedRecordsYet")}
+              </p>
+            )
+          )}
+        </section>
+
+        {/* Recent Logs - Collapsible */}
+        <section>
+          <button
+            onClick={() => setShowRecentLogs(!showRecentLogs)}
+            className="w-full flex items-center justify-between mb-3"
+          >
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              {t("profile.recentLogs")}
+            </h2>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate("/create?type=log"); }} className="text-primary rounded-xl">
+                {t("common.add")}
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showRecentLogs ? "rotate-180" : ""}`} />
+            </div>
+          </button>
+          {showRecentLogs && (
+            logs.length > 0 ? (
+              <div className="space-y-3">
+                {logs.slice(0, 5).map((log) => (
+                  <HealthLogCard
+                    key={log.id}
+                    id={log.id}
+                    type={log.log_type}
+                    value={log.value || ""}
+                    createdAt={new Date(log.created_at)}
+                    onDelete={setDeletingLogId}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
+                {t("profile.noHealthLogsYet")}
+              </p>
+            )
+          )}
+        </section>
+
         {/* Co-Pet Parents Section */}
         <CoParentSection dogId={dog.id} dogName={dog.name} ownerId={dog.owner_id} />
 
@@ -259,6 +435,47 @@ export default function DogDetailPage() {
           </Button>
         )}
       </div>
+
+      <MedRecordEditDialog
+        record={editingMedRecord}
+        open={!!editingMedRecord}
+        onOpenChange={(open) => !open && setEditingMedRecord(null)}
+        onSuccess={handleMedRecordUpdated}
+      />
+
+      <AlertDialog open={!!deletingMedRecord} onOpenChange={(open) => !open && setDeletingMedRecord(null)}>
+        <AlertDialogContent className="glass-card-modal rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("home.deleteRecord")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("home.deleteRecordConfirm", { name: deletingMedRecord?.name })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteMedRecord} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
+              {t("common.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deletingLogId} onOpenChange={(open) => !open && setDeletingLogId(null)}>
+        <AlertDialogContent className="glass-card-modal rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("home.deleteLog")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("home.deleteLogConfirm")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
+              {t("common.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileLayout>
   );
 }
