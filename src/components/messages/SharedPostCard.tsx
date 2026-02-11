@@ -88,7 +88,7 @@ export function SharedPostCard({ data, isOwn }: SharedPostCardProps) {
   }, [data.postId, data.authorName]);
 
   const handleClick = () => {
-    navigate(`/post/${data.postId}`);
+    navigate(`/?highlightPost=${data.postId}`);
   };
 
   return (
