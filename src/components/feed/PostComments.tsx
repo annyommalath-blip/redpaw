@@ -86,18 +86,13 @@ export default function PostComments({ postId }: { postId: string }) {
     if (error) {
       toast.error("Failed to comment");
     } else {
-      // Send mention notifications
+      // Send mention notifications via secure RPC
       const mentionedIds = parseMentions(commentText, allUsers);
       for (const mentionedUserId of mentionedIds) {
-        if (mentionedUserId === user.id) continue; // Skip self
-        await supabase.from("notifications").insert({
-          user_id: mentionedUserId,
-          type: "post_comment_mention" as any,
-          title: "You were mentioned",
-          body: `${commentText.slice(0, 80)}`,
-          link_type: "post",
-          link_id: postId,
-          body_params: {},
+        await supabase.rpc("create_mention_notification" as any, {
+          p_mentioned_user_id: mentionedUserId,
+          p_comment_text: commentText,
+          p_post_id: postId,
         });
       }
       setText("");
