@@ -927,7 +927,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-muted-foreground mt-0.5">{formatLocation()}</p>
                     )}
                   </button>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     <button className="hover:text-foreground transition-colors" onClick={() => openFollowList("followers")}>
                       <span className="font-semibold text-foreground">{followerCount}</span> Followers
                     </button>
