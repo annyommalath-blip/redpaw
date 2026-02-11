@@ -629,15 +629,18 @@ export default function ProfilePage() {
                           <User className="h-8 w-8" />
                         </AvatarFallback>
                       </Avatar>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingPhoto}
+                      <label
+                        className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full z-10 bg-background border border-input shadow-sm flex items-center justify-center cursor-pointer hover:bg-accent transition-colors"
                       >
                         {uploadingPhoto ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
-                      </Button>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploadingPhoto}
+                          onChange={handleProfilePhotoSelect}
+                        />
+                      </label>
                     </div>
                     <div className="flex-1">
                       <h2 className="text-lg font-semibold text-foreground">
