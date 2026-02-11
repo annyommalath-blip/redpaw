@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom"; 
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages } from "lucide-react";
 
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -406,8 +406,8 @@ export default function ProfilePage() {
                     className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left"
                     onClick={() => navigate("/settings")}
                   >
-                    <Settings className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-foreground">{t("profile.languageSetting") || "Language Setting"}</span>
+                    <Languages className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-foreground">Language Setting</span>
                   </button>
                   <Separator />
                   <button 
