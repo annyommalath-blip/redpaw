@@ -94,17 +94,16 @@ export default function MessagesPage() {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, first_name, last_name, avatar_url")
+        .select("user_id, display_name, first_name, last_name, avatar_url, username")
         .in("user_id", otherParticipantIds);
 
       const conversationsWithProfiles: ConversationWithProfile[] = convos.map(convo => {
         const otherParticipantId = convo.participant_ids.find(id => id !== user.id);
         const profile = profiles?.find(p => p.user_id === otherParticipantId);
-        const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
         
         return {
           ...convo,
-          otherParticipantName: fullName || profile?.display_name || "User",
+          otherParticipantName: profile?.username ? `@${profile.username}` : profile?.display_name || "User",
           otherParticipantAvatar: profile?.avatar_url || null,
         };
       });
