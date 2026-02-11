@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Bell, Camera } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
@@ -22,12 +22,35 @@ import type { PostData } from "@/components/feed/PostCard";
 export default function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { unreadCount: notificationCount } = useNotifications();
   const { posts, loading, fetchPosts, toggleLike, repost, deletePost } = useFeed();
   const [showCreate, setShowCreate] = useState(false);
   const [sharePost, setSharePost] = useState<PostData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const highlightPostId = searchParams.get("highlightPost");
+  const highlightedRef = useRef(false);
+
+  // Scroll to highlighted post once posts are loaded
+  useEffect(() => {
+    if (highlightPostId && !loading && posts.length > 0 && !highlightedRef.current) {
+      highlightedRef.current = true;
+      // Small delay to let DOM render
+      setTimeout(() => {
+        const el = document.getElementById(`post-${highlightPostId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("ring-2", "ring-primary", "ring-offset-2", "rounded-2xl");
+          setTimeout(() => {
+            el.classList.remove("ring-2", "ring-primary", "ring-offset-2", "rounded-2xl");
+          }, 3000);
+        }
+        // Clean up URL
+        setSearchParams({}, { replace: true });
+      }, 300);
+    }
+  }, [highlightPostId, loading, posts]);
 
   useEffect(() => {
     if (user) {
@@ -120,14 +143,15 @@ export default function HomePage() {
         {posts.length > 0 ? (
           <AnimatedList className="space-y-4">
             {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onLikeToggle={toggleLike}
-                onRepost={handleRepost}
-                onDelete={handleDelete}
-                onShare={handleShare}
-              />
+              <div key={post.id} id={`post-${post.id}`} className="transition-all duration-500">
+                <PostCard
+                  post={post}
+                  onLikeToggle={toggleLike}
+                  onRepost={handleRepost}
+                  onDelete={handleDelete}
+                  onShare={handleShare}
+                />
+              </div>
             ))}
           </AnimatedList>
         ) : (
