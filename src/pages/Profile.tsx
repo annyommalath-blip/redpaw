@@ -722,7 +722,7 @@ export default function ProfilePage() {
                     />
                   </label>
                 </div>
-                <div className="flex-1 min-w-0 pt-1">
+                <button className="flex-1 min-w-0 pt-1 text-left" onClick={() => setIsEditing(!isEditing)}>
                   <h2 className="text-xl font-bold text-foreground truncate">{displayName}</h2>
                   {profile?.username && (
                     <p className="text-sm text-muted-foreground">@{profile.username}</p>
@@ -730,7 +730,7 @@ export default function ProfilePage() {
                   {formatLocation() && (
                     <p className="text-xs text-muted-foreground mt-0.5">{formatLocation()}</p>
                   )}
-                </div>
+                </button>
               </div>
 
               {/* Stats row */}
@@ -803,18 +803,6 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Action buttons */}
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 rounded-xl"
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  <Edit className="h-4 w-4 mr-1.5" />
-                  Edit Profile
-                </Button>
-              </div>
 
               {/* Edit profile form (inline) */}
               {isEditing && (
