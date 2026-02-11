@@ -133,6 +133,11 @@ export default function ProfilePage() {
   // Profile stats
   const [postCount, setPostCount] = useState(0);
   const [careJobCount, setCareJobCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [showFollowList, setShowFollowList] = useState<"following" | "followers" | null>(null);
+  const [followListUsers, setFollowListUsers] = useState<{ user_id: string; display_name: string | null; avatar_url: string | null; username: string | null }[]>([]);
+  const [followListLoading, setFollowListLoading] = useState(false);
 
   // Posts tab state
   const [myPosts, setMyPosts] = useState<PostData[]>([]);
@@ -473,10 +478,60 @@ export default function ProfilePage() {
         .order("resolved_at", { ascending: false });
 
       setArchivedLostAlerts((resolvedAlerts as any) || []);
+
+      // Fetch follow counts
+      const { count: fwingCount } = await supabase
+        .from("user_follows")
+        .select("*", { count: "exact", head: true })
+        .eq("follower_id", user.id);
+      setFollowingCount(fwingCount || 0);
+
+      const { count: fwerCount } = await supabase
+        .from("user_follows")
+        .select("*", { count: "exact", head: true })
+        .eq("following_id", user.id);
+      setFollowerCount(fwerCount || 0);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openFollowList = async (type: "following" | "followers") => {
+    if (!user) return;
+    setShowFollowList(type);
+    setFollowListLoading(true);
+    setFollowListUsers([]);
+
+    try {
+      let userIds: string[] = [];
+      if (type === "following") {
+        const { data } = await supabase
+          .from("user_follows")
+          .select("following_id")
+          .eq("follower_id", user.id);
+        userIds = (data || []).map((d) => d.following_id);
+      } else {
+        const { data } = await supabase
+          .from("user_follows")
+          .select("follower_id")
+          .eq("following_id", user.id);
+        userIds = (data || []).map((d) => d.follower_id);
+      }
+
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase.rpc("get_public_profiles");
+        const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+        const users = userIds
+          .map((id) => profileMap.get(id))
+          .filter(Boolean) as typeof followListUsers;
+        setFollowListUsers(users);
+      }
+    } catch (err) {
+      console.error("Error fetching follow list:", err);
+    } finally {
+      setFollowListLoading(false);
     }
   };
 
@@ -880,10 +935,15 @@ export default function ProfilePage() {
                   <p className="text-xs text-muted-foreground">Posts</p>
                 </div>
                 <div className="w-px h-8 bg-border/50" />
-                <div className="flex-1 text-center">
-                  <p className="text-lg font-bold text-foreground">{dogs.length}</p>
-                  <p className="text-xs text-muted-foreground">{dogs.length === 1 ? "Dog" : "Dogs"}</p>
-                </div>
+                <button className="flex-1 text-center" onClick={() => openFollowList("followers")}>
+                  <p className="text-lg font-bold text-foreground">{followerCount}</p>
+                  <p className="text-xs text-muted-foreground">Followers</p>
+                </button>
+                <div className="w-px h-8 bg-border/50" />
+                <button className="flex-1 text-center" onClick={() => openFollowList("following")}>
+                  <p className="text-lg font-bold text-foreground">{followingCount}</p>
+                  <p className="text-xs text-muted-foreground">Following</p>
+                </button>
                 <div className="w-px h-8 bg-border/50" />
                 <button 
                   className="flex-1 text-center"
@@ -1228,6 +1288,52 @@ export default function ProfilePage() {
           postPhotoUrls={sharePost.photo_urls}
         />
       )}
+
+      {/* Followers / Following Sheet */}
+      <Sheet open={!!showFollowList} onOpenChange={(open) => { if (!open) setShowFollowList(null); }}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[70vh]">
+          <SheetHeader>
+            <SheetTitle>
+              {showFollowList === "followers" ? "Followers" : "Following"}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-3 max-h-[55vh] overflow-y-auto space-y-1">
+            {followListLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : followListUsers.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {showFollowList === "followers" ? "No followers yet" : "Not following anyone yet"}
+              </p>
+            ) : (
+              followListUsers.map((u) => {
+                const name = u.username ? `@${u.username}` : u.display_name || "User";
+                return (
+                  <button
+                    key={u.user_id}
+                    onClick={() => { setShowFollowList(null); navigate(`/user/${u.user_id}`); }}
+                    className="flex items-center gap-3 w-full p-2.5 rounded-xl hover:bg-muted/50 transition-colors"
+                  >
+                    <Avatar className="h-10 w-10">
+                      {u.avatar_url && <AvatarImage src={u.avatar_url} />}
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                        {name.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0 text-left">
+                      <span className="text-sm font-medium text-foreground block truncate">{name}</span>
+                      {u.username && u.display_name && (
+                        <span className="text-xs text-muted-foreground block truncate">{u.display_name}</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </MobileLayout>
   );
 }
