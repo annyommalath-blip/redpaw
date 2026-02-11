@@ -15,11 +15,15 @@ import { useAuth } from "@/hooks/useAuth";
 interface UserProfile {
   user_id: string;
   display_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
   avatar_url: string | null;
   bio: string | null;
   username: string | null;
+}
+
+interface UserDog {
+  id: string;
+  name: string;
+  breed: string | null;
 }
 
 export default function UserProfile() {
@@ -32,6 +36,7 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [userDogs, setUserDogs] = useState<UserDog[]>([]);
 
   const fetchProfile = useCallback(async () => {
     if (!userId) return;
@@ -61,6 +66,13 @@ export default function UserProfile() {
         .select("id", { count: "exact", head: true })
         .eq("follower_id", userId);
       setFollowingCount(following || 0);
+
+      // Fetch dogs owned by user
+      const { data: dogsData } = await supabase
+        .from("dogs")
+        .select("id, name, breed")
+        .eq("owner_id", userId);
+      setUserDogs((dogsData || []) as UserDog[]);
 
       // Fetch user's posts (only public ones visible to viewer)
       const { data: postsData } = await supabase
@@ -203,8 +215,8 @@ export default function UserProfile() {
     );
   }
 
-  const name = profile.display_name || [profile.first_name, profile.last_name].filter(Boolean).join(" ") || "User";
-  const initials = (profile.first_name?.[0] || "") + (profile.last_name?.[0] || "") || name[0] || "?";
+  const name = profile.username ? `@${profile.username}` : profile.display_name || "User";
+  const initials = profile.username ? profile.username[0].toUpperCase() : (name[0] || "?");
   const isOwnProfile = user?.id === profile.user_id;
 
   return (
@@ -230,11 +242,13 @@ export default function UserProfile() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <h2 className="font-bold text-lg">{name}</h2>
-            {profile.username && (
-              <p className="text-sm text-primary font-medium">@{profile.username}</p>
-            )}
             {profile.bio && (
               <p className="text-sm text-muted-foreground mt-1">{profile.bio}</p>
+            )}
+            {userDogs.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                🐕 Owner of {userDogs.map(d => d.name).join(", ")}
+              </p>
             )}
             <div className="flex items-center gap-4 mt-2 text-sm">
               <span><strong>{followersCount}</strong> <span className="text-muted-foreground">followers</span></span>

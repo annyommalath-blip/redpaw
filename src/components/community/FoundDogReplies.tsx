@@ -16,9 +16,8 @@ interface Reply {
   created_at: string;
   profile?: {
     display_name: string | null;
-    first_name: string | null;
-    last_name: string | null;
     avatar_url: string | null;
+    username: string | null;
   };
 }
 
@@ -88,7 +87,7 @@ export function FoundDogReplies({ postId, autoFocus = false }: FoundDogRepliesPr
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles_public")
-          .select("user_id, display_name, first_name, last_name, avatar_url")
+          .select("user_id, display_name, avatar_url, username")
           .in("user_id", userIds);
 
         const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
@@ -174,9 +173,7 @@ export function FoundDogReplies({ postId, autoFocus = false }: FoundDogRepliesPr
 
   const getDisplayName = (profile: Reply["profile"]) => {
     if (!profile) return "Anonymous";
-    if (profile.first_name || profile.last_name) {
-      return `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
-    }
+    if (profile.username) return `@${profile.username}`;
     return profile.display_name || "Anonymous";
   };
 

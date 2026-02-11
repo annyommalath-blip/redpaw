@@ -8,8 +8,6 @@ import { extractMentionedUsernames } from "@/lib/mentionUtils";
 export interface MentionUser {
   user_id: string;
   display_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
   avatar_url: string | null;
   username: string | null;
 }
@@ -29,7 +27,7 @@ export function parseMentions(text: string): string[] {
 }
 
 function getName(u: MentionUser): string {
-  if (u.first_name) return `${u.first_name} ${u.last_name || ""}`.trim();
+  if (u.username) return `@${u.username}`;
   return u.display_name || "User";
 }
 
