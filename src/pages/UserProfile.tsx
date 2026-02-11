@@ -19,6 +19,7 @@ interface UserProfile {
   last_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  username: string | null;
 }
 
 export default function UserProfile() {
@@ -229,6 +230,9 @@ export default function UserProfile() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <h2 className="font-bold text-lg">{name}</h2>
+            {profile.username && (
+              <p className="text-sm text-primary font-medium">@{profile.username}</p>
+            )}
             {profile.bio && (
               <p className="text-sm text-muted-foreground mt-1">{profile.bio}</p>
             )}

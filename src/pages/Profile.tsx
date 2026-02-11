@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom"; 
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Syringe, PlusCircle, Bell, ChevronDown } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Syringe, PlusCircle, Bell, ChevronDown, AtSign } from "lucide-react";
+
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
@@ -41,6 +42,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { enrichRecordWithStatus, MedRecordWithStatus } from "@/lib/medRecordUtils";
 import { checkMedicationNotifications } from "@/lib/notificationUtils";
+import UsernameSetupDialog from "@/components/UsernameSetupDialog";
 
 const ACTIVE_DOG_STORAGE_KEY = "redpaw_active_dog_id";
 
@@ -67,6 +69,7 @@ interface OwnerProfile {
   last_name: string | null;
   city: string | null;
   postal_code: string | null;
+  username: string | null;
 }
 
 interface MyCareRequest {
@@ -120,11 +123,13 @@ export default function ProfilePage() {
   const [deletingMedRecord, setDeletingMedRecord] = useState<MedRecordWithStatus | null>(null);
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
   const [showOwnerProfile, setShowOwnerProfile] = useState(false);
+  const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [editForm, setEditForm] = useState({
     first_name: "",
     last_name: "",
     city: "",
     postal_code: "",
+    username: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -152,7 +157,7 @@ export default function ProfilePage() {
     try {
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, first_name, last_name, city, postal_code")
+        .select("display_name, avatar_url, first_name, last_name, city, postal_code, username")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -163,7 +168,11 @@ export default function ProfilePage() {
           last_name: profileData.last_name || "",
           city: profileData.city || "",
           postal_code: profileData.postal_code || "",
+          username: profileData.username || "",
         });
+        if (!profileData.username) {
+          setShowUsernameSetup(true);
+        }
       }
 
       const { data: ownedDogs } = await supabase
@@ -515,7 +524,10 @@ export default function ProfilePage() {
                       <h2 className="text-lg font-semibold text-foreground">
                         {profile?.display_name || user?.email?.split("@")[0] || "Dog Lover"}
                       </h2>
-                      <p className="text-sm text-muted-foreground">{user?.email}</p>
+                      {profile?.username && (
+                        <p className="text-sm text-primary font-medium">@{profile.username}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => setIsEditing(!isEditing)}>
                       <Edit className="h-4 w-4" />
@@ -602,6 +614,7 @@ export default function ProfilePage() {
                               last_name: profile?.last_name || "",
                               city: profile?.city || "",
                               postal_code: profile?.postal_code || "",
+                              username: profile?.username || "",
                             });
                           }}
                         >
@@ -611,6 +624,15 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
+                      {profile?.username && (
+                        <div className="flex items-center gap-2">
+                          <AtSign className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            <span className="text-muted-foreground">Username: </span>
+                            <span className="font-medium text-primary">@{profile.username}</span>
+                          </span>
+                        </div>
+                      )}
                       {formatName() && (
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
@@ -1058,6 +1080,14 @@ export default function ProfilePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <UsernameSetupDialog
+        open={showUsernameSetup}
+        onComplete={(username) => {
+          setShowUsernameSetup(false);
+          setProfile(prev => prev ? { ...prev, username } : null);
+          setEditForm(prev => ({ ...prev, username }));
+        }}
+      />
     </MobileLayout>
   );
 }

@@ -730,6 +730,7 @@ export type Database = {
           preferred_language: string | null
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -744,6 +745,7 @@ export type Database = {
           preferred_language?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -758,6 +760,7 @@ export type Database = {
           preferred_language?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -881,6 +884,7 @@ export type Database = {
           first_name: string | null
           last_name: string | null
           user_id: string | null
+          username: string | null
         }
         Relationships: []
       }
@@ -920,9 +924,11 @@ export type Database = {
           first_name: string
           last_name: string
           user_id: string
+          username: string
         }[]
       }
       get_user_id_by_email: { Args: { lookup_email: string }; Returns: string }
+      get_user_id_by_username: { Args: { p_username: string }; Returns: string }
       has_dog_access: {
         Args: { p_dog_id: string; p_user_id: string }
         Returns: boolean
