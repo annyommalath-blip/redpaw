@@ -10,7 +10,8 @@ import {
   UserPlus,
   UserMinus,
   MessageSquare,
-  Users
+  Users,
+  AtSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDateLocale } from "@/hooks/useDateLocale";
@@ -40,6 +41,7 @@ const typeIcons: Record<string, typeof Bell> = {
   dog_invite: Users,
   dog_invite_accepted: UserCheck,
   dog_invite_declined: UserMinus,
+  post_comment_mention: AtSign,
 };
 
 const typeColors: Record<string, string> = {
@@ -56,6 +58,7 @@ const typeColors: Record<string, string> = {
   dog_invite: "text-violet-600 bg-violet-100",
   dog_invite_accepted: "text-green-600 bg-green-100",
   dog_invite_declined: "text-amber-600 bg-amber-100",
+  post_comment_mention: "text-pink-600 bg-pink-100",
 };
 
 export function NotificationItem({
