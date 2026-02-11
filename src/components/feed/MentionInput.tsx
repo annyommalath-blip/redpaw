@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, forwardRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,14 +34,14 @@ function getName(u: MentionUser): string {
   return u.display_name || "User";
 }
 
-export default function MentionInput({
+const MentionInput = forwardRef<HTMLDivElement, MentionInputProps>(({
   value,
   onChange,
   onKeyDown,
   placeholder,
   disabled,
   className,
-}: MentionInputProps) {
+}, _ref) => {
   const { user } = useAuth();
   const [suggestions, setSuggestions] = useState<MentionUser[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -74,33 +74,30 @@ export default function MentionInput({
 
   const checkForMention = useCallback(
     (text: string) => {
-      const cursorPos = inputRef.current?.selectionStart || text.length;
+      const cursorPos = inputRef.current?.selectionStart ?? text.length;
       const beforeCursor = text.slice(0, cursorPos);
 
+      // Find the last @ sign
       const atIndex = beforeCursor.lastIndexOf("@");
 
-      if (atIndex === -1 || (atIndex > 0 && beforeCursor[atIndex - 1] !== " " && atIndex !== 0)) {
-        if (atIndex > 0 && beforeCursor[atIndex - 1] !== " ") {
-          setShowDropdown(false);
-          return;
-        }
+      // @ must be at start of text or preceded by a space
+      if (atIndex === -1 || (atIndex > 0 && beforeCursor[atIndex - 1] !== " ")) {
+        setShowDropdown(false);
+        return;
       }
 
-      if (atIndex >= 0) {
-        const query = beforeCursor.slice(atIndex + 1).toLowerCase();
-        if (query.length > 30 || query.includes(" ")) {
-          setShowDropdown(false);
-          return;
-        }
-        
-        // Debounce the API call
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-          fetchSuggestions(query);
-        }, 150);
-      } else {
+      const query = beforeCursor.slice(atIndex + 1);
+      // Close if query is too long or has a space (completed mention)
+      if (query.length > 30 || query.includes(" ")) {
         setShowDropdown(false);
+        return;
       }
+
+      // Debounce the API call
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        fetchSuggestions(query.toLowerCase());
+      }, 150);
     },
     [fetchSuggestions]
   );
@@ -220,4 +217,8 @@ export default function MentionInput({
       )}
     </div>
   );
-}
+});
+
+MentionInput.displayName = "MentionInput";
+
+export default MentionInput;
