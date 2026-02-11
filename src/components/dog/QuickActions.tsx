@@ -16,12 +16,12 @@ export function QuickActions({ dogId, isLost, onToggleLost }: QuickActionsProps)
   const careUrl = dogId ? `/create?type=care&dog_id=${dogId}` : "/create?type=care";
 
   return (
-    <div className="grid grid-cols-3 gap-3">
-      <Link to={logUrl}>
+    <div className="grid grid-cols-3 gap-3 auto-rows-fr">
+      <Link to={logUrl} className="flex">
         <GlassCard 
           variant="light" 
           hover 
-          className="w-full h-auto flex flex-col items-center gap-2 py-5 px-3"
+          className="w-full flex flex-col items-center justify-center gap-2 py-5 px-3"
         >
           <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
             <PlusCircle className="h-6 w-6 text-primary" />
@@ -34,7 +34,7 @@ export function QuickActions({ dogId, isLost, onToggleLost }: QuickActionsProps)
         variant="light"
         hover
         className={cn(
-          "w-full h-auto flex flex-col items-center gap-2 py-5 px-3 cursor-pointer transition-all duration-300",
+          "w-full flex flex-col items-center justify-center gap-2 py-5 px-3 cursor-pointer transition-all duration-300",
           isLost && "bg-lost/20 border-lost/40"
         )}
         onClick={onToggleLost}
@@ -53,11 +53,11 @@ export function QuickActions({ dogId, isLost, onToggleLost }: QuickActionsProps)
         </span>
       </GlassCard>
 
-      <Link to={careUrl}>
+      <Link to={careUrl} className="flex">
         <GlassCard 
           variant="light" 
           hover 
-          className="w-full h-auto flex flex-col items-center gap-2 py-5 px-3"
+          className="w-full flex flex-col items-center justify-center gap-2 py-5 px-3"
         >
           <div className="h-12 w-12 rounded-xl bg-success/10 flex items-center justify-center">
             <HandHeart className="h-6 w-6 text-success" />
