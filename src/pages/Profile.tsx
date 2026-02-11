@@ -123,9 +123,9 @@ export default function ProfilePage() {
   const [deletingMedRecord, setDeletingMedRecord] = useState<MedRecordWithStatus | null>(null);
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
   const [showOwnerProfile, setShowOwnerProfile] = useState(false);
-  const [showMedRecords, setShowMedRecords] = useState(true);
-  const [showRecentLogs, setShowRecentLogs] = useState(true);
-  const [showCareRequests, setShowCareRequests] = useState(true);
+  const [showMedRecords, setShowMedRecords] = useState(false);
+  const [showRecentLogs, setShowRecentLogs] = useState(false);
+  const [showCareRequests, setShowCareRequests] = useState(false);
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [editForm, setEditForm] = useState({
     first_name: "",
