@@ -24,6 +24,7 @@ interface SendPostSheetProps {
   postCaption: string | null;
   postPhotoUrl: string | null;
   postPhotoUrls?: string[] | null;
+  postAuthorName?: string | null;
 }
 
 export default function SendPostSheet({
@@ -33,6 +34,7 @@ export default function SendPostSheet({
   postCaption,
   postPhotoUrl,
   postPhotoUrls,
+  postAuthorName,
 }: SendPostSheetProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -99,6 +101,7 @@ export default function SendPostSheet({
         caption: postCaption?.slice(0, 200) || "",
         photoUrl: photos[0] || "",
         photoCount: photos.length,
+        authorName: postAuthorName || "",
       });
 
       const { error: msgError } = await supabase.from("messages").insert({

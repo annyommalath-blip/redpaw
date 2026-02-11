@@ -15,7 +15,7 @@ export function ChatBubble({ message, timestamp, isOwn, senderName }: ChatBubble
   return (
     <div className={cn(
       "flex flex-col gap-1 animate-fade-in",
-      sharedPost ? "max-w-[75%]" : "max-w-[80%]",
+      sharedPost ? "max-w-[65%]" : "max-w-[80%]",
       isOwn ? "ml-auto items-end" : "mr-auto items-start"
     )}>
       {!isOwn && senderName && (
@@ -24,12 +24,12 @@ export function ChatBubble({ message, timestamp, isOwn, senderName }: ChatBubble
 
       {sharedPost ? (
         <div className={cn(
-          "rounded-2xl overflow-hidden shadow-sm",
+          "rounded-2xl overflow-hidden shadow-sm w-full",
           isOwn
-            ? "bg-gradient-to-br from-primary to-primary-glow rounded-br-md"
-            : "glass-card-light rounded-bl-md"
+            ? "bg-gradient-to-br from-primary to-primary-glow rounded-br-sm"
+            : "glass-card-light rounded-bl-sm"
         )}>
-          <div className="p-1.5">
+          <div className="p-1">
             <SharedPostCard data={sharedPost} isOwn={isOwn} />
           </div>
         </div>

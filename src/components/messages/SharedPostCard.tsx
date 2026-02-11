@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Images } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface SharedPostData {
@@ -68,15 +68,36 @@ export function SharedPostCard({ data, isOwn }: SharedPostCardProps) {
         navigate(`/post/${data.postId}`);
       }}
       className={cn(
-        "w-full rounded-xl overflow-hidden border text-left transition-all active:scale-[0.98]",
+        "w-full rounded-lg overflow-hidden text-left transition-all active:scale-[0.97]",
         isOwn
-          ? "border-primary-foreground/20 bg-primary-foreground/10"
-          : "border-border bg-card"
+          ? "border border-primary-foreground/15 bg-primary-foreground/10"
+          : "border border-border bg-card"
       )}
     >
-      {/* Photo preview */}
+      {/* Author header - Instagram style */}
+      {data.authorName && (
+        <div className={cn(
+          "flex items-center gap-1.5 px-2.5 py-1.5 border-b",
+          isOwn ? "border-primary-foreground/10" : "border-border/50"
+        )}>
+          <div className={cn(
+            "h-5 w-5 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0",
+            isOwn ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+          )}>
+            {data.authorName.replace("@", "").slice(0, 1).toUpperCase()}
+          </div>
+          <span className={cn(
+            "text-[11px] font-semibold truncate",
+            isOwn ? "text-primary-foreground" : "text-foreground"
+          )}>
+            {data.authorName}
+          </span>
+        </div>
+      )}
+
+      {/* Photo - original 4:5 aspect ratio, compact */}
       {data.photoUrl ? (
-        <div className="relative w-full aspect-[16/10] bg-muted overflow-hidden">
+        <div className="relative w-full aspect-[4/5] bg-muted overflow-hidden">
           <img
             src={data.photoUrl}
             alt="Shared post"
@@ -84,53 +105,41 @@ export function SharedPostCard({ data, isOwn }: SharedPostCardProps) {
             loading="lazy"
           />
           {(data.photoCount || 0) > 1 && (
-            <span className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-              <ImageIcon className="h-2.5 w-2.5" />
+            <span className="absolute top-1.5 right-1.5 bg-black/60 text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+              <Images className="h-2.5 w-2.5" />
               {data.photoCount}
             </span>
           )}
         </div>
       ) : (
-        <div className="w-full h-20 bg-muted/50 flex items-center justify-center">
+        <div className={cn(
+          "w-full aspect-square flex items-center justify-center",
+          isOwn ? "bg-primary-foreground/5" : "bg-muted/30"
+        )}>
           <ImageIcon className={cn(
-            "h-6 w-6",
-            isOwn ? "text-primary-foreground/40" : "text-muted-foreground/40"
+            "h-8 w-8",
+            isOwn ? "text-primary-foreground/30" : "text-muted-foreground/30"
           )} />
         </div>
       )}
 
-      {/* Caption / info */}
-      <div className="px-3 py-2.5">
-        {data.authorName && (
+      {/* Caption footer */}
+      {data.caption && (
+        <div className={cn(
+          "px-2.5 py-2",
+          isOwn ? "border-t border-primary-foreground/10" : ""
+        )}>
           <p className={cn(
-            "text-[11px] font-semibold mb-0.5",
-            isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
+            "text-[12px] line-clamp-2 leading-tight",
+            isOwn ? "text-primary-foreground/90" : "text-foreground/80"
           )}>
-            {data.authorName}
-          </p>
-        )}
-        {data.caption ? (
-          <p className={cn(
-            "text-sm line-clamp-2 leading-snug",
-            isOwn ? "text-primary-foreground" : "text-foreground"
-          )}>
+            {data.authorName && (
+              <span className="font-semibold mr-1">{data.authorName}</span>
+            )}
             {data.caption}
           </p>
-        ) : (
-          <p className={cn(
-            "text-xs italic",
-            isOwn ? "text-primary-foreground/60" : "text-muted-foreground"
-          )}>
-            Shared a post
-          </p>
-        )}
-        <p className={cn(
-          "text-[10px] mt-1",
-          isOwn ? "text-primary-foreground/50" : "text-muted-foreground/60"
-        )}>
-          Tap to view post
-        </p>
-      </div>
+        </div>
+      )}
     </button>
   );
 }

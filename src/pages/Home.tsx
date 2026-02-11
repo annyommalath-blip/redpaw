@@ -165,6 +165,11 @@ export default function HomePage() {
         postCaption={sharePost?.caption || sharePost?.original_post?.caption || null}
         postPhotoUrl={sharePost?.photo_url || sharePost?.original_post?.photo_url || null}
         postPhotoUrls={sharePost?.photo_urls || sharePost?.original_post?.photo_urls || null}
+        postAuthorName={
+          (sharePost?.author?.username ? `@${sharePost.author.username}` : sharePost?.author?.display_name) ||
+          (sharePost?.original_post?.author?.username ? `@${sharePost.original_post.author.username}` : sharePost?.original_post?.author?.display_name) ||
+          null
+        }
       />
     </MobileLayout>
   );
