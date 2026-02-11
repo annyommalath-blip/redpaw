@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom"; 
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu } from "lucide-react";
 
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -379,8 +379,8 @@ export default function ProfilePage() {
         title={t("profile.title")} 
         subtitle={t("profile.subtitle")}
         action={
-          <div className="flex items-center gap-1">
-            <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative rounded-xl">
+          <div className="flex items-center -space-x-1">
+            <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative rounded-xl h-9 w-9">
               <Bell className="h-5 w-5" />
               {notificationCount > 0 && (
                 <Badge 
@@ -393,8 +393,8 @@ export default function ProfilePage() {
             </Button>
             <Sheet>
               <SheetTrigger asChild>
-                <Button size="icon" variant="ghost" className="rounded-xl">
-                  <Settings className="h-5 w-5" />
+                <Button size="icon" variant="ghost" className="rounded-xl h-9 w-9">
+                  <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[320px] p-0">
