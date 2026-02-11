@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { SharedPostCard, parseSharedPost } from "./SharedPostCard";
 
 interface ChatBubbleProps {
   message: string;
@@ -9,24 +10,42 @@ interface ChatBubbleProps {
 }
 
 export function ChatBubble({ message, timestamp, isOwn, senderName }: ChatBubbleProps) {
+  const sharedPost = parseSharedPost(message);
+
   return (
     <div className={cn(
-      "flex flex-col gap-1 max-w-[80%] animate-fade-in",
+      "flex flex-col gap-1 animate-fade-in",
+      sharedPost ? "max-w-[75%]" : "max-w-[80%]",
       isOwn ? "ml-auto items-end" : "mr-auto items-start"
     )}>
       {!isOwn && senderName && (
         <span className="text-xs text-muted-foreground px-3 font-medium">{senderName}</span>
       )}
-      <div
-        className={cn(
-          "px-4 py-2.5 rounded-2xl shadow-sm",
+
+      {sharedPost ? (
+        <div className={cn(
+          "rounded-2xl overflow-hidden shadow-sm",
           isOwn
-            ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground rounded-br-md"
+            ? "bg-gradient-to-br from-primary to-primary-glow rounded-br-md"
             : "glass-card-light rounded-bl-md"
-        )}
-      >
-        <p className="text-sm leading-relaxed">{message}</p>
-      </div>
+        )}>
+          <div className="p-1.5">
+            <SharedPostCard data={sharedPost} isOwn={isOwn} />
+          </div>
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "px-4 py-2.5 rounded-2xl shadow-sm",
+            isOwn
+              ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground rounded-br-md"
+              : "glass-card-light rounded-bl-md"
+          )}
+        >
+          <p className="text-sm leading-relaxed">{message}</p>
+        </div>
+      )}
+
       <span className="text-[10px] text-muted-foreground px-3">
         {format(timestamp, "h:mm a")}
       </span>

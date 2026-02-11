@@ -92,18 +92,14 @@ export default function SendPostSheet({
 
       if (convError || !conversationId) throw convError || new Error("No conversation");
 
-      let messageText = "📤 Shared a post";
-      if (postCaption) {
-        messageText += `:\n"${postCaption.slice(0, 200)}${postCaption.length > 200 ? "..." : ""}"`;
-      }
       const photos = postPhotoUrls?.length ? postPhotoUrls : postPhotoUrl ? [postPhotoUrl] : [];
-      if (photos.length > 0) {
-        messageText += `\n📷 ${photos[0]}`;
-        if (photos.length > 1) messageText += ` (+${photos.length - 1} more)`;
-      }
-      if (postId) {
-        messageText += `\n🔗 /post/${postId}`;
-      }
+      const messageText = JSON.stringify({
+        type: "shared_post",
+        postId: postId || "",
+        caption: postCaption?.slice(0, 200) || "",
+        photoUrl: photos[0] || "",
+        photoCount: photos.length,
+      });
 
       const { error: msgError } = await supabase.from("messages").insert({
         conversation_id: conversationId,
@@ -115,7 +111,7 @@ export default function SendPostSheet({
 
       await supabase
         .from("conversations")
-        .update({ last_message: messageText, updated_at: new Date().toISOString() })
+        .update({ last_message: "Shared a post", updated_at: new Date().toISOString() })
         .eq("id", conversationId);
 
       toast.success(`Sent to ${getName(recipient)}!`);
