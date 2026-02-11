@@ -45,13 +45,14 @@ export interface PostData {
   repost_count: number;
   is_liked: boolean;
   is_saved?: boolean;
+  is_reposted?: boolean;
   original_post?: PostData | null;
 }
 
 interface PostCardProps {
   post: PostData;
   onLikeToggle: (postId: string, liked: boolean) => void;
-  onRepost: (postId: string) => void;
+  onRepost: (postId: string, reposted: boolean) => void;
   onDelete: (postId: string) => void;
   onShare: (post: PostData) => void;
 }
@@ -198,10 +199,13 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
             )}
           </button>
 
-          <button onClick={() => onRepost(isRepost ? displayPost.id : post.id)} className="flex items-center gap-1.5 group">
-            <Repeat2 className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition-colors" />
+          <button onClick={() => onRepost(isRepost ? displayPost.id : post.id, !(post.is_reposted ?? false))} className="flex items-center gap-1.5 group">
+            <Repeat2 className={cn(
+              "h-5 w-5 transition-colors",
+              post.is_reposted ? "text-green-500" : "text-muted-foreground group-hover:text-green-500"
+            )} />
             {post.repost_count > 0 && (
-              <span className="text-xs text-muted-foreground">{post.repost_count}</span>
+              <span className={cn("text-xs", post.is_reposted ? "text-green-500" : "text-muted-foreground")}>{post.repost_count}</span>
             )}
           </button>
 

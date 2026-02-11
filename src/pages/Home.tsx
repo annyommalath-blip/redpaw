@@ -49,9 +49,9 @@ export default function HomePage() {
     toast.success("Post deleted");
   };
 
-  const handleRepost = async (postId: string) => {
-    await repost(postId);
-    toast.success("Reposted! 🔄");
+  const handleRepost = async (postId: string, reposted: boolean) => {
+    await repost(postId, reposted);
+    toast.success(reposted ? "Reposted! 🔄" : "Repost removed");
   };
 
   if (loading) {
