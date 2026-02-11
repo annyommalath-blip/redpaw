@@ -51,12 +51,15 @@ export default function NotificationsPage() {
         }
         break;
       case "dog_invite":
-        // Navigate to home where pending invites are shown
         navigate("/");
         break;
       case "post":
-        // Navigate to home/feed where posts are shown
         navigate("/");
+        break;
+      case "user":
+        if (notification.link_id) {
+          navigate(`/user/${notification.link_id}`);
+        }
         break;
       default:
         // Stay on notifications page
