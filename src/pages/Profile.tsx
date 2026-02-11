@@ -917,15 +917,26 @@ export default function ProfilePage() {
                     />
                   </label>
                 </div>
-                <button className="flex-1 min-w-0 pt-1 text-left" onClick={() => setIsEditing(!isEditing)}>
-                  {profile?.username && (
-                    <h2 className="text-xl font-bold text-foreground truncate">{profile.username}</h2>
-                  )}
-                  <p className="text-sm text-muted-foreground">{displayName}</p>
-                  {formatLocation() && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{formatLocation()}</p>
-                  )}
-                </button>
+                <div className="flex-1 min-w-0 pt-1">
+                  <button className="text-left w-full" onClick={() => setIsEditing(!isEditing)}>
+                    {profile?.username && (
+                      <h2 className="text-xl font-bold text-foreground truncate">{profile.username}</h2>
+                    )}
+                    <p className="text-sm text-muted-foreground">{displayName}</p>
+                    {formatLocation() && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{formatLocation()}</p>
+                    )}
+                  </button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <button className="hover:text-foreground transition-colors" onClick={() => openFollowList("followers")}>
+                      <span className="font-semibold text-foreground">{followerCount}</span> Followers
+                    </button>
+                    <span className="mx-1.5">·</span>
+                    <button className="hover:text-foreground transition-colors" onClick={() => openFollowList("following")}>
+                      <span className="font-semibold text-foreground">{followingCount}</span> Following
+                    </button>
+                  </p>
+                </div>
               </div>
 
               {/* Stats row */}
@@ -935,15 +946,10 @@ export default function ProfilePage() {
                   <p className="text-xs text-muted-foreground">Posts</p>
                 </div>
                 <div className="w-px h-8 bg-border/50" />
-                <button className="flex-1 text-center" onClick={() => openFollowList("followers")}>
-                  <p className="text-lg font-bold text-foreground">{followerCount}</p>
-                  <p className="text-xs text-muted-foreground">Followers</p>
-                </button>
-                <div className="w-px h-8 bg-border/50" />
-                <button className="flex-1 text-center" onClick={() => openFollowList("following")}>
-                  <p className="text-lg font-bold text-foreground">{followingCount}</p>
-                  <p className="text-xs text-muted-foreground">Following</p>
-                </button>
+                <div className="flex-1 text-center">
+                  <p className="text-lg font-bold text-foreground">{dogs.length}</p>
+                  <p className="text-xs text-muted-foreground">Pets</p>
+                </div>
                 <div className="w-px h-8 bg-border/50" />
                 <button 
                   className="flex-1 text-center"
