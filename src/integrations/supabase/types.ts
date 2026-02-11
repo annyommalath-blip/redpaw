@@ -1042,6 +1042,7 @@ export type Database = {
         | "dog_invite_accepted"
         | "dog_invite_declined"
         | "post_comment_mention"
+        | "new_follower"
       post_visibility: "public" | "friends" | "private"
       request_status: "open" | "closed"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
@@ -1196,6 +1197,7 @@ export const Constants = {
         "dog_invite_accepted",
         "dog_invite_declined",
         "post_comment_mention",
+        "new_follower",
       ],
       post_visibility: ["public", "friends", "private"],
       request_status: ["open", "closed"],

@@ -42,6 +42,7 @@ const typeIcons: Record<string, typeof Bell> = {
   dog_invite_accepted: UserCheck,
   dog_invite_declined: UserMinus,
   post_comment_mention: AtSign,
+  new_follower: UserPlus,
 };
 
 const typeColors: Record<string, string> = {
@@ -59,6 +60,7 @@ const typeColors: Record<string, string> = {
   dog_invite_accepted: "text-green-600 bg-green-100",
   dog_invite_declined: "text-amber-600 bg-amber-100",
   post_comment_mention: "text-pink-600 bg-pink-100",
+  new_follower: "text-blue-600 bg-blue-100",
 };
 
 export function NotificationItem({
@@ -117,6 +119,8 @@ export function NotificationItem({
         return t("notifications.bodies.dog_invite_accepted", bodyParams);
       case "dog_invite_declined":
         return t("notifications.bodies.dog_invite_declined", bodyParams);
+      case "new_follower":
+        return t("notifications.bodies.new_follower", { ...bodyParams, defaultValue: body });
       default:
         return body;
     }
