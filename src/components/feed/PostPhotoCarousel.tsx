@@ -58,16 +58,16 @@ export default function PostPhotoCarousel({ photos, className }: PostPhotoCarous
       </div>
 
       {/* Dots indicator */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-[5px]">
         {photos.map((_, i) => (
-          <button
+          <span
             key={i}
             onClick={() => emblaApi?.scrollTo(i)}
             className={cn(
-              "w-1.5 h-1.5 rounded-full transition-colors duration-200",
+              "block w-[6px] h-[6px] rounded-full transition-all duration-200 cursor-pointer",
               i === activeIndex
-                ? "bg-white"
-                : "bg-white/40"
+                ? "bg-white scale-100"
+                : "bg-white/35 scale-100"
             )}
           />
         ))}
