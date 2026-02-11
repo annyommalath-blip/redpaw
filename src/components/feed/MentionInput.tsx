@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { buildMentionToken, extractMentionedUserIds } from "@/lib/mentionUtils";
+import { extractMentionedUsernames } from "@/lib/mentionUtils";
 
 export interface MentionUser {
   user_id: string;
@@ -11,6 +11,7 @@ export interface MentionUser {
   first_name: string | null;
   last_name: string | null;
   avatar_url: string | null;
+  username: string | null;
 }
 
 interface MentionInputProps {
@@ -22,9 +23,9 @@ interface MentionInputProps {
   className?: string;
 }
 
-/** Extract mentioned user IDs from structured mention tokens */
+/** Extract mentioned usernames from text */
 export function parseMentions(text: string): string[] {
-  return extractMentionedUserIds(text);
+  return extractMentionedUsernames(text);
 }
 
 function getName(u: MentionUser): string {
@@ -44,7 +45,6 @@ export default function MentionInput({
   const [suggestions, setSuggestions] = useState<MentionUser[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [mentionQuery, setMentionQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -60,38 +60,30 @@ export default function MentionInput({
       const cursorPos = inputRef.current?.selectionStart || text.length;
       const beforeCursor = text.slice(0, cursorPos);
 
-      // Check if cursor is inside a completed mention token @[...](...)
-      // If so, don't show dropdown
-      const tokenRe = /@\[[^\]]*\]\([a-f0-9-]{36}\)/g;
-      let m;
-      while ((m = tokenRe.exec(beforeCursor)) !== null) {
-        if (cursorPos >= m.index && cursorPos <= m.index + m[0].length) {
-          setShowDropdown(false);
-          return;
-        }
-      }
+      const atIndex = beforeCursor.lastIndexOf("@");
 
-      // Strip completed tokens to find bare @ triggers
-      const stripped = beforeCursor.replace(/@\[[^\]]*\]\([a-f0-9-]{36}\)/g, "X".repeat(38));
-      const atIndex = stripped.lastIndexOf("@");
-
-      if (atIndex === -1 || (atIndex > 0 && stripped[atIndex - 1] !== " " && atIndex !== 0)) {
-        if (atIndex > 0 && stripped[atIndex - 1] !== " ") {
+      if (atIndex === -1 || (atIndex > 0 && beforeCursor[atIndex - 1] !== " " && atIndex !== 0)) {
+        if (atIndex > 0 && beforeCursor[atIndex - 1] !== " ") {
           setShowDropdown(false);
           return;
         }
       }
 
       if (atIndex >= 0) {
-        const query = stripped.slice(atIndex + 1).toLowerCase();
-        if (query.length > 30) {
+        const query = beforeCursor.slice(atIndex + 1).toLowerCase();
+        if (query.length > 30 || query.includes(" ")) {
           setShowDropdown(false);
           return;
         }
-        setMentionQuery(query);
-        const filtered = allUsers.filter((u) =>
-          getName(u).toLowerCase().includes(query)
-        ).slice(0, 6);
+        const filtered = allUsers
+          .filter((u) => {
+            if (!u.username) return false;
+            return (
+              u.username.toLowerCase().includes(query) ||
+              getName(u).toLowerCase().includes(query)
+            );
+          })
+          .slice(0, 6);
         setSuggestions(filtered);
         setShowDropdown(filtered.length > 0);
         setSelectedIndex(0);
@@ -109,21 +101,20 @@ export default function MentionInput({
   };
 
   const insertMention = (user: MentionUser) => {
+    if (!user.username) return;
     const cursorPos = inputRef.current?.selectionStart || value.length;
     const beforeCursor = value.slice(0, cursorPos);
     const atIndex = beforeCursor.lastIndexOf("@");
     const afterCursor = value.slice(cursorPos);
 
-    const name = getName(user);
-    const token = buildMentionToken(name, user.user_id);
-    const newValue = beforeCursor.slice(0, atIndex) + token + " " + afterCursor;
+    const mention = `@${user.username}`;
+    const newValue = beforeCursor.slice(0, atIndex) + mention + " " + afterCursor;
     onChange(newValue);
     setShowDropdown(false);
 
-    // Refocus input
     setTimeout(() => {
       inputRef.current?.focus();
-      const newPos = atIndex + token.length + 1;
+      const newPos = atIndex + mention.length + 1;
       inputRef.current?.setSelectionRange(newPos, newPos);
     }, 0);
   };
@@ -193,7 +184,12 @@ export default function MentionInput({
                     {name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="truncate">{name}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate font-medium">{name}</span>
+                  {user.username && (
+                    <span className="truncate text-xs text-muted-foreground">@{user.username}</span>
+                  )}
+                </div>
               </button>
             );
           })}

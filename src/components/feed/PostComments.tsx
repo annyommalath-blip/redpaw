@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import MentionInput, { parseMentions } from "./MentionInput";
+import { extractMentionedUsernames } from "@/lib/mentionUtils";
+import MentionInput from "./MentionInput";
 import MentionText from "./MentionText";
 
 interface Comment {
@@ -20,10 +21,9 @@ interface Comment {
     first_name: string | null;
     last_name: string | null;
     avatar_url: string | null;
+    username: string | null;
   };
 }
-
-// Removed old renderCommentText — MentionText handles this now
 
 export default function PostComments({ postId }: { postId: string }) {
   const { t } = useTranslation();
@@ -73,14 +73,25 @@ export default function PostComments({ postId }: { postId: string }) {
     if (error) {
       toast.error("Failed to comment");
     } else {
-      // Send mention notifications via secure RPC
-      const mentionedIds = parseMentions(commentText);
-      for (const mentionedUserId of mentionedIds) {
-        await supabase.rpc("create_mention_notification" as any, {
-          p_mentioned_user_id: mentionedUserId,
-          p_comment_text: commentText,
-          p_post_id: postId,
-        });
+      // Resolve mentioned usernames to user IDs and send notifications
+      const mentionedUsernames = extractMentionedUsernames(commentText);
+      if (mentionedUsernames.length > 0) {
+        const { data: profiles } = await supabase.rpc("get_public_profiles");
+        const usernameToId = new Map(
+          (profiles || [])
+            .filter((p: any) => p.username)
+            .map((p: any) => [p.username, p.user_id])
+        );
+        for (const username of mentionedUsernames) {
+          const mentionedUserId = usernameToId.get(username);
+          if (mentionedUserId) {
+            await supabase.rpc("create_mention_notification" as any, {
+              p_mentioned_user_id: mentionedUserId,
+              p_comment_text: commentText,
+              p_post_id: postId,
+            });
+          }
+        }
       }
       setText("");
       fetchComments();

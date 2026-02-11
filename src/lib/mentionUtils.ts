@@ -1,50 +1,44 @@
-import type { MentionUser } from "@/components/feed/MentionInput";
-
 /**
- * Mention token format: @[Display Name](user_id)
- * This structured format allows parsing mentions for rendering as clickable links.
+ * Username-based mention system.
+ * Mentions are stored as plain @username in text.
+ * The regex detects @username tokens for rendering as clickable links.
  */
 
-/** Insert a structured mention token into text */
-export function buildMentionToken(name: string, userId: string): string {
-  return `@[${name}](${userId})`;
-}
+/** Regex to match @username tokens (lowercase, digits, underscore, dot) */
+const MENTION_RE = /@([a-z0-9_.]{1,30})\b/g;
 
-/** Regex to match mention tokens: @[Name](uuid) */
-export const MENTION_TOKEN_RE = /@\[([^\]]+)\]\(([a-f0-9-]{36})\)/g;
-
-/** Parse mention tokens from text, return unique user IDs */
-export function extractMentionedUserIds(text: string): string[] {
-  const ids = new Set<string>();
+/** Extract unique mentioned usernames from text */
+export function extractMentionedUsernames(text: string): string[] {
+  const usernames = new Set<string>();
+  const re = new RegExp(MENTION_RE.source, "g");
   let match;
-  const re = new RegExp(MENTION_TOKEN_RE.source, "g");
   while ((match = re.exec(text)) !== null) {
-    ids.add(match[2]);
+    usernames.add(match[1]);
   }
-  return [...ids];
+  return [...usernames];
 }
 
 /**
  * Split text into parts for rendering.
- * Returns array of { type: 'text' | 'mention', value, userId? }
+ * Returns array of { type: 'text' | 'mention', value }
  */
 export interface MentionPart {
   type: "text" | "mention";
-  value: string;
-  userId?: string;
+  value: string; // for mention, this is the username (without @)
 }
 
 export function parseMentionParts(text: string): MentionPart[] {
   const parts: MentionPart[] = [];
-  const re = new RegExp(MENTION_TOKEN_RE.source, "g");
+  const re = new RegExp(MENTION_RE.source, "g");
   let lastIndex = 0;
   let match;
 
   while ((match = re.exec(text)) !== null) {
+    // The full match includes the @ sign
     if (match.index > lastIndex) {
       parts.push({ type: "text", value: text.slice(lastIndex, match.index) });
     }
-    parts.push({ type: "mention", value: match[1], userId: match[2] });
+    parts.push({ type: "mention", value: match[1] });
     lastIndex = re.lastIndex;
   }
 
