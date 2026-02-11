@@ -123,6 +123,9 @@ export default function ProfilePage() {
   const [deletingMedRecord, setDeletingMedRecord] = useState<MedRecordWithStatus | null>(null);
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
   const [showOwnerProfile, setShowOwnerProfile] = useState(false);
+  const [showMedRecords, setShowMedRecords] = useState(true);
+  const [showRecentLogs, setShowRecentLogs] = useState(true);
+  const [showCareRequests, setShowCareRequests] = useState(true);
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [editForm, setEditForm] = useState({
     first_name: "",
@@ -761,66 +764,82 @@ export default function ProfilePage() {
 
             <AnimatedItem delay={0.3}>
               <section>
-                <div className="flex items-center justify-between mb-3">
+                <button
+                  onClick={() => setShowMedRecords(!showMedRecords)}
+                  className="w-full flex items-center justify-between mb-3"
+                >
                   <h2 className="section-header flex items-center gap-2">
                     <Syringe className="h-4 w-4" />
                     {t("profile.medicationRecords")}
                   </h2>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => navigate("/create?type=meds")}
-                    className="text-primary rounded-xl"
-                  >
-                    {t("common.add")}
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-                {filteredMedRecords.length > 0 ? (
-                  <div className="space-y-3">
-                    {filteredMedRecords.map((record) => (
-                      <MedRecordCardReadOnly
-                        key={record.id}
-                        record={record}
-                        onEdit={setEditingMedRecord}
-                        onDelete={setDeletingMedRecord}
-                      />
-                    ))}
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={(e) => { e.stopPropagation(); navigate("/create?type=meds"); }}
+                      className="text-primary rounded-xl"
+                    >
+                      {t("common.add")}
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showMedRecords ? "rotate-180" : ""}`} />
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                    {t("profile.noMedRecordsYet")}
-                  </p>
+                </button>
+                {showMedRecords && (
+                  filteredMedRecords.length > 0 ? (
+                    <div className="space-y-3">
+                      {filteredMedRecords.map((record) => (
+                        <MedRecordCardReadOnly
+                          key={record.id}
+                          record={record}
+                          onEdit={setEditingMedRecord}
+                          onDelete={setDeletingMedRecord}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
+                      {t("profile.noMedRecordsYet")}
+                    </p>
+                  )
                 )}
               </section>
             </AnimatedItem>
 
             <AnimatedItem delay={0.35}>
               <section>
-                <div className="flex items-center justify-between mb-3">
+                <button
+                  onClick={() => setShowRecentLogs(!showRecentLogs)}
+                  className="w-full flex items-center justify-between mb-3"
+                >
                   <h2 className="section-header">{t("profile.recentLogs")}</h2>
-                  <Button variant="ghost" size="sm" onClick={() => navigate("/create?type=log")} className="text-primary rounded-xl">
-                    <PlusCircle className="h-4 w-4 mr-1" />
-                    {t("common.add")}
-                  </Button>
-                </div>
-                {filteredLogs.length > 0 ? (
-                  <div className="space-y-3">
-                    {filteredLogs.slice(0, 5).map((log) => (
-                      <HealthLogCard
-                        key={log.id}
-                        id={log.id}
-                        type={log.log_type}
-                        value={log.value || ""}
-                        createdAt={new Date(log.created_at)}
-                        onDelete={setDeletingLogId}
-                      />
-                    ))}
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate("/create?type=log"); }} className="text-primary rounded-xl">
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      {t("common.add")}
+                    </Button>
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showRecentLogs ? "rotate-180" : ""}`} />
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                    {t("profile.noHealthLogsYet")}
-                  </p>
+                </button>
+                {showRecentLogs && (
+                  filteredLogs.length > 0 ? (
+                    <div className="space-y-3">
+                      {filteredLogs.slice(0, 5).map((log) => (
+                        <HealthLogCard
+                          key={log.id}
+                          id={log.id}
+                          type={log.log_type}
+                          value={log.value || ""}
+                          createdAt={new Date(log.created_at)}
+                          onDelete={setDeletingLogId}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
+                      {t("profile.noHealthLogsYet")}
+                    </p>
+                  )
                 )}
               </section>
             </AnimatedItem>
@@ -842,12 +861,16 @@ export default function ProfilePage() {
         {/* My Care Requests */}
         <AnimatedItem delay={0.4}>
           <section>
-            <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => setShowCareRequests(!showCareRequests)}
+              className="w-full flex items-center justify-between mb-3"
+            >
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 {t("profile.myCareRequests")}
               </h2>
-            </div>
-            {(() => {
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showCareRequests ? "rotate-180" : ""}`} />
+            </button>
+            {showCareRequests && (() => {
               const activeRequests = myCareRequests.filter(r => !isRequestArchived(r));
               return activeRequests.length === 0 ? (
                 <GlassCard variant="light">
