@@ -800,7 +800,7 @@ export default function ProfilePage() {
                 </div>
                 <button className="flex-1 min-w-0 pt-1 text-left" onClick={() => setIsEditing(!isEditing)}>
                   {profile?.username && (
-                    <h2 className="text-xl font-bold text-foreground truncate">@{profile.username}</h2>
+                    <h2 className="text-xl font-bold text-foreground truncate">{profile.username}</h2>
                   )}
                   <p className="text-sm text-muted-foreground">{displayName}</p>
                   {formatLocation() && (
