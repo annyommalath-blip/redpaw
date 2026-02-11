@@ -886,6 +886,14 @@ export type Database = {
       }
     }
     Functions: {
+      create_mention_notification: {
+        Args: {
+          p_comment_text: string
+          p_mentioned_user_id: string
+          p_post_id: string
+        }
+        Returns: undefined
+      }
       generate_participant_key: { Args: { p_ids: string[] }; Returns: string }
       get_or_create_conversation: {
         Args: {
