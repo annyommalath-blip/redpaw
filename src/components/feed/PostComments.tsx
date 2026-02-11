@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import MentionInput, { parseMentions, type MentionUser } from "./MentionInput";
+import MentionInput, { parseMentions } from "./MentionInput";
+import MentionText from "./MentionText";
 
 interface Comment {
   id: string;
@@ -22,17 +23,7 @@ interface Comment {
   };
 }
 
-function renderCommentText(text: string) {
-  // Highlight @mentions in the text
-  const parts = text.split(/(@[\w\s]+?)(?=\s@|\s|$)/g);
-  return parts.map((part, i) =>
-    part.startsWith("@") ? (
-      <span key={i} className="text-primary font-semibold">{part}</span>
-    ) : (
-      <span key={i}>{part}</span>
-    )
-  );
-}
+// Removed old renderCommentText — MentionText handles this now
 
 export default function PostComments({ postId }: { postId: string }) {
   const { t } = useTranslation();
@@ -40,13 +31,9 @@ export default function PostComments({ postId }: { postId: string }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const [allUsers, setAllUsers] = useState<MentionUser[]>([]);
 
   useEffect(() => {
     fetchComments();
-    supabase.rpc("get_public_profiles").then(({ data }) => {
-      if (data) setAllUsers(data as MentionUser[]);
-    });
   }, [postId]);
 
   const fetchComments = async () => {
@@ -87,7 +74,7 @@ export default function PostComments({ postId }: { postId: string }) {
       toast.error("Failed to comment");
     } else {
       // Send mention notifications via secure RPC
-      const mentionedIds = parseMentions(commentText, allUsers);
+      const mentionedIds = parseMentions(commentText);
       for (const mentionedUserId of mentionedIds) {
         await supabase.rpc("create_mention_notification" as any, {
           p_mentioned_user_id: mentionedUserId,
@@ -118,7 +105,7 @@ export default function PostComments({ postId }: { postId: string }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs">
                     <span className="font-semibold text-foreground">{name}</span>{" "}
-                    <span className="text-foreground/80">{renderCommentText(c.text)}</span>
+                    <MentionText text={c.text} className="text-foreground/80" />
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
