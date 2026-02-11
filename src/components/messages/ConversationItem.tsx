@@ -38,9 +38,9 @@ export function ConversationItem({
     >
       {/* Avatar */}
       <div className="relative">
-        <div className="h-13 w-13 rounded-2xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+        <div className="h-12 w-12 min-w-[3rem] min-h-[3rem] rounded-2xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
           {participantAvatar ? (
-            <img src={participantAvatar} alt={participantName} className="h-full w-full object-cover" />
+            <img src={participantAvatar} alt={participantName} className="h-12 w-12 min-w-[3rem] min-h-[3rem] object-cover" />
           ) : (
             <User className="h-6 w-6 text-muted-foreground" />
           )}
