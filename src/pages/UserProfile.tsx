@@ -249,37 +249,6 @@ export default function UserProfilePage() {
           </GlassCard>
         </AnimatedItem>
 
-        {/* Dogs Section */}
-        {userDogs.length > 0 && (
-          <AnimatedItem delay={0.1}>
-            <section>
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Their Dogs
-              </h2>
-              <div className="space-y-2">
-                {userDogs.map(dog => (
-                  <div
-                    key={dog.id}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/50 cursor-pointer hover:border-primary/30 transition-colors"
-                    onClick={() => navigate(`/dog/${dog.id}`)}
-                  >
-                    <div className="h-12 w-12 rounded-xl overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                      {dog.photo_url ? (
-                        <img src={dog.photo_url} alt={dog.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <Dog className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground text-sm">{dog.name}</h3>
-                      {dog.breed && <p className="text-xs text-muted-foreground">{dog.breed}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </AnimatedItem>
-        )}
 
         {/* Posts */}
         <AnimatedItem delay={0.2}>
