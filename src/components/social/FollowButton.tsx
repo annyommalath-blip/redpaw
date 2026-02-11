@@ -9,9 +9,10 @@ interface FollowButtonProps {
   targetUserId: string;
   size?: "xs" | "sm" | "default";
   className?: string;
+  onToggle?: (isNowFollowing: boolean) => void;
 }
 
-export function FollowButton({ targetUserId, size = "xs", className }: FollowButtonProps) {
+export function FollowButton({ targetUserId, size = "xs", className, onToggle }: FollowButtonProps) {
   const { user } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -51,11 +52,13 @@ export function FollowButton({ targetUserId, size = "xs", className }: FollowBut
           .eq("follower_id", user.id)
           .eq("following_id", targetUserId);
         setIsFollowing(false);
+        onToggle?.(false);
       } else {
         await supabase
           .from("user_follows" as any)
           .insert({ follower_id: user.id, following_id: targetUserId } as any);
         setIsFollowing(true);
+        onToggle?.(true);
       }
     } catch (err) {
       console.error("Follow toggle error:", err);
