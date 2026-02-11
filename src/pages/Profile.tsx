@@ -927,7 +927,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-muted-foreground mt-0.5">{formatLocation()}</p>
                     )}
                   </button>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <span className="text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
                     <button className="hover:text-foreground transition-colors" onClick={() => openFollowList("followers")}>
                       <span className="font-semibold text-foreground">{followerCount}</span> Followers
                     </button>
@@ -935,7 +935,7 @@ export default function ProfilePage() {
                     <button className="hover:text-foreground transition-colors" onClick={() => openFollowList("following")}>
                       <span className="font-semibold text-foreground">{followingCount}</span> Following
                     </button>
-                  </p>
+                  </span>
                 </div>
               </div>
 
