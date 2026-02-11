@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, User, Dog, HandHeart, ChevronDown } from "lucide-react";
+import { ArrowLeft, Loader2, User, Dog, HandHeart, ChevronDown, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -221,7 +221,7 @@ export default function UserProfilePage() {
                     <span><span className="font-semibold text-foreground">{followingCount}</span> Following</span>
                   </div>
                   {!isOwnProfile && (
-                    <div className="mt-1.5">
+                    <div className="mt-1.5 flex items-center gap-2">
                       <FollowButton
                         targetUserId={profile.user_id}
                         size="sm"
@@ -229,6 +229,22 @@ export default function UserProfilePage() {
                           setFollowersCount(prev => prev + (isNowFollowing ? 1 : -1));
                         }}
                       />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-xl"
+                        onClick={async () => {
+                          if (!user) return;
+                          const { data: convId } = await supabase.rpc("get_or_create_conversation", {
+                            p_user_id_1: user.id,
+                            p_user_id_2: profile.user_id,
+                          });
+                          if (convId) navigate(`/messages/${convId}`);
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        {t("common.message", "Message")}
+                      </Button>
                     </div>
                   )}
                 </div>
