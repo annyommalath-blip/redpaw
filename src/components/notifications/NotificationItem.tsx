@@ -11,7 +11,9 @@ import {
   UserMinus,
   MessageSquare,
   Users,
-  AtSign
+  AtSign,
+  Heart,
+  Repeat2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDateLocale } from "@/hooks/useDateLocale";
@@ -43,6 +45,9 @@ const typeIcons: Record<string, typeof Bell> = {
   dog_invite_declined: UserMinus,
   post_comment_mention: AtSign,
   new_follower: UserPlus,
+  post_comment: MessageSquare,
+  post_like: Heart,
+  post_repost: Repeat2,
 };
 
 const typeColors: Record<string, string> = {
@@ -61,6 +66,9 @@ const typeColors: Record<string, string> = {
   dog_invite_declined: "text-amber-600 bg-amber-100",
   post_comment_mention: "text-pink-600 bg-pink-100",
   new_follower: "text-blue-600 bg-blue-100",
+  post_comment: "text-teal-600 bg-teal-100",
+  post_like: "text-red-600 bg-red-100",
+  post_repost: "text-green-600 bg-green-100",
 };
 
 export function NotificationItem({
@@ -121,6 +129,12 @@ export function NotificationItem({
         return t("notifications.bodies.dog_invite_declined", bodyParams);
       case "new_follower":
         return t("notifications.bodies.new_follower", { ...bodyParams, defaultValue: body });
+      case "post_comment":
+        return t("notifications.bodies.post_comment", { ...bodyParams, defaultValue: body });
+      case "post_like":
+        return t("notifications.bodies.post_like", { ...bodyParams, defaultValue: body });
+      case "post_repost":
+        return t("notifications.bodies.post_repost", { ...bodyParams, defaultValue: body });
       default:
         return body;
     }
