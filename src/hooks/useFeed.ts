@@ -244,15 +244,24 @@ export function useFeed() {
     }
   };
 
-  const repost = async (originalPostId: string) => {
+  const repost = async (originalPostId: string, reposted: boolean) => {
     if (!user) return;
-    // Insert into reposts table instead of creating a new post
-    const { error } = await supabase.from("reposts").insert({
-      user_id: user.id,
-      post_id: originalPostId,
-    });
-    if (!error) {
-      fetchPosts();
+
+    // Optimistic update
+    setPosts((prev) =>
+      prev.map((p) => {
+        const targetId = p.original_post ? p.original_post.id : p.id;
+        if (targetId === originalPostId) {
+          return { ...p, is_reposted: reposted, repost_count: p.repost_count + (reposted ? 1 : -1) };
+        }
+        return p;
+      })
+    );
+
+    if (reposted) {
+      await supabase.from("reposts").insert({ user_id: user.id, post_id: originalPostId });
+    } else {
+      await supabase.from("reposts").delete().eq("user_id", user.id).eq("post_id", originalPostId);
     }
   };
 
