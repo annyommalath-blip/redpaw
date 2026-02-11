@@ -5,7 +5,7 @@
  */
 
 /** Regex to match @username tokens (lowercase, digits, underscore, dot) */
-const MENTION_RE = /@([a-z0-9_.]{1,30})\b/g;
+const MENTION_RE = /@([a-zA-Z0-9_.]{1,30})(?=\s|$|[^a-zA-Z0-9_.])/g;
 
 /** Extract unique mentioned usernames from text */
 export function extractMentionedUsernames(text: string): string[] {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { parseMentionParts } from "@/lib/mentionUtils";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,24 +14,25 @@ const usernameCache = new Map<string, string | null>();
 /**
  * Renders text with @username tokens as clickable mention links.
  */
-export default function MentionText({ text, className }: MentionTextProps) {
+const MentionText = forwardRef<HTMLSpanElement, MentionTextProps>(({ text, className }, ref) => {
   const navigate = useNavigate();
   const parts = parseMentionParts(text);
   const [resolvedMap, setResolvedMap] = useState<Map<string, string | null>>(new Map());
 
   // Resolve usernames to user IDs
   useEffect(() => {
-    const usernames = parts
-      .filter((p) => p.type === "mention")
-      .map((p) => p.value)
-      .filter((u) => !usernameCache.has(u));
+    const mentionParts = parts.filter((p) => p.type === "mention");
+    if (mentionParts.length === 0) return;
 
-    if (usernames.length === 0) {
+    const uncached = mentionParts.map((p) => p.value.toLowerCase()).filter((u) => !usernameCache.has(u));
+
+    if (uncached.length === 0) {
       // Use cached values
       const cached = new Map<string, string | null>();
-      parts.filter((p) => p.type === "mention").forEach((p) => {
-        if (usernameCache.has(p.value)) {
-          cached.set(p.value, usernameCache.get(p.value)!);
+      mentionParts.forEach((p) => {
+        const key = p.value.toLowerCase();
+        if (usernameCache.has(key)) {
+          cached.set(key, usernameCache.get(key)!);
         }
       });
       setResolvedMap(cached);
@@ -42,16 +43,17 @@ export default function MentionText({ text, className }: MentionTextProps) {
     supabase.rpc("get_public_profiles").then(({ data }) => {
       const newMap = new Map<string, string | null>();
       const profiles = data || [];
-      for (const username of usernames) {
-        const profile = profiles.find((p: any) => p.username === username);
+      for (const username of uncached) {
+        const profile = profiles.find((p: any) => p.username?.toLowerCase() === username);
         const userId = profile?.user_id || null;
         usernameCache.set(username, userId);
         newMap.set(username, userId);
       }
       // Include cached
-      parts.filter((p) => p.type === "mention").forEach((p) => {
-        if (usernameCache.has(p.value) && !newMap.has(p.value)) {
-          newMap.set(p.value, usernameCache.get(p.value)!);
+      mentionParts.forEach((p) => {
+        const key = p.value.toLowerCase();
+        if (usernameCache.has(key) && !newMap.has(key)) {
+          newMap.set(key, usernameCache.get(key)!);
         }
       });
       setResolvedMap(newMap);
@@ -59,14 +61,14 @@ export default function MentionText({ text, className }: MentionTextProps) {
   }, [text]);
 
   return (
-    <span className={className}>
+    <span ref={ref} className={className}>
       {parts.map((part, i) =>
         part.type === "mention" ? (
           <button
             key={i}
             onClick={(e) => {
               e.stopPropagation();
-              const userId = resolvedMap.get(part.value) || usernameCache.get(part.value);
+              const userId = resolvedMap.get(part.value.toLowerCase()) || usernameCache.get(part.value.toLowerCase());
               if (userId) navigate(`/user/${userId}`);
             }}
             className="text-primary font-semibold hover:underline"
@@ -79,4 +81,8 @@ export default function MentionText({ text, className }: MentionTextProps) {
       )}
     </span>
   );
-}
+});
+
+MentionText.displayName = "MentionText";
+
+export default MentionText;
