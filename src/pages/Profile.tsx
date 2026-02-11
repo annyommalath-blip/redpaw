@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom"; 
 import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages } from "lucide-react";
 
@@ -38,6 +38,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { checkMedicationNotifications } from "@/lib/notificationUtils";
 import UsernameSetupDialog from "@/components/UsernameSetupDialog";
+import ProfilePhotoCropDialog from "@/components/profile/ProfilePhotoCropDialog";
+import { isValidImageType, isHeicFile, processImageFile } from "@/lib/imageUtils";
 
 const ACTIVE_DOG_STORAGE_KEY = "redpaw_active_dog_id";
 
@@ -118,6 +120,10 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { unreadCount: notificationCount } = useNotifications();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const activeDog = dogs.find(d => d.id === activeDogId) || null;
 
@@ -314,6 +320,64 @@ export default function ProfilePage() {
   const formatLocation = (): string => {
     const parts = [profile?.city, profile?.postal_code].filter(Boolean);
     return parts.length > 0 ? parts.join(", ") : "";
+  };
+
+  const handleProfilePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    if (!isValidImageType(file)) {
+      toast({ variant: "destructive", title: "Invalid file type", description: "Please use JPG, PNG, WebP, or HEIC." });
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ variant: "destructive", title: "File too large", description: "Maximum 50MB." });
+      return;
+    }
+
+    try {
+      // Process HEIC if needed, compress
+      const processed = await processImageFile(file, { targetSize: 5 * 1024 * 1024 });
+      const url = URL.createObjectURL(processed);
+      setCropImageSrc(url);
+      setCropDialogOpen(true);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Error", description: err.message || "Could not process image." });
+    }
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    setCropDialogOpen(false);
+    if (!user) return;
+    setUploadingPhoto(true);
+    try {
+      const ext = "png";
+      const storagePath = `${user.id}/profile-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("dog-photos")
+        .upload(storagePath, blob, { cacheControl: "3600", upsert: false, contentType: "image/png" });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("dog-photos").getPublicUrl(storagePath);
+      const publicUrl = urlData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", user.id);
+      if (updateError) throw updateError;
+
+      setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
+      toast({ title: "Profile photo updated! 📸" });
+    } catch (err: any) {
+      console.error("Profile photo upload error:", err);
+      toast({ variant: "destructive", title: "Upload failed", description: err.message });
+    } finally {
+      setUploadingPhoto(false);
+      if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
+      setCropImageSrc("");
+    }
   };
 
   const handleSignOut = async () => {
@@ -569,8 +633,10 @@ export default function ProfilePage() {
                         size="icon"
                         variant="outline"
                         className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingPhoto}
                       >
-                        <Camera className="h-3 w-3" />
+                        {uploadingPhoto ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
                       </Button>
                     </div>
                     <div className="flex-1">
@@ -893,6 +959,25 @@ export default function ProfilePage() {
           setShowUsernameSetup(false);
           setProfile(prev => prev ? { ...prev, username } : null);
           setEditForm(prev => ({ ...prev, username }));
+        }}
+      />
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleProfilePhotoSelect}
+      />
+
+      <ProfilePhotoCropDialog
+        open={cropDialogOpen}
+        imageSrc={cropImageSrc}
+        onConfirm={handleCropConfirm}
+        onCancel={() => {
+          setCropDialogOpen(false);
+          if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
+          setCropImageSrc("");
         }}
       />
     </MobileLayout>
