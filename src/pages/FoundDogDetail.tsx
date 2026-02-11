@@ -51,8 +51,7 @@ interface FoundDog {
 interface ReporterProfile {
   display_name: string | null;
   avatar_url: string | null;
-  first_name: string | null;
-  last_name: string | null;
+  username: string | null;
 }
 
 interface UserDog {
@@ -104,7 +103,7 @@ export default function FoundDogDetailPage() {
       if (foundData) {
         const { data: profileData } = await supabase
           .from("profiles_public")
-          .select("display_name, avatar_url, first_name, last_name")
+          .select("display_name, avatar_url, username")
           .eq("user_id", foundData.reporter_id)
           .maybeSingle();
 
@@ -224,9 +223,7 @@ export default function FoundDogDetailPage() {
 
   const getReporterName = () => {
     if (!reporter) return "Anonymous";
-    if (reporter.first_name || reporter.last_name) {
-      return `${reporter.first_name || ""} ${reporter.last_name || ""}`.trim();
-    }
+    if (reporter.username) return `@${reporter.username}`;
     return reporter.display_name || "Anonymous";
   };
 

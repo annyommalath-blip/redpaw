@@ -18,8 +18,6 @@ interface Comment {
   user_id: string;
   author?: {
     display_name: string | null;
-    first_name: string | null;
-    last_name: string | null;
     avatar_url: string | null;
     username: string | null;
   };
@@ -104,8 +102,8 @@ export default function PostComments({ postId }: { postId: string }) {
       {comments.length > 0 && (
         <div className="space-y-2.5 max-h-60 overflow-y-auto">
           {comments.map((c) => {
-            const name = c.author?.first_name
-              ? `${c.author.first_name} ${c.author.last_name || ""}`.trim()
+            const name = c.author?.username
+              ? `@${c.author.username}`
               : c.author?.display_name || "User";
             return (
               <div key={c.id} className="flex gap-2">

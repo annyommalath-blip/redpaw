@@ -11,9 +11,8 @@ import { toast } from "sonner";
 interface Profile {
   user_id: string;
   display_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
   avatar_url: string | null;
+  username: string | null;
 }
 
 interface SendPostSheetProps {
@@ -46,7 +45,7 @@ export default function SendPostSheet({ open, onOpenChange, postCaption, postPho
   };
 
   const getName = (p: Profile) =>
-    p.first_name ? `${p.first_name} ${p.last_name || ""}`.trim() : p.display_name || "User";
+    p.username ? `@${p.username}` : p.display_name || "User";
 
   const filtered = profiles.filter((p) => {
     if (!search.trim()) return true;

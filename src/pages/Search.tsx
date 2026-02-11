@@ -20,10 +20,9 @@ import { useSignedUrl } from "@/hooks/useSignedUrl";
 interface UserResult {
   user_id: string;
   display_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  username: string | null;
 }
 
 interface CareResult {
@@ -81,8 +80,8 @@ interface FoundResult {
 
 function UserCard({ user }: { user: UserResult }) {
   const navigate = useNavigate();
-  const name = user.display_name || [user.first_name, user.last_name].filter(Boolean).join(" ") || "User";
-  const initials = (user.first_name?.[0] || "") + (user.last_name?.[0] || "") || name[0] || "?";
+  const name = user.username ? `@${user.username}` : user.display_name || "User";
+  const initials = name[0] === "@" ? name[1]?.toUpperCase() || "?" : name[0]?.toUpperCase() || "?";
 
   return (
     <div
@@ -92,7 +91,7 @@ function UserCard({ user }: { user: UserResult }) {
       <Avatar className="h-12 w-12">
         <AvatarImage src={user.avatar_url || undefined} />
         <AvatarFallback className="bg-muted text-muted-foreground font-semibold">
-          {initials.toUpperCase()}
+          {initials}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
@@ -141,7 +140,7 @@ export default function SearchPage() {
       const { data: userData } = await supabase
         .from("profiles_public")
         .select("*")
-        .or(`display_name.ilike.${term},first_name.ilike.${term},last_name.ilike.${term},bio.ilike.${term}`);
+        .or(`display_name.ilike.${term},username.ilike.${term},bio.ilike.${term}`);
       
       // Filter out current user
       setUsers((userData || []).filter((u: any) => u.user_id !== user?.id) as UserResult[]);

@@ -23,9 +23,8 @@ import MentionText from "./MentionText";
 interface PostAuthor {
   user_id: string;
   display_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
   avatar_url: string | null;
+  username: string | null;
 }
 
 export type PostVisibility = "public" | "friends" | "private";
@@ -67,14 +66,14 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
   const isOwn = post.user_id === user?.id;
 
   const authorName = displayPost.author
-    ? displayPost.author.first_name
-      ? `${displayPost.author.first_name} ${displayPost.author.last_name || ""}`.trim()
+    ? displayPost.author.username
+      ? `@${displayPost.author.username}`
       : displayPost.author.display_name || "User"
     : "User";
 
   const repostAuthorName = isRepost && post.author
-    ? post.author.first_name
-      ? `${post.author.first_name} ${post.author.last_name || ""}`.trim()
+    ? post.author.username
+      ? `@${post.author.username}`
       : post.author.display_name || "User"
     : "";
 

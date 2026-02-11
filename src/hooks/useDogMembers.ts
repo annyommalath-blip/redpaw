@@ -15,9 +15,8 @@ export interface DogMember {
   // Joined profile data
   profile?: {
     display_name: string | null;
-    first_name: string | null;
-    last_name: string | null;
     avatar_url: string | null;
+    username: string | null;
   };
 }
 
@@ -68,9 +67,8 @@ export function useDogMembers(dogId: string | undefined) {
             profile: profile
               ? {
                   display_name: profile.display_name,
-                  first_name: profile.first_name,
-                  last_name: profile.last_name,
                   avatar_url: profile.avatar_url,
+                  username: profile.username,
                 }
               : undefined,
           };
@@ -256,8 +254,8 @@ export function usePendingInvites() {
           );
 
           const inviterName =
-            inviterProfile?.first_name && inviterProfile?.last_name
-              ? `${inviterProfile.first_name} ${inviterProfile.last_name}`.trim()
+            inviterProfile?.username
+              ? `@${inviterProfile.username}`
               : inviterProfile?.display_name || "Someone";
 
           return {
