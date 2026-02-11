@@ -493,7 +493,7 @@ export default function ProfilePage() {
                 </Avatar>
                 <div className="text-left">
                   <p className="text-sm font-medium text-foreground">
-                    {profile?.display_name || user?.email?.split("@")[0] || t("profile.ownerProfile")}
+                    {profile?.username ? `@${profile.username}` : user?.email?.split("@")[0] || t("profile.ownerProfile")}
                   </p>
                   <p className="text-xs text-muted-foreground">{t("profile.viewOwnerProfile")}</p>
                 </div>
