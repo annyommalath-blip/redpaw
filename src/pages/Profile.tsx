@@ -1289,9 +1289,13 @@ export default function ProfilePage() {
         <SendPostSheet
           open={!!sharePost}
           onOpenChange={(open) => { if (!open) setSharePost(null); }}
+          postId={sharePost.id}
           postCaption={sharePost.caption}
           postPhotoUrl={sharePost.photo_url}
           postPhotoUrls={sharePost.photo_urls}
+          postAuthorName={
+            sharePost.author?.username ? `@${sharePost.author.username}` : sharePost.author?.display_name || null
+          }
         />
       )}
 
