@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -378,17 +379,148 @@ export default function ProfilePage() {
         title={t("profile.title")} 
         subtitle={t("profile.subtitle")}
         action={
-          <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative rounded-xl">
-            <Bell className="h-5 w-5" />
-            {notificationCount > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs border-2 border-card"
-              >
-                {notificationCount > 9 ? "9+" : notificationCount}
-              </Badge>
-            )}
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button size="icon" variant="ghost" onClick={() => navigate("/notifications")} className="relative rounded-xl">
+              <Bell className="h-5 w-5" />
+              {notificationCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs border-2 border-card"
+                >
+                  {notificationCount > 9 ? "9+" : notificationCount}
+                </Badge>
+              )}
+            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button size="icon" variant="ghost" className="rounded-xl">
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[320px] p-0">
+                <SheetHeader className="p-4 pb-2">
+                  <SheetTitle>{t("profile.settings")}</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col">
+                  <button 
+                    className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left"
+                    onClick={() => navigate("/settings")}
+                  >
+                    <Settings className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-foreground">{t("profile.languageSetting") || "Language Setting"}</span>
+                  </button>
+                  <Separator />
+                  <button 
+                    className="w-full flex items-center justify-between p-4 hover:bg-accent transition-colors text-left"
+                    onClick={() => setShowArchive(!showArchive)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Archive className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-foreground">{t("profile.archive")}</span>
+                    </div>
+                    <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${showArchive ? 'rotate-90' : ''}`} />
+                  </button>
+                  
+                  {showArchive && (
+                    <div className="border-t bg-muted/30 p-4 space-y-4">
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                          {t("profile.archivedCareRequests")}
+                        </h3>
+                        {(() => {
+                          const archivedRequests = myCareRequests.filter(r => isRequestArchived(r));
+                          return archivedRequests.length === 0 ? (
+                            <p className="text-sm text-muted-foreground italic">{t("profile.noArchivedCareRequests")}</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {archivedRequests.map((request) => {
+                                const isOwner = request.owner_id === user?.id;
+                                const isAssignedSitter = request.assigned_sitter_id === user?.id;
+                                return (
+                                  <Card
+                                    key={request.id}
+                                    className="cursor-pointer hover:border-primary transition-colors opacity-70"
+                                    onClick={() => navigate(`/care-request/${request.id}`)}
+                                  >
+                                    <CardContent className="p-3 flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <HandHeart className="h-5 w-5 text-muted-foreground" />
+                                        <div>
+                                          <p className="text-sm font-medium text-foreground">
+                                            {careTypeLabels[request.care_type]}
+                                            {request.dogs?.name && (
+                                              <span className="text-muted-foreground font-normal"> - {request.dogs.name}</span>
+                                            )}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {request.time_window}
+                                            {!isOwner && isAssignedSitter && ` • ${t("profile.youWereTheSitter")}`}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <Badge variant="secondary">{t("common.completed")}</Badge>
+                                    </CardContent>
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                          {t("profile.resolvedLostAlerts")}
+                        </h3>
+                        {archivedLostAlerts.length === 0 ? (
+                          <p className="text-sm text-muted-foreground italic">{t("profile.noResolvedAlerts")}</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {archivedLostAlerts.map((alert) => (
+                              <Card
+                                key={alert.id}
+                                className="cursor-pointer hover:border-primary transition-colors opacity-70"
+                                onClick={() => navigate(`/lost-alert/${alert.id}`)}
+                              >
+                                <CardContent className="p-3">
+                                  <div className="flex items-center gap-3">
+                                    <AlertTriangle className="h-5 w-5 text-success shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-foreground truncate">
+                                        {alert.dogs?.name || "Unknown"} - {t("profile.found")}! ✅
+                                      </p>
+                                      <div className="text-xs text-muted-foreground space-y-0.5">
+                                        <p>{t("profile.lost")}: {format(new Date(alert.created_at), "MMM d, yyyy")}</p>
+                                        {alert.resolved_at && (
+                                          <p>{t("profile.found")}: {format(new Date(alert.resolved_at), "MMM d, yyyy")}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+                                      {t("common.resolved")}
+                                    </Badge>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Separator />
+                  <button
+                    className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left text-destructive"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>{t("auth.signOut")}</span>
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         }
       />
 
@@ -746,134 +878,6 @@ export default function ProfilePage() {
                 </div>
               );
             })()}
-          </section>
-        </AnimatedItem>
-
-        {/* Settings */}
-        <AnimatedItem delay={0.45}>
-          <section>
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-              {t("profile.settings")}
-            </h2>
-            <GlassCard variant="light">
-              <CardContent className="p-0">
-                <button 
-                  className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left rounded-t-2xl"
-                  onClick={() => navigate("/settings")}
-                >
-                  <Settings className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-foreground">{t("profile.appSettings")}</span>
-                </button>
-                <Separator />
-                <button 
-                  className="w-full flex items-center justify-between p-4 hover:bg-accent transition-colors text-left"
-                  onClick={() => setShowArchive(!showArchive)}
-                >
-                  <div className="flex items-center gap-3">
-                    <Archive className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-foreground">{t("profile.archive")}</span>
-                  </div>
-                  <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${showArchive ? 'rotate-90' : ''}`} />
-                </button>
-                
-                {showArchive && (
-                  <div className="border-t bg-muted/30 p-4 space-y-4">
-                    <div>
-                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                        {t("profile.archivedCareRequests")}
-                      </h3>
-                      {(() => {
-                        const archivedRequests = myCareRequests.filter(r => isRequestArchived(r));
-                        return archivedRequests.length === 0 ? (
-                          <p className="text-sm text-muted-foreground italic">{t("profile.noArchivedCareRequests")}</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {archivedRequests.map((request) => {
-                              const isOwner = request.owner_id === user?.id;
-                              const isAssignedSitter = request.assigned_sitter_id === user?.id;
-                              return (
-                                <Card
-                                  key={request.id}
-                                  className="cursor-pointer hover:border-primary transition-colors opacity-70"
-                                  onClick={() => navigate(`/care-request/${request.id}`)}
-                                >
-                                  <CardContent className="p-3 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <HandHeart className="h-5 w-5 text-muted-foreground" />
-                                      <div>
-                                        <p className="text-sm font-medium text-foreground">
-                                          {careTypeLabels[request.care_type]}
-                                          {request.dogs?.name && (
-                                            <span className="text-muted-foreground font-normal"> - {request.dogs.name}</span>
-                                          )}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {request.time_window}
-                                          {!isOwner && isAssignedSitter && ` • ${t("profile.youWereTheSitter")}`}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <Badge variant="secondary">{t("common.completed")}</Badge>
-                                  </CardContent>
-                                </Card>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    <div>
-                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                        {t("profile.resolvedLostAlerts")}
-                      </h3>
-                      {archivedLostAlerts.length === 0 ? (
-                        <p className="text-sm text-muted-foreground italic">{t("profile.noResolvedAlerts")}</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {archivedLostAlerts.map((alert) => (
-                            <Card
-                              key={alert.id}
-                              className="cursor-pointer hover:border-primary transition-colors opacity-70"
-                              onClick={() => navigate(`/lost-alert/${alert.id}`)}
-                            >
-                              <CardContent className="p-3">
-                                <div className="flex items-center gap-3">
-                                  <AlertTriangle className="h-5 w-5 text-success shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-foreground truncate">
-                                      {alert.dogs?.name || "Unknown"} - {t("profile.found")}! ✅
-                                    </p>
-                                    <div className="text-xs text-muted-foreground space-y-0.5">
-                                      <p>{t("profile.lost")}: {format(new Date(alert.created_at), "MMM d, yyyy")}</p>
-                                      {alert.resolved_at && (
-                                        <p>{t("profile.found")}: {format(new Date(alert.resolved_at), "MMM d, yyyy")}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
-                                    {t("common.resolved")}
-                                  </Badge>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                <Separator />
-                <button
-                  className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left text-destructive rounded-b-2xl"
-                  onClick={handleSignOut}
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span>{t("auth.signOut")}</span>
-                </button>
-              </CardContent>
-            </GlassCard>
           </section>
         </AnimatedItem>
 
