@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom"; 
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Share2, Grid3X3, Bookmark, Activity } from "lucide-react";
 
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DogSelector } from "@/components/dog/DogSelector";
 import { DogCard } from "@/components/dog/DogCard";
 import { LostModeDialog } from "@/components/dog/LostModeDialog";
@@ -40,6 +41,10 @@ import { checkMedicationNotifications } from "@/lib/notificationUtils";
 import UsernameSetupDialog from "@/components/UsernameSetupDialog";
 import ProfilePhotoCropDialog from "@/components/profile/ProfilePhotoCropDialog";
 import { isValidImageType, isHeicFile, processImageFile } from "@/lib/imageUtils";
+import PostCard from "@/components/feed/PostCard";
+import type { PostData } from "@/components/feed/PostCard";
+import SendPostSheet from "@/components/feed/SendPostSheet";
+import { cn } from "@/lib/utils";
 
 const ACTIVE_DOG_STORAGE_KEY = "redpaw_active_dog_id";
 
@@ -51,7 +56,6 @@ interface UserDog {
   is_lost: boolean;
 }
 
-
 interface OwnerProfile {
   display_name: string | null;
   avatar_url: string | null;
@@ -60,6 +64,7 @@ interface OwnerProfile {
   city: string | null;
   postal_code: string | null;
   username: string | null;
+  bio: string | null;
 }
 
 interface MyCareRequest {
@@ -94,6 +99,8 @@ const isRequestArchived = (request: MyCareRequest): boolean => {
   return new Date() > archiveTime;
 };
 
+type PostFilter = "all" | "lost" | "found" | "care";
+
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
   const { t } = useTranslation();
@@ -107,7 +114,6 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [lostModeDialogOpen, setLostModeDialogOpen] = useState(false);
-  const [showOwnerProfile, setShowOwnerProfile] = useState(false);
   const [showCareRequests, setShowCareRequests] = useState(false);
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -125,6 +131,22 @@ export default function ProfilePage() {
   const [cropImageSrc, setCropImageSrc] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
+  // Profile stats
+  const [postCount, setPostCount] = useState(0);
+  const [careJobCount, setCareJobCount] = useState(0);
+
+  // Posts tab state
+  const [myPosts, setMyPosts] = useState<PostData[]>([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [postFilter, setPostFilter] = useState<PostFilter>("all");
+  const [activeTab, setActiveTab] = useState("posts");
+
+  // Share post sheet
+  const [sharePost, setSharePost] = useState<PostData | null>(null);
+
+  // My Dogs collapsible
+  const [showMyDogs, setShowMyDogs] = useState(true);
+
   const activeDog = dogs.find(d => d.id === activeDogId) || null;
 
   const handleSelectDog = useCallback((dogId: string) => {
@@ -139,13 +161,93 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user) {
+      fetchMyPosts();
+    }
+  }, [user]);
+
+  const fetchMyPosts = async () => {
+    if (!user) return;
+    setPostsLoading(true);
+    try {
+      const { data: postsData } = await supabase
+        .from("posts")
+        .select("id, user_id, caption, photo_url, photo_urls, repost_id, created_at, visibility")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (!postsData) { setPostsLoading(false); return; }
+
+      const { data: profiles } = await supabase.rpc("get_public_profiles");
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
+      const postIds = postsData.map(p => p.id);
+      const { data: userLikes } = await supabase
+        .from("post_likes").select("post_id").eq("user_id", user.id).in("post_id", postIds);
+      const likedSet = new Set((userLikes || []).map(l => l.post_id));
+
+      const { data: likeCounts } = await supabase
+        .from("post_likes").select("post_id").in("post_id", postIds);
+      const likeCountMap = new Map<string, number>();
+      (likeCounts || []).forEach(l => likeCountMap.set(l.post_id, (likeCountMap.get(l.post_id) || 0) + 1));
+
+      const { data: commentCounts } = await supabase
+        .from("post_comments").select("post_id").in("post_id", postIds);
+      const commentCountMap = new Map<string, number>();
+      (commentCounts || []).forEach(c => commentCountMap.set(c.post_id, (commentCountMap.get(c.post_id) || 0) + 1));
+
+      const enriched: PostData[] = postsData.map(p => ({
+        ...p,
+        author: profileMap.get(p.user_id) || undefined,
+        like_count: likeCountMap.get(p.id) || 0,
+        comment_count: commentCountMap.get(p.id) || 0,
+        repost_count: 0,
+        is_liked: likedSet.has(p.id),
+        original_post: null,
+      }));
+
+      setMyPosts(enriched);
+      setPostCount(enriched.length);
+    } catch (err) {
+      console.error("Error fetching my posts:", err);
+    } finally {
+      setPostsLoading(false);
+    }
+  };
+
+  const handlePostLikeToggle = async (postId: string, liked: boolean) => {
+    if (!user) return;
+    setMyPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, is_liked: liked, like_count: p.like_count + (liked ? 1 : -1) } : p
+    ));
+    if (liked) {
+      await supabase.from("post_likes").insert({ post_id: postId, user_id: user.id });
+    } else {
+      await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", user.id);
+    }
+  };
+
+  const handlePostDelete = async (postId: string) => {
+    await supabase.from("posts").delete().eq("id", postId);
+    setMyPosts(prev => prev.filter(p => p.id !== postId));
+    setPostCount(prev => prev - 1);
+  };
+
+  const handlePostRepost = async (originalPostId: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("posts").insert({ user_id: user.id, repost_id: originalPostId });
+    if (!error) fetchMyPosts();
+  };
+
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
     try {
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, first_name, last_name, city, postal_code, username")
+        .select("display_name, avatar_url, first_name, last_name, city, postal_code, username, bio")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -221,6 +323,7 @@ export default function ProfilePage() {
       );
       uniqueRequests.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setMyCareRequests(uniqueRequests as MyCareRequest[]);
+      setCareJobCount(uniqueRequests.length);
 
       const { data: resolvedAlerts } = await supabase
         .from("lost_alerts")
@@ -272,7 +375,6 @@ export default function ProfilePage() {
   const handleLostModeSuccess = () => {
     fetchData();
   };
-
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -337,7 +439,6 @@ export default function ProfilePage() {
     }
 
     try {
-      // Process HEIC if needed, compress
       const processed = await processImageFile(file, { targetSize: 5 * 1024 * 1024 });
       const url = URL.createObjectURL(processed);
       setCropImageSrc(url);
@@ -421,6 +522,18 @@ export default function ProfilePage() {
     "check-in": `👋 ${t("care.checkIn")}`,
   };
 
+  const handleShareProfile = async () => {
+    const url = `${window.location.origin}/user/${user?.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${profile?.display_name || "My Profile"}`, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied!" });
+    }
+  };
+
   if (loading) {
     return (
       <MobileLayout>
@@ -436,6 +549,8 @@ export default function ProfilePage() {
       </MobileLayout>
     );
   }
+
+  const displayName = profile?.display_name || formatName() || user?.email?.split("@")[0] || "Dog Lover";
 
   return (
     <MobileLayout>
@@ -588,366 +703,340 @@ export default function ProfilePage() {
         }
       />
 
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-4">
         {/* Pending Invites */}
-        <AnimatedItem>
-          <PendingInvitesCard onInviteAccepted={fetchData} />
-        </AnimatedItem>
+        <PendingInvitesCard onInviteAccepted={fetchData} />
 
-        {/* Owner Profile (Collapsible) */}
-        <AnimatedItem delay={0.05}>
-          <section>
-            <button
-              onClick={() => setShowOwnerProfile(!showOwnerProfile)}
-              className="w-full flex items-center justify-between px-4 py-3 glass-card rounded-2xl hover:bg-white/80 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={profile?.avatar_url || ""} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    <User className="h-5 w-5" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-left">
-                  <p className="text-sm font-medium text-foreground">
-                    {profile?.username ? `@${profile.username}` : user?.email?.split("@")[0] || t("profile.ownerProfile")}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t("profile.viewOwnerProfile")}</p>
+        {/* ═══════════════════════════════════════════════
+            PROFILE HEADER CARD
+            ═══════════════════════════════════════════════ */}
+        <AnimatedItem>
+          <GlassCard variant="light" className="overflow-hidden">
+            <div className="p-5">
+              {/* Avatar + Name row */}
+              <div className="flex items-start gap-4">
+                <div className="relative">
+                  <Avatar className="h-20 w-20 border-2 border-border">
+                    <AvatarImage src={profile?.avatar_url || ""} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+                      <User className="h-8 w-8" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <label className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full z-10 bg-background border border-input shadow-sm flex items-center justify-center cursor-pointer hover:bg-accent transition-colors">
+                    {uploadingPhoto ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                      onChange={handleProfilePhotoSelect}
+                    />
+                  </label>
+                </div>
+                <div className="flex-1 min-w-0 pt-1">
+                  <h2 className="text-xl font-bold text-foreground truncate">{displayName}</h2>
+                  {profile?.username && (
+                    <p className="text-sm text-muted-foreground">@{profile.username}</p>
+                  )}
+                  {formatLocation() && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{formatLocation()}</p>
+                  )}
                 </div>
               </div>
-              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${showOwnerProfile ? "rotate-180" : ""}`} />
-            </button>
 
-            {showOwnerProfile && (
-              <GlassCard variant="light" className="mt-3">
-                <CardContent className="p-4 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={profile?.avatar_url || ""} />
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          <User className="h-8 w-8" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <label
-                        className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full z-10 bg-background border border-input shadow-sm flex items-center justify-center cursor-pointer hover:bg-accent transition-colors"
-                      >
-                        {uploadingPhoto ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          disabled={uploadingPhoto}
-                          onChange={handleProfilePhotoSelect}
-                        />
-                      </label>
-                    </div>
-                    <div className="flex-1">
-                      <h2 className="text-lg font-semibold text-foreground">
-                        {profile?.display_name || user?.email?.split("@")[0] || "Dog Lover"}
-                      </h2>
-                      {profile?.username && (
-                        <p className="text-sm text-primary font-medium">@{profile.username}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(!isEditing)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
+              {/* Stats row */}
+              <div className="flex items-center mt-4 border-t border-b border-border/50 py-3">
+                <div className="flex-1 text-center">
+                  <p className="text-lg font-bold text-foreground">{postCount}</p>
+                  <p className="text-xs text-muted-foreground">Posts</p>
+                </div>
+                <div className="w-px h-8 bg-border/50" />
+                <div className="flex-1 text-center">
+                  <p className="text-lg font-bold text-foreground">{dogs.length}</p>
+                  <p className="text-xs text-muted-foreground">{dogs.length === 1 ? "Dog" : "Dogs"}</p>
+                </div>
+                <div className="w-px h-8 bg-border/50" />
+                <button 
+                  className="flex-1 text-center"
+                  onClick={() => setShowCareRequests(!showCareRequests)}
+                >
+                  <p className="text-lg font-bold text-foreground">{careJobCount}</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <p className="text-xs text-muted-foreground">Care Jobs</p>
+                    <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", showCareRequests && "rotate-180")} />
                   </div>
+                </button>
+              </div>
 
-                  <Separator />
-
-                  {isEditing ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="first_name" className="text-xs text-muted-foreground">
-                            {t("profile.firstName")}
-                          </Label>
-                          <Input
-                            id="first_name"
-                            value={editForm.first_name}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
-                            placeholder={t("profile.firstName")}
-                            className="h-9"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="last_name" className="text-xs text-muted-foreground">
-                            {t("profile.lastName")}
-                          </Label>
-                          <Input
-                            id="last_name"
-                            value={editForm.last_name}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
-                            placeholder={t("profile.lastName")}
-                            className="h-9"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="city" className="text-xs text-muted-foreground">
-                            {t("profile.city")}
-                          </Label>
-                          <Input
-                            id="city"
-                            value={editForm.city}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, city: e.target.value }))}
-                            placeholder="Seattle"
-                            className="h-9"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="postal_code" className="text-xs text-muted-foreground">
-                            {t("profile.postalCode")}
-                          </Label>
-                          <Input
-                            id="postal_code"
-                            value={editForm.postal_code}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, postal_code: e.target.value }))}
-                            placeholder="98125"
-                            className="h-9"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button onClick={handleSaveProfile} disabled={saving} className="flex-1" size="sm">
-                          {saving ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              {t("profile.saving")}
-                            </>
-                          ) : (
-                            <>
-                              <Save className="h-4 w-4 mr-2" />
-                              {t("profile.saveProfile")}
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setIsEditing(false);
-                            setEditForm({
-                              first_name: profile?.first_name || "",
-                              last_name: profile?.last_name || "",
-                              city: profile?.city || "",
-                              postal_code: profile?.postal_code || "",
-                              username: profile?.username || "",
-                            });
-                          }}
-                        >
-                          {t("common.cancel")}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {profile?.username && (
-                        <div className="flex items-center gap-2">
-                          <AtSign className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            <span className="text-muted-foreground">Username: </span>
-                            <span className="font-medium text-primary">@{profile.username}</span>
-                          </span>
-                        </div>
-                      )}
-                      {formatName() && (
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            <span className="text-muted-foreground">{t("profile.name")}: </span>
-                            <span className="font-medium text-foreground">{formatName()}</span>
-                          </span>
-                        </div>
-                      )}
-                      {formatLocation() && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            <span className="text-muted-foreground">{t("profile.location")}: </span>
-                            <span className="font-medium text-foreground">{formatLocation()}</span>
-                          </span>
-                        </div>
-                      )}
-                      {dogs.length > 0 && (
-                        <div className="flex items-start gap-2">
-                          <Dog className="h-4 w-4 text-muted-foreground mt-0.5" />
-                          <div className="flex-1">
-                            <span className="text-sm text-muted-foreground">{t("profile.ownerOf")}: </span>
-                            <div className="flex flex-wrap gap-1.5 mt-1">
-                              {dogs.map((dog) => (
-                                <span
-                                  key={dog.id}
-                                  className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
-                                >
-                                  {dog.name} {dog.breed ? `(${dog.breed})` : ""}
-                                </span>
-                              ))}
+              {/* Care requests dropdown */}
+              {showCareRequests && (
+                <div className="mt-3 space-y-2">
+                  {(() => {
+                    const activeRequests = myCareRequests.filter(r => !isRequestArchived(r));
+                    return activeRequests.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-2">{t("profile.noCareRequests")}</p>
+                    ) : (
+                      activeRequests.map((request) => {
+                        const isOwner = request.owner_id === user?.id;
+                        const isAssignedSitter = request.assigned_sitter_id === user?.id;
+                        return (
+                          <div
+                            key={request.id}
+                            className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
+                            onClick={() => navigate(`/care-request/${request.id}`)}
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <HandHeart className="h-4 w-4 text-primary shrink-0" />
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium text-foreground truncate">
+                                  {careTypeLabels[request.care_type]}
+                                  {request.dogs?.name && <span className="text-muted-foreground font-normal"> - {request.dogs.name}</span>}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground truncate">{request.time_window}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Badge className={cn("text-[10px] px-1.5 py-0", request.assigned_sitter_id ? "bg-primary" : "bg-warning")}>
+                                {request.assigned_sitter_id ? t("common.assigned") : t("common.open")}
+                              </Badge>
+                              <button
+                                onClick={(e) => handleArchiveRequest(request.id, e)}
+                                className="p-1 rounded-md hover:bg-background transition-colors"
+                              >
+                                <ArchiveX className="h-3.5 w-3.5 text-muted-foreground" />
+                              </button>
                             </div>
                           </div>
-                        </div>
-                      )}
-                      {!formatName() && !formatLocation() && (
-                        <p className="text-sm text-muted-foreground italic">{t("profile.editHint")}</p>
-                      )}
+                        );
+                      })
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 rounded-xl"
+                  onClick={() => setIsEditing(!isEditing)}
+                >
+                  <Edit className="h-4 w-4 mr-1.5" />
+                  Edit Profile
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 rounded-xl"
+                  onClick={handleShareProfile}
+                >
+                  <Share2 className="h-4 w-4 mr-1.5" />
+                  Share Profile
+                </Button>
+              </div>
+
+              {/* Edit profile form (inline) */}
+              {isEditing && (
+                <div className="mt-4 pt-4 border-t border-border/50 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="first_name" className="text-xs text-muted-foreground">{t("profile.firstName")}</Label>
+                      <Input id="first_name" value={editForm.first_name} onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))} placeholder={t("profile.firstName")} className="h-9" />
                     </div>
-                  )}
-                </CardContent>
-              </GlassCard>
-            )}
-          </section>
+                    <div className="space-y-1">
+                      <Label htmlFor="last_name" className="text-xs text-muted-foreground">{t("profile.lastName")}</Label>
+                      <Input id="last_name" value={editForm.last_name} onChange={(e) => setEditForm(prev => ({ ...prev, last_name: e.target.value }))} placeholder={t("profile.lastName")} className="h-9" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="city" className="text-xs text-muted-foreground">{t("profile.city")}</Label>
+                      <Input id="city" value={editForm.city} onChange={(e) => setEditForm(prev => ({ ...prev, city: e.target.value }))} placeholder="Seattle" className="h-9" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="postal_code" className="text-xs text-muted-foreground">{t("profile.postalCode")}</Label>
+                      <Input id="postal_code" value={editForm.postal_code} onChange={(e) => setEditForm(prev => ({ ...prev, postal_code: e.target.value }))} placeholder="98125" className="h-9" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleSaveProfile} disabled={saving} className="flex-1" size="sm">
+                      {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("profile.saving")}</> : <><Save className="h-4 w-4 mr-2" />{t("profile.saveProfile")}</>}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setIsEditing(false);
+                      setEditForm({ first_name: profile?.first_name || "", last_name: profile?.last_name || "", city: profile?.city || "", postal_code: profile?.postal_code || "", username: profile?.username || "" });
+                    }}>
+                      {t("common.cancel")}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </GlassCard>
         </AnimatedItem>
 
-
-        {/* My Dogs Section with Dog Management */}
-        {dogs.length > 0 && activeDog ? (
-          <>
-            <AnimatedItem delay={0.15}>
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="section-header">
-                    {dogs.length > 1 ? t("home.myDogs") : t("home.myDog")}
-                  </h2>
-                  <Button variant="ghost" size="sm" onClick={() => navigate("/profile/add-dog")} className="text-primary rounded-xl">
-                    <Plus className="h-4 w-4 mr-1" />
-                    {t("profile.addDog")}
-                  </Button>
-                </div>
-                
-                {dogs.length > 1 ? (
-                  <DogSelector
-                    dogs={dogs}
-                    activeDogId={activeDogId!}
-                    onSelectDog={handleSelectDog}
-                  />
-                ) : (
-                  <DogCard
-                    name={activeDog.name}
-                    breed={activeDog.breed || t("common.mixedBreed")}
-                    photoUrl={activeDog.photo_url || ""}
-                    isLost={activeDog.is_lost}
-                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                    onClick={() => navigate(`/dog/${activeDog.id}`)}
-                  />
-                )}
-              </section>
-            </AnimatedItem>
-
-            {dogs.length > 1 && (
-              <AnimatedItem delay={0.2}>
-                <section>
-                  <DogCard
-                    name={activeDog.name}
-                    breed={activeDog.breed || t("common.mixedBreed")}
-                    photoUrl={activeDog.photo_url || ""}
-                    isLost={activeDog.is_lost}
-                    onLostToggle={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                    onClick={() => navigate(`/dog/${activeDog.id}`)}
-                  />
-                </section>
-              </AnimatedItem>
-            )}
-
-            <LostModeDialog
-              open={lostModeDialogOpen}
-              onOpenChange={setLostModeDialogOpen}
-              dog={{
-                id: activeDog.id,
-                name: activeDog.name,
-                breed: activeDog.breed,
-                photo_url: activeDog.photo_url,
-              }}
-              onSuccess={handleLostModeSuccess}
-            />
-
-          </>
-        ) : (
-          <AnimatedItem delay={0.15}>
-            <EmptyState
-              icon={<Dog className="h-10 w-10 text-muted-foreground" />}
-              title={t("home.noDogProfile")}
-              description={t("home.addFurryFriend")}
-              action={{
-                label: t("home.addMyDog"),
-                onClick: () => navigate("/profile/add-dog"),
-              }}
-            />
-          </AnimatedItem>
-        )}
-
-        {/* My Care Requests */}
-        <AnimatedItem delay={0.4}>
+        {/* ═══════════════════════════════════════════════
+            MY DOGS SECTION (Collapsible)
+            ═══════════════════════════════════════════════ */}
+        <AnimatedItem delay={0.1}>
           <section>
             <button
-              onClick={() => setShowCareRequests(!showCareRequests)}
+              onClick={() => setShowMyDogs(!showMyDogs)}
               className="w-full flex items-center justify-between mb-3"
             >
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                {t("profile.myCareRequests")}
+                {t("home.myDogs")}
               </h2>
-              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showCareRequests ? "rotate-180" : ""}`} />
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", showMyDogs && "rotate-180")} />
             </button>
-            {showCareRequests && (() => {
-              const activeRequests = myCareRequests.filter(r => !isRequestArchived(r));
-              return activeRequests.length === 0 ? (
-                <GlassCard variant="light">
-                  <CardContent className="p-4 text-center text-muted-foreground">
-                    <p>{t("profile.noCareRequests")}</p>
-                  </CardContent>
-                </GlassCard>
-              ) : (
-                <div className="space-y-2">
-                  {activeRequests.map((request) => {
-                    const isOwner = request.owner_id === user?.id;
-                    const isAssignedSitter = request.assigned_sitter_id === user?.id;
-                    return (
-                      <GlassCard
-                        key={request.id}
-                        variant="light"
-                        hover
-                        className="cursor-pointer"
-                        onClick={() => navigate(`/care-request/${request.id}`)}
+
+            {showMyDogs && (
+              <>
+                {dogs.length > 0 && activeDog ? (
+                  <div className="space-y-3">
+                    {dogs.map(dog => (
+                      <div key={dog.id} className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/50 cursor-pointer hover:border-primary/30 transition-colors"
+                        onClick={() => navigate(`/dog/${dog.id}`)}
                       >
-                        <CardContent className="p-3 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <HandHeart className="h-5 w-5 text-primary shrink-0" />
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">
-                                {careTypeLabels[request.care_type]}
-                                {request.dogs?.name && (
-                                  <span className="text-muted-foreground font-normal"> - {request.dogs.name}</span>
-                                )}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {request.time_window}
-                                {!isOwner && isAssignedSitter && ` • ${t("profile.youreTheSitter")}`}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Badge className={request.assigned_sitter_id ? "bg-primary" : "bg-warning"}>
-                              {request.assigned_sitter_id ? t("common.assigned") : t("common.open")}
-                            </Badge>
-                            <button
-                              onClick={(e) => handleArchiveRequest(request.id, e)}
-                              className="p-1.5 rounded-md hover:bg-muted transition-colors"
-                              title={t("profile.archive")}
-                            >
-                              <ArchiveX className="h-4 w-4 text-muted-foreground" />
-                            </button>
-                          </div>
-                        </CardContent>
-                      </GlassCard>
-                    );
-                  })}
-                </div>
-              );
-            })()}
+                        <div className={cn(
+                          "h-16 w-16 rounded-2xl overflow-hidden bg-muted flex items-center justify-center shrink-0",
+                          dog.is_lost && "ring-2 ring-lost ring-offset-2 ring-offset-card"
+                        )}>
+                          {dog.photo_url ? (
+                            <img src={dog.photo_url} alt={dog.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <Dog className="h-8 w-8 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-foreground">{dog.name}</h3>
+                          <p className="text-sm text-muted-foreground">{dog.breed || t("common.mixedBreed")}</p>
+                          {dog.is_lost && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-lost/15 text-lost text-xs font-semibold mt-1">
+                              🚨 {t("dogs.lostModeActive")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <Button variant="outline" size="sm" className="w-full rounded-xl" onClick={() => navigate("/profile/add-dog")}>
+                      <Plus className="h-4 w-4 mr-1.5" />
+                      {t("profile.addDog")}
+                    </Button>
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon={<Dog className="h-10 w-10 text-muted-foreground" />}
+                    title={t("home.noDogProfile")}
+                    description={t("home.addFurryFriend")}
+                    action={{
+                      label: t("home.addMyDog"),
+                      onClick: () => navigate("/profile/add-dog"),
+                    }}
+                  />
+                )}
+              </>
+            )}
           </section>
+        </AnimatedItem>
+
+        {/* ═══════════════════════════════════════════════
+            CONTENT TABS: Posts / Saved / Activity
+            ═══════════════════════════════════════════════ */}
+        <AnimatedItem delay={0.2}>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full bg-transparent border-b border-border rounded-none h-auto p-0 gap-0">
+              <TabsTrigger
+                value="posts"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none py-2.5 text-sm font-medium"
+              >
+                Posts
+              </TabsTrigger>
+              <TabsTrigger
+                value="saved"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none py-2.5 text-sm font-medium"
+              >
+                Saved
+              </TabsTrigger>
+              <TabsTrigger
+                value="activity"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none py-2.5 text-sm font-medium"
+              >
+                Activity
+              </TabsTrigger>
+            </TabsList>
+
+            {/* ── Posts Tab ── */}
+            <TabsContent value="posts" className="mt-3">
+              {/* Post filters */}
+              <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
+                {(["all", "lost", "found", "care"] as PostFilter[]).map(filter => (
+                  <button
+                    key={filter}
+                    onClick={() => setPostFilter(filter)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors",
+                      postFilter === filter
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-transparent text-muted-foreground border-border hover:border-foreground/30"
+                    )}
+                  >
+                    {filter === "all" ? "All" : filter === "lost" ? "Lost" : filter === "found" ? "Found" : "Care Requests"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Posts list */}
+              {postsLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-48 w-full rounded-2xl" />
+                  <Skeleton className="h-48 w-full rounded-2xl" />
+                </div>
+              ) : myPosts.length === 0 ? (
+                <EmptyState
+                  icon={<Grid3X3 className="h-10 w-10 text-muted-foreground" />}
+                  title="No posts yet"
+                  description="Share your first post with the community!"
+                  action={{
+                    label: "Create Post",
+                    onClick: () => navigate("/create"),
+                  }}
+                />
+              ) : (
+                <div className="space-y-4">
+                  {myPosts.map(post => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      onLikeToggle={handlePostLikeToggle}
+                      onRepost={handlePostRepost}
+                      onDelete={handlePostDelete}
+                      onShare={(p) => setSharePost(p)}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* ── Saved Tab ── */}
+            <TabsContent value="saved" className="mt-3">
+              <EmptyState
+                icon={<Bookmark className="h-10 w-10 text-muted-foreground" />}
+                title="No saved posts"
+                description="Save posts from the community to view them later"
+              />
+            </TabsContent>
+
+            {/* ── Activity Tab ── */}
+            <TabsContent value="activity" className="mt-3">
+              <EmptyState
+                icon={<Activity className="h-10 w-10 text-muted-foreground" />}
+                title="No recent activity"
+                description="Your likes, comments and interactions will show up here"
+              />
+            </TabsContent>
+          </Tabs>
         </AnimatedItem>
 
         <div className="text-center text-sm text-muted-foreground pt-4">
@@ -955,6 +1044,21 @@ export default function ProfilePage() {
           <p className="mt-1">{t("profile.madeWithLove")}</p>
         </div>
       </div>
+
+      {/* Lost mode dialog */}
+      {activeDog && (
+        <LostModeDialog
+          open={lostModeDialogOpen}
+          onOpenChange={setLostModeDialogOpen}
+          dog={{
+            id: activeDog.id,
+            name: activeDog.name,
+            breed: activeDog.breed,
+            photo_url: activeDog.photo_url,
+          }}
+          onSuccess={handleLostModeSuccess}
+        />
+      )}
 
       <UsernameSetupDialog
         open={showUsernameSetup}
@@ -983,6 +1087,16 @@ export default function ProfilePage() {
           setCropImageSrc("");
         }}
       />
+
+      {sharePost && (
+        <SendPostSheet
+          open={!!sharePost}
+          onOpenChange={(open) => { if (!open) setSharePost(null); }}
+          postCaption={sharePost.caption}
+          postPhotoUrl={sharePost.photo_url}
+          postPhotoUrls={sharePost.photo_urls}
+        />
+      )}
     </MobileLayout>
   );
 }
