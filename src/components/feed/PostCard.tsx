@@ -68,9 +68,9 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
     setSaved(post.is_saved ?? false);
   }, [post.is_saved]);
 
-  const displayPost = post.original_post || post;
   const isRepost = !!post.repost_id && !!post.original_post;
-  const isOwn = post.user_id === user?.id;
+  const displayPost = isRepost ? post.original_post! : post;
+  const isOwn = (isRepost ? displayPost.user_id : post.user_id) === user?.id;
 
   const authorName = displayPost.author
     ? displayPost.author.username
@@ -94,9 +94,11 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
     return [];
   })();
 
+  const likeTargetId = isRepost ? displayPost.id : post.id;
+
   const handleLike = () => {
     setLikeAnimating(true);
-    onLikeToggle(post.id, !post.is_liked);
+    onLikeToggle(likeTargetId, !post.is_liked);
     setTimeout(() => setLikeAnimating(false), 300);
   };
 
@@ -196,7 +198,7 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
             )}
           </button>
 
-          <button onClick={() => onRepost(post.repost_id || post.id)} className="flex items-center gap-1.5 group">
+          <button onClick={() => onRepost(isRepost ? displayPost.id : post.id)} className="flex items-center gap-1.5 group">
             <Repeat2 className="h-5 w-5 text-muted-foreground group-hover:text-green-500 transition-colors" />
             {post.repost_count > 0 && (
               <span className="text-xs text-muted-foreground">{post.repost_count}</span>

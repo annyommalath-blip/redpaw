@@ -13,10 +13,11 @@ export function useFeed() {
     setLoading(true);
 
     try {
-      // Fetch posts
+      // Fetch original posts (non-reposts only)
       const { data: postsData, error } = await supabase
         .from("posts")
-        .select("id, user_id, caption, photo_url, photo_urls, repost_id, created_at, visibility")
+        .select("id, user_id, caption, photo_url, photo_urls, created_at, visibility")
+        .is("repost_id", null)
         .order("created_at", { ascending: false })
         .limit(50);
 
@@ -26,25 +27,40 @@ export function useFeed() {
         return;
       }
 
-      // Get all user IDs (post authors + repost originals)
-      const repostIds = postsData.filter((p) => p.repost_id).map((p) => p.repost_id!);
+      // Get users that current user follows
+      const { data: followingData } = await supabase
+        .from("user_follows")
+        .select("following_id")
+        .eq("follower_id", user.id);
+      const followingIds = (followingData || []).map((f) => f.following_id);
 
-      // Fetch original posts for reposts
-      let originalPostsMap = new Map<string, any>();
-      if (repostIds.length > 0) {
-        const { data: originals } = await supabase
+      // Fetch reposts by followed users (and self)
+      const repostUserIds = [...followingIds, user.id];
+      const { data: repostsData } = await supabase
+        .from("reposts")
+        .select("user_id, post_id, created_at")
+        .in("user_id", repostUserIds)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      // Get reposted post IDs that aren't already in the feed
+      const existingPostIds = new Set(postsData.map((p) => p.id));
+      const repostedPostIds = [...new Set((repostsData || []).map((r) => r.post_id))];
+      const missingPostIds = repostedPostIds.filter((id) => !existingPostIds.has(id));
+
+      // Fetch missing reposted posts
+      let repostedPostsMap = new Map<string, any>();
+      if (missingPostIds.length > 0) {
+        const { data: repostedPosts } = await supabase
           .from("posts")
-          .select("id, user_id, caption, photo_url, photo_urls, created_at")
-          .in("id", repostIds);
-        if (originals) {
-          originals.forEach((p) => originalPostsMap.set(p.id, p));
+          .select("id, user_id, caption, photo_url, photo_urls, created_at, visibility")
+          .in("id", missingPostIds);
+        if (repostedPosts) {
+          repostedPosts.forEach((p) => repostedPostsMap.set(p.id, p));
         }
       }
-
-      // Gather all user IDs
-      const allUserIds = new Set<string>();
-      postsData.forEach((p) => allUserIds.add(p.user_id));
-      originalPostsMap.forEach((p) => allUserIds.add(p.user_id));
+      // Also map existing posts for lookup
+      postsData.forEach((p) => repostedPostsMap.set(p.id, p));
 
       // Fetch profiles
       const { data: profiles } = await supabase.rpc("get_public_profiles");
@@ -52,20 +68,66 @@ export function useFeed() {
         (profiles || []).map((p: any) => [p.user_id, p])
       );
 
+      // Build a combined feed: original posts + repost entries
+      // For reposts, use the repost's created_at as the sort time
+      type FeedItem = {
+        post: any;
+        repost_by?: string;
+        repost_created_at?: string;
+        sort_time: string;
+      };
+
+      const feedItems: FeedItem[] = [];
+
+      // Add original posts
+      postsData.forEach((p) => {
+        feedItems.push({ post: p, sort_time: p.created_at });
+      });
+
+      // Add reposts (deduplicate: only show latest repost per post)
+      const seenRepostPosts = new Set<string>();
+      (repostsData || []).forEach((r) => {
+        if (seenRepostPosts.has(r.post_id)) return;
+        // Don't add if the post author is the reposter (reposting own post)
+        const postData = repostedPostsMap.get(r.post_id);
+        if (!postData || postData.user_id === r.user_id) return;
+        seenRepostPosts.add(r.post_id);
+        feedItems.push({
+          post: postData,
+          repost_by: r.user_id,
+          repost_created_at: r.created_at,
+          sort_time: r.created_at,
+        });
+      });
+
+      // Sort by sort_time descending
+      feedItems.sort((a, b) => new Date(b.sort_time).getTime() - new Date(a.sort_time).getTime());
+
+      // Deduplicate: if a post appears as both original and repost, keep the one that comes first
+      const seenIds = new Set<string>();
+      const uniqueItems = feedItems.filter((item) => {
+        const key = item.repost_by ? `repost-${item.post.id}-${item.repost_by}` : item.post.id;
+        if (seenIds.has(item.post.id)) return false;
+        seenIds.add(item.post.id);
+        return true;
+      });
+
+      // Collect all post IDs for counts
+      const allPostIds = uniqueItems.map((item) => item.post.id);
+
       // Fetch likes for current user
-      const postIds = postsData.map((p) => p.id);
       const { data: userLikes } = await supabase
         .from("post_likes")
         .select("post_id")
         .eq("user_id", user.id)
-        .in("post_id", postIds);
+        .in("post_id", allPostIds);
       const likedSet = new Set((userLikes || []).map((l) => l.post_id));
 
       // Fetch like counts
       const { data: likeCounts } = await supabase
         .from("post_likes")
         .select("post_id")
-        .in("post_id", postIds);
+        .in("post_id", allPostIds);
       const likeCountMap = new Map<string, number>();
       (likeCounts || []).forEach((l) => {
         likeCountMap.set(l.post_id, (likeCountMap.get(l.post_id) || 0) + 1);
@@ -75,22 +137,20 @@ export function useFeed() {
       const { data: commentCounts } = await supabase
         .from("post_comments")
         .select("post_id")
-        .in("post_id", postIds);
+        .in("post_id", allPostIds);
       const commentCountMap = new Map<string, number>();
       (commentCounts || []).forEach((c) => {
         commentCountMap.set(c.post_id, (commentCountMap.get(c.post_id) || 0) + 1);
       });
 
-      // Fetch repost counts (how many times each post was reposted)
-      const { data: repostCounts } = await supabase
-        .from("posts")
-        .select("repost_id")
-        .in("repost_id", postIds);
+      // Fetch repost counts from reposts table
+      const { data: repostCountsData } = await supabase
+        .from("reposts")
+        .select("post_id")
+        .in("post_id", allPostIds);
       const repostCountMap = new Map<string, number>();
-      (repostCounts || []).forEach((r) => {
-        if (r.repost_id) {
-          repostCountMap.set(r.repost_id, (repostCountMap.get(r.repost_id) || 0) + 1);
-        }
+      (repostCountsData || []).forEach((r) => {
+        repostCountMap.set(r.post_id, (repostCountMap.get(r.post_id) || 0) + 1);
       });
 
       // Fetch saved status
@@ -98,30 +158,56 @@ export function useFeed() {
         .from("saved_posts")
         .select("post_id")
         .eq("user_id", user.id)
-        .in("post_id", postIds);
+        .in("post_id", allPostIds);
       const savedSet = new Set((userSaved || []).map((s) => s.post_id));
 
-      // Build post data
-      const enrichedPosts: PostData[] = postsData.map((p) => {
-        const original = p.repost_id ? originalPostsMap.get(p.repost_id) : null;
+      // Check if current user has reposted each post
+      const { data: userReposts } = await supabase
+        .from("reposts")
+        .select("post_id")
+        .eq("user_id", user.id)
+        .in("post_id", allPostIds);
+      const repostedSet = new Set((userReposts || []).map((r) => r.post_id));
+
+      // Build enriched posts
+      const enrichedPosts: PostData[] = uniqueItems.map((item) => {
+        const p = item.post;
         return {
           ...p,
+          repost_id: item.repost_by ? "repost" : null, // marker for repost display
           author: profileMap.get(p.user_id) || undefined,
           like_count: likeCountMap.get(p.id) || 0,
           comment_count: commentCountMap.get(p.id) || 0,
           repost_count: repostCountMap.get(p.id) || 0,
           is_liked: likedSet.has(p.id),
           is_saved: savedSet.has(p.id),
-          original_post: original
+          is_reposted: repostedSet.has(p.id),
+          original_post: item.repost_by
             ? {
-                ...original,
-                author: profileMap.get(original.user_id) || undefined,
+                ...p,
+                author: profileMap.get(p.user_id) || undefined,
                 like_count: 0,
                 comment_count: 0,
                 repost_count: 0,
                 is_liked: false,
               }
             : null,
+          // Override author to show the reposter for repost entries
+          ...(item.repost_by
+            ? {
+                user_id: item.repost_by,
+                author: profileMap.get(item.repost_by) || undefined,
+                // Keep original post author in original_post
+                original_post: {
+                  ...p,
+                  author: profileMap.get(p.user_id) || undefined,
+                  like_count: likeCountMap.get(p.id) || 0,
+                  comment_count: commentCountMap.get(p.id) || 0,
+                  repost_count: repostCountMap.get(p.id) || 0,
+                  is_liked: likedSet.has(p.id),
+                },
+              }
+            : {}),
         };
       });
 
@@ -142,11 +228,13 @@ export function useFeed() {
 
     // Optimistic update
     setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
-          ? { ...p, is_liked: liked, like_count: p.like_count + (liked ? 1 : -1) }
-          : p
-      )
+      prev.map((p) => {
+        const targetId = p.original_post ? p.original_post.id : p.id;
+        if (targetId === postId) {
+          return { ...p, is_liked: liked, like_count: p.like_count + (liked ? 1 : -1) };
+        }
+        return p;
+      })
     );
 
     if (liked) {
@@ -158,9 +246,10 @@ export function useFeed() {
 
   const repost = async (originalPostId: string) => {
     if (!user) return;
-    const { error } = await supabase.from("posts").insert({
+    // Insert into reposts table instead of creating a new post
+    const { error } = await supabase.from("reposts").insert({
       user_id: user.id,
-      repost_id: originalPostId,
+      post_id: originalPostId,
     });
     if (!error) {
       fetchPosts();
