@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImageIcon, Images } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface SharedPostData {
   postId: string;
@@ -60,13 +62,41 @@ interface SharedPostCardProps {
 
 export function SharedPostCard({ data, isOwn }: SharedPostCardProps) {
   const navigate = useNavigate();
+  const [authorName, setAuthorName] = useState(data.authorName);
+
+  // Fetch author name if not provided (legacy messages)
+  useEffect(() => {
+    if (data.authorName || !data.postId) return;
+    let cancelled = false;
+    (async () => {
+      const { data: post } = await supabase
+        .from("posts")
+        .select("user_id")
+        .eq("id", data.postId)
+        .maybeSingle();
+      if (!post || cancelled) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username, display_name")
+        .eq("user_id", post.user_id)
+        .maybeSingle();
+      if (profile && !cancelled) {
+        setAuthorName(profile.username ? `@${profile.username}` : profile.display_name || undefined);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [data.postId, data.authorName]);
+
+  const handleClick = () => {
+    navigate(`/post/${data.postId}`);
+  };
 
   return (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        navigate(`/post/${data.postId}`);
-      }}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={(e) => { if (e.key === "Enter") handleClick(); }}
       className={cn(
         "w-full rounded-lg overflow-hidden text-left transition-all active:scale-[0.97]",
         isOwn
@@ -75,7 +105,7 @@ export function SharedPostCard({ data, isOwn }: SharedPostCardProps) {
       )}
     >
       {/* Author header - Instagram style */}
-      {data.authorName && (
+      {authorName && (
         <div className={cn(
           "flex items-center gap-1.5 px-2.5 py-1.5 border-b",
           isOwn ? "border-primary-foreground/10" : "border-border/50"
@@ -84,13 +114,13 @@ export function SharedPostCard({ data, isOwn }: SharedPostCardProps) {
             "h-5 w-5 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0",
             isOwn ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
           )}>
-            {data.authorName.replace("@", "").slice(0, 1).toUpperCase()}
+            {authorName.replace("@", "").slice(0, 1).toUpperCase()}
           </div>
           <span className={cn(
             "text-[11px] font-semibold truncate",
             isOwn ? "text-primary-foreground" : "text-foreground"
           )}>
-            {data.authorName}
+            {authorName}
           </span>
         </div>
       )}
@@ -133,13 +163,13 @@ export function SharedPostCard({ data, isOwn }: SharedPostCardProps) {
             "text-[12px] line-clamp-2 leading-tight",
             isOwn ? "text-primary-foreground/90" : "text-foreground/80"
           )}>
-            {data.authorName && (
-              <span className="font-semibold mr-1">{data.authorName}</span>
+            {authorName && (
+              <span className="font-semibold mr-1">{authorName}</span>
             )}
             {data.caption}
           </p>
         </div>
       )}
-    </button>
+    </div>
   );
 }
