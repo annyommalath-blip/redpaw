@@ -54,6 +54,10 @@ export default function NotificationsPage() {
         // Navigate to home where pending invites are shown
         navigate("/");
         break;
+      case "post":
+        // Navigate to home/feed where posts are shown
+        navigate("/");
+        break;
       default:
         // Stay on notifications page
         break;

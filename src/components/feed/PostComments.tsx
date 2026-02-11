@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Send } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import MentionInput, { parseMentions, type MentionUser } from "./MentionInput";
 
 interface Comment {
   id: string;
@@ -22,15 +22,31 @@ interface Comment {
   };
 }
 
+function renderCommentText(text: string) {
+  // Highlight @mentions in the text
+  const parts = text.split(/(@[\w\s]+?)(?=\s@|\s|$)/g);
+  return parts.map((part, i) =>
+    part.startsWith("@") ? (
+      <span key={i} className="text-primary font-semibold">{part}</span>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
 export default function PostComments({ postId }: { postId: string }) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [allUsers, setAllUsers] = useState<MentionUser[]>([]);
 
   useEffect(() => {
     fetchComments();
+    supabase.rpc("get_public_profiles").then(({ data }) => {
+      if (data) setAllUsers(data as MentionUser[]);
+    });
   }, [postId]);
 
   const fetchComments = async () => {
@@ -43,10 +59,7 @@ export default function PostComments({ postId }: { postId: string }) {
 
     if (!data) return;
 
-    // Fetch author profiles
-    const userIds = [...new Set(data.map((c) => c.user_id))];
     const { data: profiles } = await supabase.rpc("get_public_profiles");
-
     const profileMap = new Map(
       (profiles || []).map((p: any) => [p.user_id, p])
     );
@@ -62,14 +75,31 @@ export default function PostComments({ postId }: { postId: string }) {
   const handleSend = async () => {
     if (!text.trim() || !user) return;
     setSending(true);
+
+    const commentText = text.trim();
     const { error } = await supabase.from("post_comments").insert({
       post_id: postId,
       user_id: user.id,
-      text: text.trim(),
+      text: commentText,
     });
+
     if (error) {
       toast.error("Failed to comment");
     } else {
+      // Send mention notifications
+      const mentionedIds = parseMentions(commentText, allUsers);
+      for (const mentionedUserId of mentionedIds) {
+        if (mentionedUserId === user.id) continue; // Skip self
+        await supabase.from("notifications").insert({
+          user_id: mentionedUserId,
+          type: "post_comment_mention" as any,
+          title: "You were mentioned",
+          body: `${commentText.slice(0, 80)}`,
+          link_type: "post",
+          link_id: postId,
+          body_params: {},
+        });
+      }
       setText("");
       fetchComments();
     }
@@ -78,7 +108,6 @@ export default function PostComments({ postId }: { postId: string }) {
 
   return (
     <div className="border-t border-border/30 px-4 py-3 space-y-3">
-      {/* Comment list */}
       {comments.length > 0 && (
         <div className="space-y-2.5 max-h-60 overflow-y-auto">
           {comments.map((c) => {
@@ -94,7 +123,7 @@ export default function PostComments({ postId }: { postId: string }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs">
                     <span className="font-semibold text-foreground">{name}</span>{" "}
-                    <span className="text-foreground/80">{c.text}</span>
+                    <span className="text-foreground/80">{renderCommentText(c.text)}</span>
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
@@ -106,13 +135,11 @@ export default function PostComments({ postId }: { postId: string }) {
         </div>
       )}
 
-      {/* Input */}
       <div className="flex gap-2">
-        <Input
+        <MentionInput
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={setText}
           placeholder={t("home.writeCaption")}
-          className="flex-1 h-9 rounded-xl text-sm"
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
         />
         <Button
