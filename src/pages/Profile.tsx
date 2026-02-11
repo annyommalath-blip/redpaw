@@ -924,18 +924,18 @@ export default function ProfilePage() {
                     )}
                     <p className="text-sm text-muted-foreground">{displayName}</p>
                     {formatLocation() && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{formatLocation()}</p>
+                      <p className="text-xs text-muted-foreground">{formatLocation()}</p>
                     )}
                   </button>
-                  <span className="text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-0 -mt-0.5 text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
                     <button className="hover:text-foreground transition-colors" onClick={() => openFollowList("followers")}>
                       <span className="font-semibold text-foreground">{followerCount}</span> Followers
                     </button>
-                    <span className="mx-1.5">·</span>
+                    <span className="mx-1">·</span>
                     <button className="hover:text-foreground transition-colors" onClick={() => openFollowList("following")}>
                       <span className="font-semibold text-foreground">{followingCount}</span> Following
                     </button>
-                  </span>
+                  </div>
                 </div>
               </div>
 
