@@ -192,11 +192,6 @@ export default function UserProfilePage() {
       <PageHeader
         title={profile.username ? `@${profile.username}` : displayName}
         showBack
-        action={
-          !isOwnProfile ? (
-            <FollowButton targetUserId={profile.user_id} size="sm" />
-          ) : undefined
-        }
       />
 
       <div className="p-4 space-y-4">
@@ -225,6 +220,11 @@ export default function UserProfilePage() {
                     <span className="mx-1">·</span>
                     <span><span className="font-semibold text-foreground">{followingCount}</span> Following</span>
                   </div>
+                  {!isOwnProfile && (
+                    <div className="mt-1.5">
+                      <FollowButton targetUserId={profile.user_id} size="sm" />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -245,13 +245,6 @@ export default function UserProfilePage() {
                   <p className="text-xs text-muted-foreground">Care Jobs</p>
                 </div>
               </div>
-
-              {/* Follow button inside card for non-own profiles */}
-              {!isOwnProfile && (
-                <div className="mt-3">
-                  <FollowButton targetUserId={profile.user_id} size="default" className="w-full" />
-                </div>
-              )}
             </div>
           </GlassCard>
         </AnimatedItem>
