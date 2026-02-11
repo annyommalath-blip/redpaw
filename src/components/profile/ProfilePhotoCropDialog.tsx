@@ -50,23 +50,26 @@ export default function ProfilePhotoCropDialog({ open, imageSrc, onConfirm, onCa
     if (!imgLoaded || !imgDimensions.w) return {};
     const imgAspect = imgDimensions.w / imgDimensions.h;
 
-    let width: string, height: string;
+    // "cover" the square container, then scale by zoom
+    // For cover: if image is wider than tall, fit height to container; else fit width
+    let baseWidth: number, baseHeight: number;
     if (imgAspect > 1) {
-      height = `${zoom * 100}%`;
-      width = "auto";
+      // Landscape: height = 100%, width = auto (will overflow horizontally)
+      baseHeight = 100;
+      baseWidth = 100 * imgAspect;
     } else {
-      width = `${zoom * 100}%`;
-      height = "auto";
+      // Portrait: width = 100%, height = auto (will overflow vertically)
+      baseWidth = 100;
+      baseHeight = 100 / imgAspect;
     }
 
     return {
       position: "absolute" as const,
       top: "50%",
       left: "50%",
-      width,
-      height,
+      width: `${baseWidth * zoom}%`,
+      height: `${baseHeight * zoom}%`,
       transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
-      objectFit: "cover" as const,
       pointerEvents: "none" as const,
       userSelect: "none" as const,
     };
