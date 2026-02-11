@@ -815,8 +815,8 @@ export default function ProfilePage() {
                   <h2 className="section-header">{t("profile.recentLogs")}</h2>
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate("/create?type=log"); }} className="text-primary rounded-xl">
-                      <PlusCircle className="h-4 w-4 mr-1" />
                       {t("common.add")}
+                      <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                     <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showRecentLogs ? "rotate-180" : ""}`} />
                   </div>
