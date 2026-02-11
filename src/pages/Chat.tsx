@@ -126,12 +126,11 @@ export default function ChatPage() {
       if (otherParticipantId) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("display_name, first_name, last_name")
+          .select("display_name, first_name, last_name, username")
           .eq("user_id", otherParticipantId)
           .maybeSingle();
 
-        const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
-        setOtherParticipantName(fullName || profile?.display_name || t("messages.user"));
+        setOtherParticipantName(profile?.username ? `@${profile.username}` : profile?.display_name || t("messages.user"));
       }
 
       // Fetch context label if care request
