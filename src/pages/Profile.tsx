@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Grid3X3, Bookmark, Activity } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Grid3X3, Bookmark, Repeat2 } from "lucide-react";
 
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -139,6 +139,10 @@ export default function ProfilePage() {
   const [myPosts, setMyPosts] = useState<PostData[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
   
+  // Reposts tab state
+  const [myReposts, setMyReposts] = useState<PostData[]>([]);
+  const [repostsLoading, setRepostsLoading] = useState(false);
+
   const [activeTab, setActiveTab] = useState("posts");
 
   // Share post sheet
@@ -164,8 +168,80 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       fetchMyPosts();
+      fetchMyReposts();
     }
   }, [user]);
+
+  const fetchMyReposts = async () => {
+    if (!user) return;
+    setRepostsLoading(true);
+    try {
+      // Get user's reposts (posts where repost_id is not null)
+      const { data: repostsData } = await supabase
+        .from("posts")
+        .select("id, user_id, caption, photo_url, photo_urls, repost_id, created_at, visibility")
+        .eq("user_id", user.id)
+        .not("repost_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (!repostsData || repostsData.length === 0) { setMyReposts([]); setRepostsLoading(false); return; }
+
+      // Get original posts
+      const originalIds = repostsData.map(p => p.repost_id!).filter(Boolean);
+      const { data: originals } = await supabase
+        .from("posts")
+        .select("id, user_id, caption, photo_url, photo_urls, repost_id, created_at, visibility")
+        .in("id", originalIds);
+
+      const { data: profiles } = await supabase.rpc("get_public_profiles");
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
+      const allPostIds = [...repostsData.map(p => p.id), ...originalIds];
+      const { data: userLikes } = await supabase
+        .from("post_likes").select("post_id").eq("user_id", user.id).in("post_id", allPostIds);
+      const likedSet = new Set((userLikes || []).map(l => l.post_id));
+
+      const { data: likeCounts } = await supabase
+        .from("post_likes").select("post_id").in("post_id", allPostIds);
+      const likeCountMap = new Map<string, number>();
+      (likeCounts || []).forEach(l => likeCountMap.set(l.post_id, (likeCountMap.get(l.post_id) || 0) + 1));
+
+      const { data: commentCounts } = await supabase
+        .from("post_comments").select("post_id").in("post_id", allPostIds);
+      const commentCountMap = new Map<string, number>();
+      (commentCounts || []).forEach(c => commentCountMap.set(c.post_id, (commentCountMap.get(c.post_id) || 0) + 1));
+
+      const originalMap = new Map((originals || []).map(o => [o.id, o]));
+
+      const enriched: PostData[] = repostsData.map(p => {
+        const orig = p.repost_id ? originalMap.get(p.repost_id) : null;
+        return {
+          ...p,
+          author: profileMap.get(p.user_id) || undefined,
+          like_count: likeCountMap.get(p.id) || 0,
+          comment_count: commentCountMap.get(p.id) || 0,
+          repost_count: 0,
+          is_liked: likedSet.has(p.id),
+          original_post: orig ? {
+            ...orig,
+            author: profileMap.get(orig.user_id) || undefined,
+            like_count: likeCountMap.get(orig.id) || 0,
+            comment_count: commentCountMap.get(orig.id) || 0,
+            repost_count: 0,
+            is_liked: likedSet.has(orig.id),
+            original_post: null,
+          } : null,
+        };
+      });
+
+      setMyReposts(enriched);
+    } catch (err) {
+      console.error("Error fetching reposts:", err);
+    } finally {
+      setRepostsLoading(false);
+    }
+  };
 
   const fetchMyPosts = async () => {
     if (!user) return;
@@ -928,10 +1004,10 @@ export default function ProfilePage() {
                 Saved
               </TabsTrigger>
               <TabsTrigger
-                value="activity"
+                value="reposts"
                 className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none py-2.5 text-sm font-medium"
               >
-                Activity
+                Reposts
               </TabsTrigger>
             </TabsList>
 
@@ -979,13 +1055,33 @@ export default function ProfilePage() {
               />
             </TabsContent>
 
-            {/* ── Activity Tab ── */}
-            <TabsContent value="activity" className="mt-3">
-              <EmptyState
-                icon={<Activity className="h-10 w-10 text-muted-foreground" />}
-                title="No recent activity"
-                description="Your likes, comments and interactions will show up here"
-              />
+            {/* ── Reposts Tab ── */}
+            <TabsContent value="reposts" className="mt-3">
+              {repostsLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-48 w-full rounded-2xl" />
+                  <Skeleton className="h-48 w-full rounded-2xl" />
+                </div>
+              ) : myReposts.length === 0 ? (
+                <EmptyState
+                  icon={<Repeat2 className="h-10 w-10 text-muted-foreground" />}
+                  title="No reposts yet"
+                  description="Repost content from the community to share it with your followers"
+                />
+              ) : (
+                <div className="space-y-4">
+                  {myReposts.map(post => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      onLikeToggle={handlePostLikeToggle}
+                      onRepost={handlePostRepost}
+                      onDelete={handlePostDelete}
+                      onShare={(p) => setSharePost(p)}
+                    />
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </AnimatedItem>
