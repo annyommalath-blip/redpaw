@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Share2, Grid3X3, Bookmark, Activity } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Grid3X3, Bookmark, Activity } from "lucide-react";
 
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -99,7 +99,7 @@ const isRequestArchived = (request: MyCareRequest): boolean => {
   return new Date() > archiveTime;
 };
 
-type PostFilter = "all" | "lost" | "found" | "care";
+
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
@@ -138,7 +138,7 @@ export default function ProfilePage() {
   // Posts tab state
   const [myPosts, setMyPosts] = useState<PostData[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
-  const [postFilter, setPostFilter] = useState<PostFilter>("all");
+  
   const [activeTab, setActiveTab] = useState("posts");
 
   // Share post sheet
@@ -522,17 +522,6 @@ export default function ProfilePage() {
     "check-in": `👋 ${t("care.checkIn")}`,
   };
 
-  const handleShareProfile = async () => {
-    const url = `${window.location.origin}/user/${user?.id}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: `${profile?.display_name || "My Profile"}`, url });
-      } catch {}
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast({ title: "Link copied!" });
-    }
-  };
 
   if (loading) {
     return (
@@ -825,15 +814,6 @@ export default function ProfilePage() {
                   <Edit className="h-4 w-4 mr-1.5" />
                   Edit Profile
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 rounded-xl"
-                  onClick={handleShareProfile}
-                >
-                  <Share2 className="h-4 w-4 mr-1.5" />
-                  Share Profile
-                </Button>
               </div>
 
               {/* Edit profile form (inline) */}
@@ -969,23 +949,6 @@ export default function ProfilePage() {
 
             {/* ── Posts Tab ── */}
             <TabsContent value="posts" className="mt-3">
-              {/* Post filters */}
-              <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
-                {(["all", "lost", "found", "care"] as PostFilter[]).map(filter => (
-                  <button
-                    key={filter}
-                    onClick={() => setPostFilter(filter)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors",
-                      postFilter === filter
-                        ? "bg-foreground text-background border-foreground"
-                        : "bg-transparent text-muted-foreground border-border hover:border-foreground/30"
-                    )}
-                  >
-                    {filter === "all" ? "All" : filter === "lost" ? "Lost" : filter === "found" ? "Found" : "Care Requests"}
-                  </button>
-                ))}
-              </div>
 
               {/* Posts list */}
               {postsLoading ? (
