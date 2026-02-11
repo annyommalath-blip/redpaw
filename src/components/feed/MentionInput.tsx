@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { extractMentionedUsernames } from "@/lib/mentionUtils";
 
@@ -10,6 +11,8 @@ export interface MentionUser {
   display_name: string | null;
   avatar_url: string | null;
   username: string | null;
+  score?: number;
+  match_type?: string;
 }
 
 interface MentionInputProps {
@@ -39,19 +42,35 @@ export default function MentionInput({
   disabled,
   className,
 }: MentionInputProps) {
-  const [allUsers, setAllUsers] = useState<MentionUser[]>([]);
+  const { user } = useAuth();
   const [suggestions, setSuggestions] = useState<MentionUser[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Fetch all users once
-  useEffect(() => {
-    supabase.rpc("get_public_profiles").then(({ data }) => {
-      if (data) setAllUsers(data as MentionUser[]);
-    });
-  }, []);
+  const fetchSuggestions = useCallback(
+    async (query: string) => {
+      if (!user) return;
+      
+      const { data, error } = await supabase.rpc("get_mention_suggestions", {
+        p_user_id: user.id,
+        p_query: query,
+        p_limit: query.length < 2 ? 12 : 20,
+      });
+
+      if (!error && data) {
+        setSuggestions(data as MentionUser[]);
+        setShowDropdown(data.length > 0);
+        setSelectedIndex(0);
+      } else {
+        setSuggestions([]);
+        setShowDropdown(false);
+      }
+    },
+    [user]
+  );
 
   const checkForMention = useCallback(
     (text: string) => {
@@ -73,24 +92,25 @@ export default function MentionInput({
           setShowDropdown(false);
           return;
         }
-        const filtered = allUsers
-          .filter((u) => {
-            if (!u.username) return false;
-            return (
-              u.username.toLowerCase().includes(query) ||
-              getName(u).toLowerCase().includes(query)
-            );
-          })
-          .slice(0, 6);
-        setSuggestions(filtered);
-        setShowDropdown(filtered.length > 0);
-        setSelectedIndex(0);
+        
+        // Debounce the API call
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          fetchSuggestions(query);
+        }, 150);
       } else {
         setShowDropdown(false);
       }
     },
-    [allUsers]
+    [fetchSuggestions]
   );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -98,14 +118,14 @@ export default function MentionInput({
     checkForMention(newValue);
   };
 
-  const insertMention = (user: MentionUser) => {
-    if (!user.username) return;
+  const insertMention = (mentionUser: MentionUser) => {
+    if (!mentionUser.username) return;
     const cursorPos = inputRef.current?.selectionStart || value.length;
     const beforeCursor = value.slice(0, cursorPos);
     const atIndex = beforeCursor.lastIndexOf("@");
     const afterCursor = value.slice(cursorPos);
 
-    const mention = `@${user.username}`;
+    const mention = `@${mentionUser.username}`;
     const newValue = beforeCursor.slice(0, atIndex) + mention + " " + afterCursor;
     onChange(newValue);
     setShowDropdown(false);
@@ -162,30 +182,35 @@ export default function MentionInput({
           ref={dropdownRef}
           className="absolute bottom-full mb-1 left-0 right-0 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto"
         >
-          {suggestions.map((user, i) => {
-            const name = getName(user);
+          {suggestions.map((su, i) => {
+            const name = getName(su);
             return (
               <button
-                key={user.user_id}
+                key={su.user_id}
                 className={cn(
                   "w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent transition-colors",
                   i === selectedIndex && "bg-accent"
                 )}
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  insertMention(user);
+                  insertMention(su);
                 }}
               >
                 <Avatar className="h-6 w-6">
-                  {user.avatar_url && <AvatarImage src={user.avatar_url} />}
+                  {su.avatar_url && <AvatarImage src={su.avatar_url} />}
                   <AvatarFallback className="text-[10px] bg-muted">
                     {name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col min-w-0">
                   <span className="truncate font-medium">{name}</span>
-                  {user.username && (
-                    <span className="truncate text-xs text-muted-foreground">@{user.username}</span>
+                  {su.username && su.display_name && (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {su.display_name}
+                      {su.match_type === "global" && (
+                        <span className="ml-1 text-muted-foreground/60">·</span>
+                      )}
+                    </span>
                   )}
                 </div>
               </button>
