@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom"; 
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Syringe, PlusCircle, Bell, ChevronDown, AtSign } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign } from "lucide-react";
 
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -18,12 +18,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DogSelector } from "@/components/dog/DogSelector";
 import { DogCard } from "@/components/dog/DogCard";
-import { QuickActions } from "@/components/dog/QuickActions";
-import { HealthLogCard } from "@/components/dog/HealthLogCard";
-import { MedRecordCardReadOnly } from "@/components/med/MedRecordCardReadOnly";
-import { ExpirationNotices } from "@/components/med/ExpirationNotices";
 import { LostModeDialog } from "@/components/dog/LostModeDialog";
-import { MedRecordEditDialog } from "@/components/med/MedRecordEditDialog";
 import { PendingInvitesCard } from "@/components/dog/PendingInvitesCard";
 import { AnimatedItem } from "@/components/ui/animated-list";
 import {
@@ -40,7 +35,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
-import { enrichRecordWithStatus, MedRecordWithStatus } from "@/lib/medRecordUtils";
 import { checkMedicationNotifications } from "@/lib/notificationUtils";
 import UsernameSetupDialog from "@/components/UsernameSetupDialog";
 
@@ -54,13 +48,6 @@ interface UserDog {
   is_lost: boolean;
 }
 
-interface HealthLog {
-  id: string;
-  dog_id: string;
-  log_type: "walk" | "food" | "meds" | "mood" | "symptom";
-  value: string | null;
-  created_at: string;
-}
 
 interface OwnerProfile {
   display_name: string | null;
@@ -110,8 +97,6 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<OwnerProfile | null>(null);
   const [dogs, setDogs] = useState<UserDog[]>([]);
   const [activeDogId, setActiveDogId] = useState<string | null>(null);
-  const [logs, setLogs] = useState<HealthLog[]>([]);
-  const [medRecords, setMedRecords] = useState<MedRecordWithStatus[]>([]);
   const [myCareRequests, setMyCareRequests] = useState<MyCareRequest[]>([]);
   const [archivedLostAlerts, setArchivedLostAlerts] = useState<ArchivedLostAlert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,12 +104,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [lostModeDialogOpen, setLostModeDialogOpen] = useState(false);
-  const [editingMedRecord, setEditingMedRecord] = useState<MedRecordWithStatus | null>(null);
-  const [deletingMedRecord, setDeletingMedRecord] = useState<MedRecordWithStatus | null>(null);
-  const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
   const [showOwnerProfile, setShowOwnerProfile] = useState(false);
-  const [showMedRecords, setShowMedRecords] = useState(false);
-  const [showRecentLogs, setShowRecentLogs] = useState(false);
   const [showCareRequests, setShowCareRequests] = useState(false);
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -139,8 +119,6 @@ export default function ProfilePage() {
   const { unreadCount: notificationCount } = useNotifications();
 
   const activeDog = dogs.find(d => d.id === activeDogId) || null;
-  const filteredLogs = logs.filter(l => l.dog_id === activeDogId);
-  const filteredMedRecords = medRecords.filter(r => r.dog_id === activeDogId);
 
   const handleSelectDog = useCallback((dogId: string) => {
     setActiveDogId(dogId);
@@ -218,28 +196,6 @@ export default function ProfilePage() {
         }
       }
 
-      if (uniqueDogs.length > 0) {
-        const dogIds = uniqueDogs.map((d) => d.id);
-        const [logsResult, medResult] = await Promise.all([
-          supabase
-            .from("health_logs")
-            .select("id, dog_id, log_type, value, created_at")
-            .in("dog_id", dogIds)
-            .order("created_at", { ascending: false })
-            .limit(20),
-          supabase
-            .from("med_records")
-            .select("*")
-            .in("dog_id", dogIds)
-            .order("expires_on", { ascending: true }),
-        ]);
-        setLogs((logsResult.data || []) as HealthLog[]);
-        const enrichedRecords = (medResult.data || []).map((r) =>
-          enrichRecordWithStatus(r as any)
-        );
-        setMedRecords(enrichedRecords);
-      }
-
       const { data: ownedRequests } = await supabase
         .from("care_requests")
         .select("*, dogs (name, breed)")
@@ -310,44 +266,6 @@ export default function ProfilePage() {
     fetchData();
   };
 
-  const handleDeleteMedRecord = async () => {
-    if (!deletingMedRecord) return;
-    try {
-      const { error } = await supabase
-        .from("med_records")
-        .delete()
-        .eq("id", deletingMedRecord.id);
-      if (error) throw error;
-      setMedRecords((prev) => prev.filter((r) => r.id !== deletingMedRecord.id));
-      toast({ title: t("home.recordDeleted") });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    } finally {
-      setDeletingMedRecord(null);
-    }
-  };
-
-  const handleMedRecordUpdated = () => {
-    fetchData();
-    setEditingMedRecord(null);
-  };
-
-  const handleDeleteLog = async () => {
-    if (!deletingLogId) return;
-    try {
-      const { error } = await supabase
-        .from("health_logs")
-        .delete()
-        .eq("id", deletingLogId);
-      if (error) throw error;
-      setLogs((prev) => prev.filter((l) => l.id !== deletingLogId));
-      toast({ title: t("home.logDeleted") });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    } finally {
-      setDeletingLogId(null);
-    }
-  };
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -683,12 +601,6 @@ export default function ProfilePage() {
           </section>
         </AnimatedItem>
 
-        {/* Expiration Notices */}
-        {activeDog && (
-          <AnimatedItem delay={0.1}>
-            <ExpirationNotices records={filteredMedRecords} />
-          </AnimatedItem>
-        )}
 
         {/* My Dogs Section with Dog Management */}
         {dogs.length > 0 && activeDog ? (
@@ -751,98 +663,6 @@ export default function ProfilePage() {
               onSuccess={handleLostModeSuccess}
             />
 
-            <AnimatedItem delay={0.25}>
-              <section>
-                <h2 className="section-header mb-3">{t("profile.quickActions")}</h2>
-                <QuickActions
-                  dogId={activeDog.id}
-                  isLost={activeDog.is_lost}
-                  onToggleLost={() => handleLostModeToggle(activeDog.id, activeDog.is_lost)}
-                />
-              </section>
-            </AnimatedItem>
-
-            <AnimatedItem delay={0.3}>
-              <section>
-                <button
-                  onClick={() => setShowMedRecords(!showMedRecords)}
-                  className="w-full flex items-center justify-between mb-3"
-                >
-                  <h2 className="section-header flex items-center gap-2">
-                    <Syringe className="h-4 w-4" />
-                    {t("profile.medicationRecords")}
-                  </h2>
-                  <div className="flex items-center gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={(e) => { e.stopPropagation(); navigate("/create?type=meds"); }}
-                      className="text-primary rounded-xl"
-                    >
-                      {t("common.add")}
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showMedRecords ? "rotate-180" : ""}`} />
-                  </div>
-                </button>
-                {showMedRecords && (
-                  filteredMedRecords.length > 0 ? (
-                    <div className="space-y-3">
-                      {filteredMedRecords.map((record) => (
-                        <MedRecordCardReadOnly
-                          key={record.id}
-                          record={record}
-                          onEdit={setEditingMedRecord}
-                          onDelete={setDeletingMedRecord}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                      {t("profile.noMedRecordsYet")}
-                    </p>
-                  )
-                )}
-              </section>
-            </AnimatedItem>
-
-            <AnimatedItem delay={0.35}>
-              <section>
-                <button
-                  onClick={() => setShowRecentLogs(!showRecentLogs)}
-                  className="w-full flex items-center justify-between mb-3"
-                >
-                  <h2 className="section-header">{t("profile.recentLogs")}</h2>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate("/create?type=log"); }} className="text-primary rounded-xl">
-                      {t("common.add")}
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showRecentLogs ? "rotate-180" : ""}`} />
-                  </div>
-                </button>
-                {showRecentLogs && (
-                  filteredLogs.length > 0 ? (
-                    <div className="space-y-3">
-                      {filteredLogs.slice(0, 5).map((log) => (
-                        <HealthLogCard
-                          key={log.id}
-                          id={log.id}
-                          type={log.log_type}
-                          value={log.value || ""}
-                          createdAt={new Date(log.created_at)}
-                          onDelete={setDeletingLogId}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-6 bg-muted/30 rounded-2xl">
-                      {t("profile.noHealthLogsYet")}
-                    </p>
-                  )
-                )}
-              </section>
-            </AnimatedItem>
           </>
         ) : (
           <AnimatedItem delay={0.15}>
@@ -1063,46 +883,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <MedRecordEditDialog
-        record={editingMedRecord}
-        open={!!editingMedRecord}
-        onOpenChange={(open) => !open && setEditingMedRecord(null)}
-        onSuccess={handleMedRecordUpdated}
-      />
-
-      <AlertDialog open={!!deletingMedRecord} onOpenChange={(open) => !open && setDeletingMedRecord(null)}>
-        <AlertDialogContent className="glass-card-modal rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("home.deleteRecord")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("home.deleteRecordConfirm", { name: deletingMedRecord?.name })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteMedRecord} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
-              {t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={!!deletingLogId} onOpenChange={(open) => !open && setDeletingLogId(null)}>
-        <AlertDialogContent className="glass-card-modal rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("home.deleteLog")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("home.deleteLogConfirm")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
-              {t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       <UsernameSetupDialog
         open={showUsernameSetup}
         onComplete={(username) => {
