@@ -1,8 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { ZoomIn, Check, RotateCcw } from "lucide-react";
+import { ZoomIn, ZoomOut, Check, RotateCcw } from "lucide-react";
 
 interface ProfilePhotoCropDialogProps {
   open: boolean;
@@ -11,7 +10,7 @@ interface ProfilePhotoCropDialogProps {
   onCancel: () => void;
 }
 
-const OUTPUT_SIZE = 512; // 512x512 output
+const OUTPUT_SIZE = 512;
 
 export default function ProfilePhotoCropDialog({ open, imageSrc, onConfirm, onCancel }: ProfilePhotoCropDialogProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,7 +50,6 @@ export default function ProfilePhotoCropDialog({ open, imageSrc, onConfirm, onCa
     if (!imgLoaded || !imgDimensions.w) return {};
     const imgAspect = imgDimensions.w / imgDimensions.h;
 
-    // Cover logic for 1:1 container
     let width: string, height: string;
     if (imgAspect > 1) {
       height = `${zoom * 100}%`;
@@ -77,7 +75,7 @@ export default function ProfilePhotoCropDialog({ open, imageSrc, onConfirm, onCa
   const handlePointerDown = (e: React.PointerEvent) => {
     setDragging(true);
     setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -93,7 +91,7 @@ export default function ProfilePhotoCropDialog({ open, imageSrc, onConfirm, onCa
     if (!img || !container) return;
 
     const rect = container.getBoundingClientRect();
-    const size = rect.width; // square container
+    const size = rect.width;
 
     const imgAspect = img.width / img.height;
     let drawW: number, drawH: number;
@@ -122,7 +120,6 @@ export default function ProfilePhotoCropDialog({ open, imageSrc, onConfirm, onCa
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
 
-    // Draw circular clip
     ctx.beginPath();
     ctx.arc(OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, OUTPUT_SIZE / 2, 0, Math.PI * 2);
     ctx.closePath();
@@ -140,19 +137,25 @@ export default function ProfilePhotoCropDialog({ open, imageSrc, onConfirm, onCa
     setOffset({ x: 0, y: 0 });
   };
 
+  const handleZoomIn = () => setZoom(prev => Math.min(3, prev + 0.2));
+  const handleZoomOut = () => setZoom(prev => Math.max(1, prev - 0.2));
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
       <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden">
         <DialogHeader className="p-4 pb-2">
           <DialogTitle className="text-base">Adjust Profile Photo</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Drag to reposition, use buttons to zoom
+          </DialogDescription>
         </DialogHeader>
 
         {/* Square crop viewport with circle overlay */}
         <div className="px-4">
           <div
             ref={containerRef}
-            className="relative w-full bg-black touch-none select-none overflow-hidden rounded-lg"
-            style={{ aspectRatio: "1/1" }}
+            className="relative w-full bg-black select-none overflow-hidden rounded-lg"
+            style={{ aspectRatio: "1/1", touchAction: "none" }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -170,29 +173,43 @@ export default function ProfilePhotoCropDialog({ open, imageSrc, onConfirm, onCa
             {/* Circular mask overlay */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
               <defs>
-                <mask id="circleMask">
+                <mask id="profileCropCircleMask">
                   <rect width="100" height="100" fill="white" />
                   <circle cx="50" cy="50" r="46" fill="black" />
                 </mask>
               </defs>
-              <rect width="100" height="100" fill="rgba(0,0,0,0.55)" mask="url(#circleMask)" />
+              <rect width="100" height="100" fill="rgba(0,0,0,0.55)" mask="url(#profileCropCircleMask)" />
               <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="0.5" />
             </svg>
           </div>
         </div>
 
+        {/* Zoom controls using buttons instead of slider */}
         <div className="px-4 py-3">
-          <div className="flex items-center gap-3">
-            <ZoomIn className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Slider
-              value={[zoom]}
-              min={1}
-              max={3}
-              step={0.05}
-              onValueChange={([v]) => setZoom(v)}
-              className="flex-1"
-            />
-            <span className="text-xs text-muted-foreground w-10 text-right">{Math.round(zoom * 100)}%</span>
+          <div className="flex items-center justify-center gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-full"
+              onClick={handleZoomOut}
+              disabled={zoom <= 1}
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium text-foreground w-14 text-center">
+              {Math.round(zoom * 100)}%
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-full"
+              onClick={handleZoomIn}
+              disabled={zoom >= 3}
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
