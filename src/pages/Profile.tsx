@@ -100,7 +100,6 @@ const isRequestArchived = (request: MyCareRequest): boolean => {
 };
 
 
-
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
   const { t } = useTranslation();
@@ -143,6 +142,10 @@ export default function ProfilePage() {
   const [myReposts, setMyReposts] = useState<PostData[]>([]);
   const [repostsLoading, setRepostsLoading] = useState(false);
 
+  // Saved tab state
+  const [savedPosts, setSavedPosts] = useState<PostData[]>([]);
+  const [savedLoading, setSavedLoading] = useState(false);
+
   const [activeTab, setActiveTab] = useState("posts");
 
   // Share post sheet
@@ -169,6 +172,7 @@ export default function ProfilePage() {
     if (user) {
       fetchMyPosts();
       fetchMyReposts();
+      fetchSavedPosts();
     }
   }, [user]);
 
@@ -290,6 +294,66 @@ export default function ProfilePage() {
       console.error("Error fetching my posts:", err);
     } finally {
       setPostsLoading(false);
+    }
+  };
+
+  const fetchSavedPosts = async () => {
+    if (!user) return;
+    setSavedLoading(true);
+    try {
+      const { data: savedData } = await supabase
+        .from("saved_posts")
+        .select("post_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (!savedData || savedData.length === 0) { setSavedPosts([]); setSavedLoading(false); return; }
+
+      const postIds = savedData.map(s => s.post_id);
+      const { data: postsData } = await supabase
+        .from("posts")
+        .select("id, user_id, caption, photo_url, photo_urls, repost_id, created_at, visibility")
+        .in("id", postIds);
+
+      if (!postsData) { setSavedPosts([]); setSavedLoading(false); return; }
+
+      const { data: profiles } = await supabase.rpc("get_public_profiles");
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
+      const { data: userLikes } = await supabase
+        .from("post_likes").select("post_id").eq("user_id", user.id).in("post_id", postIds);
+      const likedSet = new Set((userLikes || []).map(l => l.post_id));
+
+      const { data: likeCounts } = await supabase
+        .from("post_likes").select("post_id").in("post_id", postIds);
+      const likeCountMap = new Map<string, number>();
+      (likeCounts || []).forEach(l => likeCountMap.set(l.post_id, (likeCountMap.get(l.post_id) || 0) + 1));
+
+      const { data: commentCounts } = await supabase
+        .from("post_comments").select("post_id").in("post_id", postIds);
+      const commentCountMap = new Map<string, number>();
+      (commentCounts || []).forEach(c => commentCountMap.set(c.post_id, (commentCountMap.get(c.post_id) || 0) + 1));
+
+      const postMap = new Map(postsData.map(p => [p.id, p]));
+      const ordered = savedData.map(s => postMap.get(s.post_id)).filter(Boolean) as typeof postsData;
+
+      const enriched: PostData[] = ordered.map(p => ({
+        ...p,
+        author: profileMap.get(p.user_id) || undefined,
+        like_count: likeCountMap.get(p.id) || 0,
+        comment_count: commentCountMap.get(p.id) || 0,
+        repost_count: 0,
+        is_liked: likedSet.has(p.id),
+        is_saved: true,
+        original_post: null,
+      }));
+
+      setSavedPosts(enriched);
+    } catch (err) {
+      console.error("Error fetching saved posts:", err);
+    } finally {
+      setSavedLoading(false);
     }
   };
 
@@ -1048,11 +1112,31 @@ export default function ProfilePage() {
 
             {/* ── Saved Tab ── */}
             <TabsContent value="saved" className="mt-3">
-              <EmptyState
-                icon={<Bookmark className="h-10 w-10 text-muted-foreground" />}
-                title="No saved posts"
-                description="Save posts from the community to view them later"
-              />
+              {savedLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-48 w-full rounded-2xl" />
+                  <Skeleton className="h-48 w-full rounded-2xl" />
+                </div>
+              ) : savedPosts.length === 0 ? (
+                <EmptyState
+                  icon={<Bookmark className="h-10 w-10 text-muted-foreground" />}
+                  title="No saved posts"
+                  description="Save posts from the community to view them later"
+                />
+              ) : (
+                <div className="space-y-4">
+                  {savedPosts.map(post => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      onLikeToggle={handlePostLikeToggle}
+                      onRepost={handlePostRepost}
+                      onDelete={handlePostDelete}
+                      onShare={(p) => setSharePost(p)}
+                    />
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             {/* ── Reposts Tab ── */}

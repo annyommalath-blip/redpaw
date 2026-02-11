@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2, Globe, Users, Lock, Bookmark } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import PostComments from "./PostComments";
 import PostPhotoCarousel from "./PostPhotoCarousel";
 import MentionText from "./MentionText";
@@ -43,6 +44,7 @@ export interface PostData {
   comment_count: number;
   repost_count: number;
   is_liked: boolean;
+  is_saved?: boolean;
   original_post?: PostData | null;
 }
 
@@ -60,6 +62,11 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
   const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [likeAnimating, setLikeAnimating] = useState(false);
+  const [saved, setSaved] = useState(post.is_saved ?? false);
+
+  useEffect(() => {
+    setSaved(post.is_saved ?? false);
+  }, [post.is_saved]);
 
   const displayPost = post.original_post || post;
   const isRepost = !!post.repost_id && !!post.original_post;
@@ -91,6 +98,17 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
     setLikeAnimating(true);
     onLikeToggle(post.id, !post.is_liked);
     setTimeout(() => setLikeAnimating(false), 300);
+  };
+
+  const handleSaveToggle = async () => {
+    if (!user) return;
+    const newSaved = !saved;
+    setSaved(newSaved);
+    if (newSaved) {
+      await supabase.from("saved_posts").insert({ post_id: post.id, user_id: user.id });
+    } else {
+      await supabase.from("saved_posts").delete().eq("post_id", post.id).eq("user_id", user.id);
+    }
   };
 
   return (
@@ -190,8 +208,13 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
           </button>
         </div>
 
-        <button className="group">
-          <Bookmark className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+        <button onClick={handleSaveToggle} className="group">
+          <Bookmark
+            className={cn(
+              "h-5 w-5 transition-colors",
+              saved ? "fill-primary text-primary" : "text-muted-foreground group-hover:text-primary"
+            )}
+          />
         </button>
       </div>
 

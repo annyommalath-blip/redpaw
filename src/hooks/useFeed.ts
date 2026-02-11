@@ -93,6 +93,14 @@ export function useFeed() {
         }
       });
 
+      // Fetch saved status
+      const { data: userSaved } = await supabase
+        .from("saved_posts")
+        .select("post_id")
+        .eq("user_id", user.id)
+        .in("post_id", postIds);
+      const savedSet = new Set((userSaved || []).map((s) => s.post_id));
+
       // Build post data
       const enrichedPosts: PostData[] = postsData.map((p) => {
         const original = p.repost_id ? originalPostsMap.get(p.repost_id) : null;
@@ -103,6 +111,7 @@ export function useFeed() {
           comment_count: commentCountMap.get(p.id) || 0,
           repost_count: repostCountMap.get(p.id) || 0,
           is_liked: likedSet.has(p.id),
+          is_saved: savedSet.has(p.id),
           original_post: original
             ? {
                 ...original,
