@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2, Globe, Users, Lock, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2, Globe, Users, Lock, Bookmark, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { FollowButton } from "@/components/social/FollowButton";
 import { motion } from "framer-motion";
@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PostComments from "./PostComments";
 import PostPhotoCarousel from "./PostPhotoCarousel";
 import MentionText from "./MentionText";
+import EditPostDialog from "./EditPostDialog";
 
 interface PostAuthor {
   user_id: string;
@@ -55,15 +56,17 @@ interface PostCardProps {
   onRepost: (postId: string, reposted: boolean) => void;
   onDelete: (postId: string) => void;
   onShare: (post: PostData) => void;
+  onEdit?: (postId: string, caption: string, visibility: PostVisibility) => Promise<void>;
 }
 
-export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onShare }: PostCardProps) {
+export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onShare, onEdit }: PostCardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [likeAnimating, setLikeAnimating] = useState(false);
   const [saved, setSaved] = useState(post.is_saved ?? false);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     setSaved(post.is_saved ?? false);
@@ -152,6 +155,10 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                {t("common.edit")}
+              </DropdownMenuItem>
               <DropdownMenuItem className="text-destructive" onClick={() => onDelete(post.id)}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 {t("common.delete")}
@@ -226,6 +233,18 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
 
       {/* Comments section */}
       {showComments && <PostComments postId={post.id} />}
+
+      {/* Edit dialog */}
+      {onEdit && (
+        <EditPostDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          postId={post.id}
+          initialCaption={post.caption || ""}
+          initialVisibility={post.visibility || "public"}
+          onSave={onEdit}
+        />
+      )}
     </GlassCard>
   );
 }

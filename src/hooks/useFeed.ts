@@ -270,5 +270,17 @@ export function useFeed() {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
-  return { posts, loading, fetchPosts, toggleLike, repost, deletePost };
+  const updatePost = async (postId: string, caption: string, visibility: "public" | "friends" | "private") => {
+    const { error } = await supabase
+      .from("posts")
+      .update({ caption, visibility })
+      .eq("id", postId);
+    if (error) throw error;
+    // Optimistic update
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, caption, visibility } : p))
+    );
+  };
+
+  return { posts, loading, fetchPosts, toggleLike, repost, deletePost, updatePost };
 }
