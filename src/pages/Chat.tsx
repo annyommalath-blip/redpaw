@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Send, ArrowLeft, Loader2 } from "lucide-react";
+import { Send, ArrowLeft, Loader2, ImagePlus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +8,14 @@ import { ChatBubble } from "@/components/messages/ChatBubble";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { processImageFile } from "@/lib/imageUtils";
 
 interface Message {
   id: string;
   sender_id: string;
   text: string;
   created_at: string;
+  image_url?: string | null;
 }
 
 interface Conversation {
@@ -37,7 +39,10 @@ export default function ChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (conversationId && user) {
@@ -45,7 +50,6 @@ export default function ChatPage() {
       fetchMessages();
       markAsRead();
 
-      // Subscribe to new messages
       const channel = supabase
         .channel(`messages-${conversationId}`)
         .on(
@@ -59,11 +63,9 @@ export default function ChatPage() {
           (payload) => {
             const newMsg = payload.new as Message;
             setMessages(prev => {
-              // Avoid duplicates
               if (prev.some(m => m.id === newMsg.id)) return prev;
               return [...prev, newMsg];
             });
-            // Mark as read when new message arrives while viewing
             markAsRead();
           }
         )
@@ -77,9 +79,7 @@ export default function ChatPage() {
 
   const markAsRead = async () => {
     if (!conversationId || !user) return;
-
     try {
-      // Upsert the read status
       await supabase
         .from("conversation_reads")
         .upsert(
@@ -96,7 +96,6 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -121,7 +120,6 @@ export default function ChatPage() {
 
       setConversation(convo);
 
-      // Fetch other participant's profile
       const otherParticipantId = convo.participant_ids.find((id: string) => id !== user?.id);
       if (otherParticipantId) {
         const { data: profile } = await supabase
@@ -133,7 +131,6 @@ export default function ChatPage() {
         setOtherParticipantName(profile?.username ? `@${profile.username}` : profile?.display_name || t("messages.user"));
       }
 
-      // Fetch context label if care request
       if (convo.context_type === "careRequest" && convo.context_id) {
         const { data: careRequest } = await supabase
           .from("care_requests")
@@ -172,30 +169,81 @@ export default function ChatPage() {
     }
   };
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const processed = await processImageFile(file);
+      setSelectedImage(processed);
+      setImagePreview(URL.createObjectURL(processed));
+    } catch (err) {
+      console.error("Error processing image:", err);
+      toast({ variant: "destructive", title: t("common.error"), description: "Failed to process image" });
+    }
+
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const clearImage = () => {
+    setSelectedImage(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (!user) return null;
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from("chat-images")
+      .upload(path, file, { contentType: file.type });
+
+    if (error) {
+      console.error("Upload error:", error);
+      throw error;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("chat-images")
+      .getPublicUrl(path);
+
+    return urlData.publicUrl;
+  };
+
   const handleSend = async () => {
-    if (!newMessage.trim() || !user || !conversationId || sending) return;
+    if ((!newMessage.trim() && !selectedImage) || !user || !conversationId || sending) return;
 
     const messageText = newMessage.trim();
+    const imageFile = selectedImage;
     setNewMessage("");
+    clearImage();
     setSending(true);
 
     try {
-      // Insert message
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+
       const { error: messageError } = await supabase
         .from("messages")
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
-          text: messageText,
+          text: messageText || (imageUrl ? "📷 Photo" : ""),
+          image_url: imageUrl,
         });
 
       if (messageError) throw messageError;
 
-      // Update conversation's last_message and updated_at
+      const lastMsg = messageText || "📷 Photo";
       const { error: convoError } = await supabase
         .from("conversations")
         .update({
-          last_message: messageText,
+          last_message: lastMsg,
           updated_at: new Date().toISOString(),
         })
         .eq("id", conversationId);
@@ -204,7 +252,7 @@ export default function ChatPage() {
     } catch (error: any) {
       console.error("Error sending message:", error);
       toast({ variant: "destructive", title: t("messages.failedToSend"), description: error.message });
-      setNewMessage(messageText); // Restore message on error
+      setNewMessage(messageText);
     } finally {
       setSending(false);
     }
@@ -252,14 +300,46 @@ export default function ChatPage() {
               timestamp={new Date(message.created_at)}
               isOwn={message.sender_id === user?.id}
               senderName={message.sender_id !== user?.id ? otherParticipantName : undefined}
+              imageUrl={message.image_url}
             />
           ))
         )}
       </div>
 
+      {/* Image preview */}
+      {imagePreview && (
+        <div className="border-t border-border bg-card px-4 py-2">
+          <div className="relative inline-block">
+            <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-xl" />
+            <button
+              onClick={clearImage}
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t border-border bg-card p-4 safe-area-bottom">
         <div className="flex gap-2">
+          <input
+            type="file"
+            accept="image/*,.heic,.heif"
+            ref={fileInputRef}
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={sending}
+            className="shrink-0"
+          >
+            <ImagePlus className="h-5 w-5 text-muted-foreground" />
+          </Button>
           <Input
             placeholder={t("messages.typeMessage")}
             value={newMessage}
@@ -268,7 +348,7 @@ export default function ChatPage() {
             className="flex-1"
             disabled={sending}
           />
-          <Button onClick={handleSend} disabled={!newMessage.trim() || sending}>
+          <Button onClick={handleSend} disabled={(!newMessage.trim() && !selectedImage) || sending}>
             {sending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

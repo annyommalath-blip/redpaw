@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { SharedPostCard, parseSharedPost } from "./SharedPostCard";
@@ -7,10 +8,12 @@ interface ChatBubbleProps {
   timestamp: Date;
   isOwn: boolean;
   senderName?: string;
+  imageUrl?: string | null;
 }
 
-export function ChatBubble({ message, timestamp, isOwn, senderName }: ChatBubbleProps) {
+export function ChatBubble({ message, timestamp, isOwn, senderName, imageUrl }: ChatBubbleProps) {
   const sharedPost = parseSharedPost(message);
+  const [imgExpanded, setImgExpanded] = useState(false);
 
   return (
     <div className={cn(
@@ -36,13 +39,27 @@ export function ChatBubble({ message, timestamp, isOwn, senderName }: ChatBubble
       ) : (
         <div
           className={cn(
-            "px-4 py-2.5 rounded-2xl shadow-sm",
+            "rounded-2xl shadow-sm overflow-hidden",
             isOwn
               ? "bg-gradient-to-br from-primary to-primary-glow text-primary-foreground rounded-br-md"
               : "glass-card-light rounded-bl-md"
           )}
         >
-          <p className="text-sm leading-relaxed">{message}</p>
+          {imageUrl && (
+            <button onClick={() => setImgExpanded(!imgExpanded)} className="block w-full">
+              <img
+                src={imageUrl}
+                alt="Shared image"
+                className={cn(
+                  "w-full object-cover",
+                  imgExpanded ? "max-h-none" : "max-h-64"
+                )}
+              />
+            </button>
+          )}
+          {message && (
+            <p className="text-sm leading-relaxed px-4 py-2.5">{message}</p>
+          )}
         </div>
       )}
 
