@@ -545,6 +545,7 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          image_url: string | null
           sender_id: string
           text: string
         }
@@ -552,6 +553,7 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
+          image_url?: string | null
           sender_id: string
           text: string
         }
@@ -559,6 +561,7 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           sender_id?: string
           text?: string
         }
