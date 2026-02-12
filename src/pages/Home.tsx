@@ -25,7 +25,7 @@ export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { unreadCount: notificationCount } = useNotifications();
-  const { posts, loading, fetchPosts, toggleLike, repost, deletePost } = useFeed();
+  const { posts, loading, fetchPosts, toggleLike, repost, deletePost, updatePost } = useFeed();
   const [showCreate, setShowCreate] = useState(false);
   const [sharePost, setSharePost] = useState<PostData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -150,6 +150,7 @@ export default function HomePage() {
                   onRepost={handleRepost}
                   onDelete={handleDelete}
                   onShare={handleShare}
+                  onEdit={updatePost}
                 />
               </div>
             ))}
