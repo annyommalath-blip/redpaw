@@ -125,8 +125,8 @@ export default function ChatPage() {
       const otherParticipantId = convo.participant_ids.find((id: string) => id !== user?.id);
       if (otherParticipantId) {
         const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name, first_name, last_name, username")
+          .from("profiles_public")
+          .select("display_name, avatar_url, username")
           .eq("user_id", otherParticipantId)
           .maybeSingle();
 

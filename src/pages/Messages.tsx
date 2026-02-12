@@ -93,8 +93,8 @@ export default function MessagesPage() {
         .filter((id, index, arr) => arr.indexOf(id) === index);
 
       const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, display_name, first_name, last_name, avatar_url, username")
+        .from("profiles_public")
+        .select("user_id, display_name, avatar_url, username")
         .in("user_id", otherParticipantIds);
 
       const conversationsWithProfiles: ConversationWithProfile[] = convos.map(convo => {
