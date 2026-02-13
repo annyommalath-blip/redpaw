@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Grid3X3, Bookmark, Repeat2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -1092,26 +1093,26 @@ export default function ProfilePage() {
                             </span>
                           )}
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "shrink-0 rounded-xl h-10 w-10",
-                            dog.is_lost ? "text-lost hover:bg-lost/10" : "text-muted-foreground hover:bg-muted"
-                          )}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectDog(dog.id);
-                            if (dog.is_lost) {
-                              handleEndLostMode(dog.id);
-                            } else {
-                              setActiveDogId(dog.id);
-                              setLostModeDialogOpen(true);
-                            }
-                          }}
-                        >
-                          <AlertTriangle className="h-5 w-5" />
-                        </Button>
+                        <div className="shrink-0 flex flex-col items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Switch
+                            checked={dog.is_lost}
+                            onCheckedChange={() => {
+                              handleSelectDog(dog.id);
+                              if (dog.is_lost) {
+                                handleEndLostMode(dog.id);
+                              } else {
+                                setActiveDogId(dog.id);
+                                setLostModeDialogOpen(true);
+                              }
+                            }}
+                            className={cn(
+                              dog.is_lost && "data-[state=checked]:bg-lost"
+                            )}
+                          />
+                          <span className={cn("text-[10px] font-medium", dog.is_lost ? "text-lost" : "text-muted-foreground")}>
+                            {t("dogs.lost")}
+                          </span>
+                        </div>
                       </div>
                     ))}
                     <Button variant="outline" size="sm" className="w-full rounded-xl" onClick={() => navigate("/profile/add-dog")}>
