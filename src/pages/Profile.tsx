@@ -1093,26 +1093,41 @@ export default function ProfilePage() {
                             </span>
                           )}
                         </div>
-                        <div className="shrink-0 flex flex-col items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                          <Switch
-                            checked={dog.is_lost}
-                            onCheckedChange={() => {
-                              handleSelectDog(dog.id);
-                              if (dog.is_lost) {
-                                handleEndLostMode(dog.id);
-                              } else {
-                                setActiveDogId(dog.id);
-                                setLostModeDialogOpen(true);
-                              }
-                            }}
-                            className={cn(
-                              dog.is_lost && "data-[state=checked]:bg-lost"
-                            )}
-                          />
-                          <span className={cn("text-[10px] font-medium", dog.is_lost ? "text-lost" : "text-muted-foreground")}>
-                            {t("dogs.lost")}
+                        <button
+                          className={cn(
+                            "shrink-0 relative flex items-center h-8 w-[72px] rounded-full border-2 transition-colors duration-300 p-0.5",
+                            dog.is_lost
+                              ? "bg-lost border-lost/60"
+                              : "bg-muted border-border"
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectDog(dog.id);
+                            if (dog.is_lost) {
+                              handleEndLostMode(dog.id);
+                            } else {
+                              setActiveDogId(dog.id);
+                              setLostModeDialogOpen(true);
+                            }
+                          }}
+                        >
+                          <span className={cn(
+                            "absolute text-[9px] font-bold uppercase tracking-wide transition-opacity duration-200",
+                            dog.is_lost ? "opacity-100 right-2.5 text-white" : "opacity-0 right-2.5 text-white"
+                          )}>
+                            ON
                           </span>
-                        </div>
+                          <span className={cn(
+                            "absolute text-[9px] font-bold uppercase tracking-wide transition-opacity duration-200",
+                            !dog.is_lost ? "opacity-100 left-2 text-muted-foreground" : "opacity-0 left-2 text-muted-foreground"
+                          )}>
+                            OFF
+                          </span>
+                          <span className={cn(
+                            "block h-6 w-8 rounded-full bg-background shadow-md transition-transform duration-300 z-10",
+                            dog.is_lost ? "translate-x-[32px]" : "translate-x-0"
+                          )} />
+                        </button>
                       </div>
                     ))}
                     <Button variant="outline" size="sm" className="w-full rounded-xl" onClick={() => navigate("/profile/add-dog")}>
