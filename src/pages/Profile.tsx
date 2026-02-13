@@ -1092,6 +1092,26 @@ export default function ProfilePage() {
                             </span>
                           )}
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "shrink-0 rounded-xl h-10 w-10",
+                            dog.is_lost ? "text-lost hover:bg-lost/10" : "text-muted-foreground hover:bg-muted"
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectDog(dog.id);
+                            if (dog.is_lost) {
+                              handleEndLostMode(dog.id);
+                            } else {
+                              setActiveDogId(dog.id);
+                              setLostModeDialogOpen(true);
+                            }
+                          }}
+                        >
+                          <AlertTriangle className="h-5 w-5" />
+                        </Button>
                       </div>
                     ))}
                     <Button variant="outline" size="sm" className="w-full rounded-xl" onClick={() => navigate("/profile/add-dog")}>
