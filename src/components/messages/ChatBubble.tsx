@@ -21,7 +21,7 @@ export function ChatBubble({ message, timestamp, isOwn, senderName, imageUrl, on
     <>
       <div className={cn(
         "flex flex-col gap-1 animate-fade-in",
-        sharedPost ? "max-w-[65%]" : "max-w-[80%]",
+        (sharedPost || imageUrl) ? "max-w-[65%]" : "max-w-[80%]",
         isOwn ? "ml-auto items-end" : "mr-auto items-start"
       )}>
         {!isOwn && senderName && (
@@ -56,7 +56,7 @@ export function ChatBubble({ message, timestamp, isOwn, senderName, imageUrl, on
                 <img
                   src={imageUrl}
                   alt="Shared image"
-                  className="w-full aspect-[4/3] object-cover"
+                  className="w-full aspect-[4/5] object-cover"
                 />
               </button>
             )}
