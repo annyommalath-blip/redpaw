@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PostCard from "@/components/feed/PostCard";
 import CreatePostSheet from "@/components/feed/CreatePostSheet";
 import SendPostSheet from "@/components/feed/SendPostSheet";
+import WelcomePost from "@/components/feed/WelcomePost";
 import { toast } from "sonner";
 import type { PostData } from "@/components/feed/PostCard";
 
@@ -142,6 +143,12 @@ export default function HomePage() {
         {/* Feed */}
         {posts.length > 0 ? (
           <AnimatedList className="space-y-4">
+            {/* Show welcome post at top for users with few posts */}
+            {posts.filter(p => p.user_id === user?.id).length === 0 && (
+              <AnimatedItem>
+                <WelcomePost />
+              </AnimatedItem>
+            )}
             {posts.map((post) => (
               <div key={post.id} id={`post-${post.id}`} className="transition-all duration-500">
                 <PostCard
@@ -156,22 +163,27 @@ export default function HomePage() {
             ))}
           </AnimatedList>
         ) : (
-          <AnimatedItem delay={0.1}>
-            <GlassCard variant="light" className="p-8 text-center">
-              <div className="flex flex-col items-center gap-4">
-                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Camera className="h-8 w-8 text-primary" />
+          <AnimatedList className="space-y-4">
+            <AnimatedItem>
+              <WelcomePost />
+            </AnimatedItem>
+            <AnimatedItem delay={0.1}>
+              <GlassCard variant="light" className="p-8 text-center">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Camera className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-foreground mb-1">{t("home.noPostsYet")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("home.beFirstToShare")}</p>
+                  </div>
+                  <Button className="rounded-xl" onClick={() => setShowCreate(true)}>
+                    {t("home.createPost")}
+                  </Button>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg text-foreground mb-1">{t("home.noPostsYet")}</h3>
-                  <p className="text-sm text-muted-foreground">{t("home.beFirstToShare")}</p>
-                </div>
-                <Button className="rounded-xl" onClick={() => setShowCreate(true)}>
-                  {t("home.createPost")}
-                </Button>
-              </div>
-            </GlassCard>
-          </AnimatedItem>
+              </GlassCard>
+            </AnimatedItem>
+          </AnimatedList>
         )}
       </div>
 
