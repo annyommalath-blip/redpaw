@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog, Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Dog, Mail, Lock, Eye, EyeOff, Sparkles, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { session, loading: authLoading } = useAuthContext();
+  const { session, loading: authLoading, enterGuestMode } = useAuthContext();
 
   // Redirect to home if already authenticated
   useEffect(() => {
@@ -262,6 +262,26 @@ export default function AuthPage() {
           </TabsContent>
         </Tabs>
       </GlassCard>
+
+      {/* Continue as Guest */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="mt-6"
+      >
+        <Button
+          variant="ghost"
+          className="text-muted-foreground hover:text-foreground gap-2"
+          onClick={() => {
+            enterGuestMode();
+            navigate("/", { replace: true });
+          }}
+        >
+          <UserRound className="h-4 w-4" />
+          Continue as Guest
+        </Button>
+      </motion.div>
     </div>
   );
 }

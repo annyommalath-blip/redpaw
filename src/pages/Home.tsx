@@ -24,7 +24,7 @@ export default function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { unreadCount: notificationCount } = useNotifications();
   const { posts, loading, fetchPosts, toggleLike, repost, deletePost, updatePost } = useFeed();
   const [showCreate, setShowCreate] = useState(false);
@@ -122,23 +122,44 @@ export default function HomePage() {
       />
 
       <div className="p-4 space-y-4">
-        {/* Compose prompt */}
-        <AnimatedItem>
-          <GlassCard
-            variant="light"
-            hover
-            className="p-3 cursor-pointer"
-            onClick={() => setShowCreate(true)}
-          >
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <Camera className="h-5 w-5 text-primary" />
+        {/* Guest banner */}
+        {isGuest && (
+          <AnimatedItem>
+            <GlassCard variant="light" className="p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">👋 Browsing as Guest</p>
+                  <p className="text-xs text-muted-foreground">Sign up to post, like & connect</p>
+                </div>
+                <Button size="sm" className="rounded-xl" onClick={() => {
+                  navigate("/auth");
+                }}>
+                  Sign Up
+                </Button>
               </div>
-              <p className="text-sm text-muted-foreground flex-1">{t("home.writeCaption")}</p>
-              <Button size="sm" className="rounded-xl">{t("common.post")}</Button>
-            </div>
-          </GlassCard>
-        </AnimatedItem>
+            </GlassCard>
+          </AnimatedItem>
+        )}
+
+        {/* Compose prompt — hidden for guests */}
+        {!isGuest && (
+          <AnimatedItem>
+            <GlassCard
+              variant="light"
+              hover
+              className="p-3 cursor-pointer"
+              onClick={() => setShowCreate(true)}
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Camera className="h-5 w-5 text-primary" />
+                </div>
+                <p className="text-sm text-muted-foreground flex-1">{t("home.writeCaption")}</p>
+                <Button size="sm" className="rounded-xl">{t("common.post")}</Button>
+              </div>
+            </GlassCard>
+          </AnimatedItem>
+        )}
 
         {/* Feed */}
         {posts.length > 0 ? (
