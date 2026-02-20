@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { GuestAuthPrompt } from "@/components/auth/GuestAuthPrompt";
 
 interface Conversation {
   id: string;
@@ -28,12 +29,20 @@ interface ConversationWithProfile extends Conversation {
 }
 
 export default function MessagesPage() {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [conversations, setConversations] = useState<ConversationWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const { getUnreadCount } = useUnreadMessages();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  useEffect(() => {
+    if (isGuest) {
+      setShowAuthPrompt(true);
+      setLoading(false);
+    }
+  }, [isGuest]);
 
   useEffect(() => {
     if (user) {
@@ -123,6 +132,23 @@ export default function MessagesPage() {
   const handleOpenAIChat = () => {
     navigate("/messages/ai");
   };
+
+  if (isGuest) {
+    return (
+      <MobileLayout>
+        <PageHeader title={t("messages.title")} subtitle={t("messages.subtitle")} />
+        <GuestAuthPrompt open={showAuthPrompt} onOpenChange={(open) => {
+          setShowAuthPrompt(open);
+          if (!open) navigate(-1);
+        }} />
+        <EmptyState
+          icon={<MessageCircle className="h-8 w-8" />}
+          title="Sign in to message"
+          description="Create an account to chat with other dog parents"
+        />
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout>

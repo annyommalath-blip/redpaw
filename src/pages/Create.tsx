@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { GuestAuthPrompt } from "@/components/auth/GuestAuthPrompt";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe, Dog, Clock } from "lucide-react";
@@ -42,8 +43,16 @@ export default function CreatePage() {
   );
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { t } = useTranslation();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  // Show auth prompt for guests
+  useEffect(() => {
+    if (isGuest) {
+      setShowAuthPrompt(true);
+    }
+  }, [isGuest]);
 
   // Dogs state
   const [dogs, setDogs] = useState<DogData[]>([]);
@@ -354,6 +363,20 @@ export default function CreatePage() {
       setSubmitting(false);
     }
   };
+
+  if (isGuest) {
+    return (
+      <MobileLayout>
+        <PageHeader title={t("create.title")} subtitle={t("create.subtitle")} />
+        <div className="p-4">
+          <GuestAuthPrompt open={showAuthPrompt} onOpenChange={(open) => {
+            setShowAuthPrompt(open);
+            if (!open) navigate(-1);
+          }} />
+        </div>
+      </MobileLayout>
+    );
+  }
 
   if (!createType) {
     return (
