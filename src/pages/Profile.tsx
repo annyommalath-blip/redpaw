@@ -46,6 +46,7 @@ import PostCard from "@/components/feed/PostCard";
 import type { PostData } from "@/components/feed/PostCard";
 import SendPostSheet from "@/components/feed/SendPostSheet";
 import { cn } from "@/lib/utils";
+import { GuestAuthPrompt } from "@/components/auth/GuestAuthPrompt";
 
 const ACTIVE_DOG_STORAGE_KEY = "redpaw_active_dog_id";
 
@@ -102,7 +103,7 @@ const isRequestArchived = (request: MyCareRequest): boolean => {
 
 
 export default function ProfilePage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isGuest } = useAuth();
   const { t } = useTranslation();
   const [profile, setProfile] = useState<OwnerProfile | null>(null);
   const [dogs, setDogs] = useState<UserDog[]>([]);
@@ -737,9 +738,27 @@ export default function ProfilePage() {
 
   const displayName = profile?.display_name || formatName() || user?.email?.split("@")[0] || "Dog Lover";
 
+  if (isGuest) {
+    return (
+      <MobileLayout>
+        <PageHeader title={t("profile.title")} subtitle={t("profile.subtitle")} />
+        <div className="p-4">
+          <GuestAuthPrompt open={true} onOpenChange={(open) => {
+            if (!open) navigate(-1);
+          }} />
+          <EmptyState
+            icon={<User className="h-8 w-8" />}
+            title="Sign in to view profile"
+            description="Create an account to manage your dogs and profile"
+          />
+        </div>
+      </MobileLayout>
+    );
+  }
+
   return (
     <MobileLayout>
-      <PageHeader 
+      <PageHeader
         title={t("profile.title")} 
         subtitle={t("profile.subtitle")}
         action={

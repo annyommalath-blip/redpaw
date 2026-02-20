@@ -198,9 +198,11 @@ export default function HomePage() {
                     <h3 className="font-semibold text-lg text-foreground mb-1">{t("home.noPostsYet")}</h3>
                     <p className="text-sm text-muted-foreground">{t("home.beFirstToShare")}</p>
                   </div>
-                  <Button className="rounded-xl" onClick={() => setShowCreate(true)}>
-                    {t("home.createPost")}
-                  </Button>
+                  {!isGuest && (
+                    <Button className="rounded-xl" onClick={() => setShowCreate(true)}>
+                      {t("home.createPost")}
+                    </Button>
+                  )}
                 </div>
               </GlassCard>
             </AnimatedItem>

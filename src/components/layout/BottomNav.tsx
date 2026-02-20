@@ -12,15 +12,13 @@ export function BottomNav() {
   const { t } = useTranslation();
   const { isGuest } = useAuthContext();
 
-  const allNavItems = [
+  const navItems = [
     { to: "/", icon: Home, label: t("nav.home") },
     { to: "/community", icon: Users, label: t("nav.community") },
-    { to: "/create", icon: PlusCircle, label: t("nav.create"), isCreate: true, authOnly: true },
-    { to: "/messages", icon: MessageCircle, label: t("nav.messages"), authOnly: true },
-    { to: "/profile", icon: User, label: t("nav.profile"), authOnly: true },
+    { to: "/create", icon: PlusCircle, label: t("nav.create"), isCreate: true },
+    { to: "/messages", icon: MessageCircle, label: t("nav.messages") },
+    { to: "/profile", icon: User, label: t("nav.profile") },
   ];
-
-  const navItems = isGuest ? allNavItems.filter(item => !item.authOnly) : allNavItems;
 
   return (
     <motion.nav 
