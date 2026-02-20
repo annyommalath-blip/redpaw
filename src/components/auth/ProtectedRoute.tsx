@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { session, loading } = useAuthContext();
+  const { session, loading, isGuest } = useAuthContext();
 
   // Show loading screen while checking auth state
   if (loading) {
@@ -19,6 +19,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         </div>
       </div>
     );
+  }
+
+  // Allow guests through to view content
+  if (isGuest) {
+    return <>{children}</>;
   }
 
   // Redirect to auth if no session

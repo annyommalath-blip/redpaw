@@ -6,7 +6,10 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isGuest: boolean;
   signOut: () => Promise<void>;
+  enterGuestMode: () => void;
+  exitGuestMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,6 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(() => localStorage.getItem("redpaw_guest") === "true");
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -23,6 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("[Auth] State change:", event, currentSession ? "session exists" : "no session");
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        if (currentSession) {
+          setIsGuest(false);
+          localStorage.removeItem("redpaw_guest");
+        }
         setLoading(false);
       }
     );
@@ -40,11 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     console.log("[Auth] Signing out...");
+    setIsGuest(false);
+    localStorage.removeItem("redpaw_guest");
     await supabase.auth.signOut();
   };
 
+  const enterGuestMode = () => {
+    setIsGuest(true);
+    localStorage.setItem("redpaw_guest", "true");
+  };
+
+  const exitGuestMode = () => {
+    setIsGuest(false);
+    localStorage.removeItem("redpaw_guest");
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isGuest, signOut, enterGuestMode, exitGuestMode }}>
       {children}
     </AuthContext.Provider>
   );

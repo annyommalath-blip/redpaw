@@ -5,18 +5,22 @@ import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export function BottomNav() {
   const { totalUnread } = useUnreadMessages();
   const { t } = useTranslation();
+  const { isGuest } = useAuthContext();
 
-  const navItems = [
+  const allNavItems = [
     { to: "/", icon: Home, label: t("nav.home") },
     { to: "/community", icon: Users, label: t("nav.community") },
-    { to: "/create", icon: PlusCircle, label: t("nav.create"), isCreate: true },
-    { to: "/messages", icon: MessageCircle, label: t("nav.messages") },
-    { to: "/profile", icon: User, label: t("nav.profile") },
+    { to: "/create", icon: PlusCircle, label: t("nav.create"), isCreate: true, authOnly: true },
+    { to: "/messages", icon: MessageCircle, label: t("nav.messages"), authOnly: true },
+    { to: "/profile", icon: User, label: t("nav.profile"), authOnly: true },
   ];
+
+  const navItems = isGuest ? allNavItems.filter(item => !item.authOnly) : allNavItems;
 
   return (
     <motion.nav 
