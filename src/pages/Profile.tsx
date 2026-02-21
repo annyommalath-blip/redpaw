@@ -742,16 +742,16 @@ export default function ProfilePage() {
     return (
       <MobileLayout>
         <PageHeader title={t("profile.title")} subtitle={t("profile.subtitle")} />
-        <div className="p-4">
-          <GuestAuthPrompt open={true} onOpenChange={(open) => {
-            if (!open) navigate(-1);
-          }} />
+        <div className="p-4 flex flex-col items-center justify-center min-h-[60vh]">
           <EmptyState
             icon={<User className="h-8 w-8" />}
             title="Sign in to view profile"
             description="Create an account to manage your dogs and profile"
           />
         </div>
+        <GuestAuthPrompt open={true} onOpenChange={(open) => {
+          if (!open) navigate("/");
+        }} />
       </MobileLayout>
     );
   }
