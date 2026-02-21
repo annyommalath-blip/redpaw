@@ -9,7 +9,6 @@ export function useFeed() {
   const [loading, setLoading] = useState(true);
 
   const fetchPosts = useCallback(async () => {
-    if (!user) return;
     setLoading(true);
 
     try {
@@ -28,20 +27,27 @@ export function useFeed() {
       }
 
       // Get users that current user follows
-      const { data: followingData } = await supabase
-        .from("user_follows")
-        .select("following_id")
-        .eq("follower_id", user.id);
-      const followingIds = (followingData || []).map((f) => f.following_id);
+      const followingIds: string[] = [];
+      if (user) {
+        const { data: followingData } = await supabase
+          .from("user_follows")
+          .select("following_id")
+          .eq("follower_id", user.id);
+        followingIds.push(...(followingData || []).map((f) => f.following_id));
+      }
 
-      // Fetch reposts by followed users (and self)
-      const repostUserIds = [...followingIds, user.id];
-      const { data: repostsData } = await supabase
-        .from("reposts")
-        .select("user_id, post_id, created_at")
-        .in("user_id", repostUserIds)
-        .order("created_at", { ascending: false })
-        .limit(50);
+      // Fetch reposts by followed users (and self) - skip for guests
+      const repostUserIds = user ? [...followingIds, user.id] : [];
+      let repostsData: any[] = [];
+      if (repostUserIds.length > 0) {
+        const { data } = await supabase
+          .from("reposts")
+          .select("user_id, post_id, created_at")
+          .in("user_id", repostUserIds)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        repostsData = data || [];
+      }
 
       // Get reposted post IDs that aren't already in the feed
       const existingPostIds = new Set(postsData.map((p) => p.id));
@@ -115,13 +121,16 @@ export function useFeed() {
       // Collect all post IDs for counts
       const allPostIds = uniqueItems.map((item) => item.post.id);
 
-      // Fetch likes for current user
-      const { data: userLikes } = await supabase
-        .from("post_likes")
-        .select("post_id")
-        .eq("user_id", user.id)
-        .in("post_id", allPostIds);
-      const likedSet = new Set((userLikes || []).map((l) => l.post_id));
+      // Fetch likes for current user (skip for guests)
+      const likedSet = new Set<string>();
+      if (user) {
+        const { data: userLikes } = await supabase
+          .from("post_likes")
+          .select("post_id")
+          .eq("user_id", user.id)
+          .in("post_id", allPostIds);
+        (userLikes || []).forEach((l) => likedSet.add(l.post_id));
+      }
 
       // Fetch like counts
       const { data: likeCounts } = await supabase
@@ -153,21 +162,27 @@ export function useFeed() {
         repostCountMap.set(r.post_id, (repostCountMap.get(r.post_id) || 0) + 1);
       });
 
-      // Fetch saved status
-      const { data: userSaved } = await supabase
-        .from("saved_posts")
-        .select("post_id")
-        .eq("user_id", user.id)
-        .in("post_id", allPostIds);
-      const savedSet = new Set((userSaved || []).map((s) => s.post_id));
+      // Fetch saved status (skip for guests)
+      const savedSet = new Set<string>();
+      if (user) {
+        const { data: userSaved } = await supabase
+          .from("saved_posts")
+          .select("post_id")
+          .eq("user_id", user.id)
+          .in("post_id", allPostIds);
+        (userSaved || []).forEach((s) => savedSet.add(s.post_id));
+      }
 
-      // Check if current user has reposted each post
-      const { data: userReposts } = await supabase
-        .from("reposts")
-        .select("post_id")
-        .eq("user_id", user.id)
-        .in("post_id", allPostIds);
-      const repostedSet = new Set((userReposts || []).map((r) => r.post_id));
+      // Check if current user has reposted each post (skip for guests)
+      const repostedSet = new Set<string>();
+      if (user) {
+        const { data: userReposts } = await supabase
+          .from("reposts")
+          .select("post_id")
+          .eq("user_id", user.id)
+          .in("post_id", allPostIds);
+        (userReposts || []).forEach((r) => repostedSet.add(r.post_id));
+      }
 
       // Build enriched posts
       const enrichedPosts: PostData[] = uniqueItems.map((item) => {
