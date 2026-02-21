@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversation } from "@/hooks/useConversation";
 import { useViewerLocation } from "@/hooks/useViewerLocation";
+import { GuestAuthPrompt } from "@/components/auth/GuestAuthPrompt";
 
 interface LostAlert {
   id: string;
@@ -90,8 +91,9 @@ export default function CommunityPage() {
   const [careRequests, setCareRequests] = useState<CareRequest[]>([]);
   const [userApplications, setUserApplications] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { openConversation } = useConversation();
   const viewerLocation = useViewerLocation();
 
@@ -203,8 +205,8 @@ export default function CommunityPage() {
   };
 
   const handleContactOwner = async (alertId: string) => {
-    if (!user) {
-      navigate("/auth");
+    if (isGuest || !user) {
+      setShowAuthPrompt(true);
       return;
     }
     
@@ -219,8 +221,8 @@ export default function CommunityPage() {
   };
 
   const handleContactFoundDogReporter = async (foundDogId: string) => {
-    if (!user) {
-      navigate("/auth");
+    if (isGuest || !user) {
+      setShowAuthPrompt(true);
       return;
     }
     
@@ -248,6 +250,10 @@ export default function CommunityPage() {
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   const handleCareRequestClick = (requestId: string) => {
+    if (isGuest) {
+      setShowAuthPrompt(true);
+      return;
+    }
     navigate(`/care-request/${requestId}`);
   };
 
@@ -425,6 +431,8 @@ export default function CommunityPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <GuestAuthPrompt open={showAuthPrompt} onOpenChange={setShowAuthPrompt} />
     </MobileLayout>
   );
 }

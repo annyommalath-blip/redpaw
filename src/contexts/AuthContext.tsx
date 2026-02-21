@@ -27,7 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("[Auth] State change:", event, currentSession ? "session exists" : "no session");
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        if (currentSession) {
+        // Only clear guest mode for real (non-anonymous) sign-ins
+        if (currentSession && !currentSession.user.is_anonymous) {
           setIsGuest(false);
           localStorage.removeItem("redpaw_guest");
         }
@@ -53,14 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const enterGuestMode = () => {
+  const enterGuestMode = async () => {
     setIsGuest(true);
     localStorage.setItem("redpaw_guest", "true");
+    // Sign in anonymously so RLS policies allow read access
+    await supabase.auth.signInAnonymously();
   };
 
-  const exitGuestMode = () => {
+  const exitGuestMode = async () => {
     setIsGuest(false);
     localStorage.removeItem("redpaw_guest");
+    // Sign out the anonymous session
+    await supabase.auth.signOut();
   };
 
   return (

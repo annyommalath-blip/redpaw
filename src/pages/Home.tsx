@@ -17,6 +17,7 @@ import PostCard from "@/components/feed/PostCard";
 import CreatePostSheet from "@/components/feed/CreatePostSheet";
 import SendPostSheet from "@/components/feed/SendPostSheet";
 import WelcomePost from "@/components/feed/WelcomePost";
+import { GuestAuthPrompt } from "@/components/auth/GuestAuthPrompt";
 import { toast } from "sonner";
 import type { PostData } from "@/components/feed/PostCard";
 
@@ -28,6 +29,7 @@ export default function HomePage() {
   const { unreadCount: notificationCount } = useNotifications();
   const { posts, loading, fetchPosts, toggleLike, repost, deletePost, updatePost } = useFeed();
   const [showCreate, setShowCreate] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [sharePost, setSharePost] = useState<PostData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const highlightPostId = searchParams.get("highlightPost");
@@ -65,6 +67,7 @@ export default function HomePage() {
   }, [user]);
 
   const handleShare = (post: PostData) => {
+    if (isGuest) { setShowAuthPrompt(true); return; }
     setSharePost(post);
   };
 
@@ -74,8 +77,14 @@ export default function HomePage() {
   };
 
   const handleRepost = async (postId: string, reposted: boolean) => {
+    if (isGuest) { setShowAuthPrompt(true); return; }
     await repost(postId, reposted);
     toast.success(reposted ? "Reposted! 🔄" : "Repost removed");
+  };
+
+  const handleLikeToggle = async (postId: string, liked: boolean) => {
+    if (isGuest) { setShowAuthPrompt(true); return; }
+    await toggleLike(postId, liked);
   };
 
   if (loading) {
@@ -174,7 +183,7 @@ export default function HomePage() {
               <div key={post.id} id={`post-${post.id}`} className="transition-all duration-500">
                 <PostCard
                   post={post}
-                  onLikeToggle={toggleLike}
+                  onLikeToggle={handleLikeToggle}
                   onRepost={handleRepost}
                   onDelete={handleDelete}
                   onShare={handleShare}
@@ -231,6 +240,8 @@ export default function HomePage() {
           null
         }
       />
+
+      <GuestAuthPrompt open={showAuthPrompt} onOpenChange={setShowAuthPrompt} />
     </MobileLayout>
   );
 }
