@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      adoption_posts: {
+        Row: {
+          adoption_fee: number | null
+          adoption_fee_currency: string | null
+          age: string | null
+          breed: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          is_spayed_neutered: boolean | null
+          is_vaccinated: boolean | null
+          latitude: number | null
+          location_label: string
+          longitude: number | null
+          owner_id: string
+          pet_name: string
+          pet_type: string
+          photo_urls: string[]
+          reason: string | null
+          size: string | null
+          status: string
+          temperament: string | null
+          updated_at: string
+        }
+        Insert: {
+          adoption_fee?: number | null
+          adoption_fee_currency?: string | null
+          age?: string | null
+          breed?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_spayed_neutered?: boolean | null
+          is_vaccinated?: boolean | null
+          latitude?: number | null
+          location_label: string
+          longitude?: number | null
+          owner_id: string
+          pet_name: string
+          pet_type?: string
+          photo_urls?: string[]
+          reason?: string | null
+          size?: string | null
+          status?: string
+          temperament?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adoption_fee?: number | null
+          adoption_fee_currency?: string | null
+          age?: string | null
+          breed?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_spayed_neutered?: boolean | null
+          is_vaccinated?: boolean | null
+          latitude?: number | null
+          location_label?: string
+          longitude?: number | null
+          owner_id?: string
+          pet_name?: string
+          pet_type?: string
+          photo_urls?: string[]
+          reason?: string | null
+          size?: string | null
+          status?: string
+          temperament?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       care_applications: {
         Row: {
           applicant_id: string
@@ -309,6 +381,104 @@ export type Database = {
           weight_unit?: string | null
         }
         Relationships: []
+      }
+      donation_campaigns: {
+        Row: {
+          about: string | null
+          caption: string
+          category: string
+          contact_phone: string | null
+          created_at: string
+          goal_amount: number
+          id: string
+          latitude: number | null
+          location_label: string | null
+          longitude: number | null
+          owner_id: string
+          photo_urls: string[]
+          raised_amount: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          about?: string | null
+          caption: string
+          category?: string
+          contact_phone?: string | null
+          created_at?: string
+          goal_amount: number
+          id?: string
+          latitude?: number | null
+          location_label?: string | null
+          longitude?: number | null
+          owner_id: string
+          photo_urls?: string[]
+          raised_amount?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          about?: string | null
+          caption?: string
+          category?: string
+          contact_phone?: string | null
+          created_at?: string
+          goal_amount?: number
+          id?: string
+          latitude?: number | null
+          location_label?: string | null
+          longitude?: number | null
+          owner_id?: string
+          photo_urls?: string[]
+          raised_amount?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      donation_records: {
+        Row: {
+          amount: number
+          campaign_id: string
+          created_at: string
+          donor_id: string
+          id: string
+          is_deleted: boolean
+          note: string | null
+          receipt_url: string
+        }
+        Insert: {
+          amount: number
+          campaign_id: string
+          created_at?: string
+          donor_id: string
+          id?: string
+          is_deleted?: boolean
+          note?: string | null
+          receipt_url: string
+        }
+        Update: {
+          amount?: number
+          campaign_id?: string
+          created_at?: string
+          donor_id?: string
+          id?: string
+          is_deleted?: boolean
+          note?: string | null
+          receipt_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donation_records_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "donation_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       found_dog_replies: {
         Row: {
