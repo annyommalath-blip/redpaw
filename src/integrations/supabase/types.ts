@@ -222,6 +222,33 @@ export type Database = {
           },
         ]
       }
+      community_comments: {
+        Row: {
+          context_id: string
+          context_type: string
+          created_at: string
+          id: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          context_id: string
+          context_type: string
+          created_at?: string
+          id?: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          context_id?: string
+          context_type?: string
+          created_at?: string
+          id?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_reads: {
         Row: {
           conversation_id: string

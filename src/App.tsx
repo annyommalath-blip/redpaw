@@ -21,6 +21,8 @@ import DogDetail from "./pages/DogDetail";
 import CareRequestDetail from "./pages/CareRequestDetail";
 import LostAlertDetail from "./pages/LostAlertDetail";
 import FoundDogDetail from "./pages/FoundDogDetail";
+import DonationCampaignDetail from "./pages/DonationCampaignDetail";
+import AdoptionPostDetail from "./pages/AdoptionPostDetail";
 import Settings from "./pages/Settings";
 import UserProfilePage from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
@@ -43,6 +45,8 @@ const App = () => (
             <Route path="/care-request/:requestId" element={<ProtectedRoute><CareRequestDetail /></ProtectedRoute>} />
             <Route path="/lost-alert/:id" element={<ProtectedRoute><LostAlertDetail /></ProtectedRoute>} />
             <Route path="/found-dog/:id" element={<ProtectedRoute><FoundDogDetail /></ProtectedRoute>} />
+            <Route path="/donation/:id" element={<ProtectedRoute><DonationCampaignDetail /></ProtectedRoute>} />
+            <Route path="/adoption/:id" element={<ProtectedRoute><AdoptionPostDetail /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/messages/ai" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />

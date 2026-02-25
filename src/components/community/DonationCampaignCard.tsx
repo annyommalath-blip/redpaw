@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Heart, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MapPin, Heart, MoreVertical, Trash2, ChevronRight, MessageCircle } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,16 +66,17 @@ export function DonationCampaignCard({
   return (
     <>
       <GlassCard variant="light" hover={!!onClick} className="overflow-hidden animate-fade-in" onClick={onClick}>
-        {/* Photo */}
+        {/* Photo header */}
         {photoUrls.length > 0 && (
           <div className="h-40 w-full overflow-hidden">
             <img src={photoUrls[0]} alt={title} className="h-full w-full object-cover" />
           </div>
         )}
         <div className="p-4">
-          <div className="flex items-start justify-between mb-2">
+          {/* Header badges - matching care card style */}
+          <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border", cat.color)}>
+              <span className={cn("inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border", cat.color)}>
                 {cat.emoji} {category.replace("-", " ")}
               </span>
             </div>
@@ -99,14 +100,17 @@ export function DonationCampaignCard({
                   </DropdownMenu>
                 </div>
               )}
+              {onClick && !isOwner && (
+                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+              )}
             </div>
           </div>
 
-          <h3 className="font-bold text-foreground text-base mb-1">{title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{caption}</p>
+          <h3 className="font-bold text-foreground">{title}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{caption}</p>
 
           {/* Progress */}
-          <div className="space-y-1.5 mb-3">
+          <div className="mt-3 space-y-1.5">
             <Progress value={percentage} className="h-2" />
             <div className="flex justify-between text-xs">
               <span className="font-semibold text-primary">${raisedAmount.toLocaleString()} raised</span>
@@ -115,14 +119,10 @@ export function DonationCampaignCard({
           </div>
 
           {locationLabel && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
               <MapPin className="h-3.5 w-3.5" /> {locationLabel}
             </div>
           )}
-
-          <Button size="sm" className="w-full mt-3 rounded-xl" onClick={(e) => { e.stopPropagation(); onClick?.(); }}>
-            <Heart className="h-4 w-4 mr-1.5" /> Donate
-          </Button>
         </div>
       </GlassCard>
 
