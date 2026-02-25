@@ -1,7 +1,6 @@
-import { MapPin, MessageCircle, ChevronRight } from "lucide-react";
+import { MapPin, ChevronRight } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -44,8 +43,8 @@ export function AdoptionPostCard({
       className={cn("overflow-hidden animate-fade-in", isAdopted && "opacity-75")}
       onClick={onClick}
     >
-      {/* Photo */}
-      <div className="relative h-48 w-full overflow-hidden">
+      {/* Photo header */}
+      <div className="relative h-40 w-full overflow-hidden">
         {photoUrls.length > 0 ? (
           <img src={photoUrls[0]} alt={petName} className="h-full w-full object-cover" />
         ) : (
@@ -54,7 +53,7 @@ export function AdoptionPostCard({
           </div>
         )}
         <div className="absolute top-2 left-2">
-          <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border", statusCfg.class)}>
+          <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border backdrop-blur-sm bg-background/60", statusCfg.class)}>
             {statusCfg.label}
           </span>
         </div>
@@ -66,9 +65,10 @@ export function AdoptionPostCard({
       </div>
 
       <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
+        {/* Header - matching care card style */}
+        <div className="flex items-start justify-between mb-1">
           <div>
-            <h3 className="font-bold text-foreground text-lg">{petName}</h3>
+            <h3 className="font-bold text-foreground">{petName}</h3>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {breed && <Badge variant="outline" className="text-xs">{breed}</Badge>}
               {age && <Badge variant="outline" className="text-xs">{age}</Badge>}
@@ -76,31 +76,30 @@ export function AdoptionPostCard({
               <Badge variant="outline" className="text-xs capitalize">{petType}</Badge>
             </div>
           </div>
-          {onClick && <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 mt-1" />}
-        </div>
-
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
-          <MapPin className="h-3.5 w-3.5" /> {locationLabel}
-        </div>
-
-        <div className="flex items-center justify-between mt-3">
-          {adoptionFee != null && adoptionFee > 0 ? (
-            <span className="text-sm font-semibold text-primary">
-              ${adoptionFee.toLocaleString()} {adoptionFeeCurrency || ""}
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              {formatDistanceToNow(createdAt, { addSuffix: false })}
             </span>
-          ) : (
-            <span className="text-sm font-semibold text-success">Free adoption</span>
-          )}
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-            {formatDistanceToNow(createdAt, { addSuffix: false })}
-          </span>
+            {onClick && <ChevronRight className="h-5 w-5 text-muted-foreground" />}
+          </div>
         </div>
 
-        {!isAdopted && (
-          <Button size="sm" variant="outline" className="w-full mt-3 rounded-xl" onClick={(e) => { e.stopPropagation(); onClick?.(); }}>
-            <MessageCircle className="h-4 w-4 mr-1.5" /> {t("common.message")}
-          </Button>
-        )}
+        {/* Details - matching care card spacing */}
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5" /> {locationLabel}
+          </div>
+
+          <div className="flex items-center justify-between">
+            {adoptionFee != null && adoptionFee > 0 ? (
+              <span className="text-sm font-semibold text-primary">
+                ${adoptionFee.toLocaleString()} {adoptionFeeCurrency || ""}
+              </span>
+            ) : (
+              <span className="text-sm font-semibold text-success">Free adoption</span>
+            )}
+          </div>
+        </div>
       </div>
     </GlassCard>
   );

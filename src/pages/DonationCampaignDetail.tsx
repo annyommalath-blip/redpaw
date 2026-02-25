@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Heart, MapPin, Phone, Loader2, Trash2, Image } from "lucide-react";
+import { CommunityComments } from "@/components/community/CommunityComments";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -160,6 +161,9 @@ export default function DonationCampaignDetail() {
             </div>
           )}
         </GlassCard>
+
+        {/* Comments */}
+        <CommunityComments contextType="donation" contextId={campaign.id} />
       </div>
 
       <DonateDialog

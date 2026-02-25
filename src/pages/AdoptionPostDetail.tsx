@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { MapPin, Phone, Check, X, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { CommunityComments } from "@/components/community/CommunityComments";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -175,6 +176,9 @@ export default function AdoptionPostDetail() {
             </Button>
           )}
         </GlassCard>
+
+        {/* Comments */}
+        <CommunityComments contextType="adoption" contextId={post.id} />
       </div>
 
       <GuestAuthPrompt open={showAuthPrompt} onOpenChange={setShowAuthPrompt} />
