@@ -246,6 +246,12 @@ export default function AIChatPage() {
         } catch { /* ignore */ }
       }
     }
+
+    // Avoid leaving an empty placeholder bubble ("...") when stream produced no text
+    if (!assistantContent.trim()) {
+      setMessages(prev => prev.filter(m => m.id !== assistantId));
+      throw new Error("No response generated. Please try again.");
+    }
   };
 
   const handleSend = async () => {

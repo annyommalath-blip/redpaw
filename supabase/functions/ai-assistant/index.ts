@@ -409,27 +409,53 @@ serve(async (req) => {
     // Handle tool calls
     if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0 && userId && supabase) {
       console.log("Processing tool calls:", assistantMessage.tool_calls.length);
-      const toolResults: any[] = [];
+
+      const toolResults: Array<{ toolName: string; result: any }> = [];
       for (const toolCall of assistantMessage.tool_calls) {
         const toolName = toolCall.function.name;
         let args = {};
-        try { args = JSON.parse(toolCall.function.arguments || "{}"); } catch { /* ignore */ }
+        try {
+          args = JSON.parse(toolCall.function.arguments || "{}");
+        } catch {
+          // ignore malformed args and execute with empty object
+        }
         const result = await executeTool(supabase, userId, toolName, args);
-        toolResults.push({ tool_call_id: toolCall.id, role: "tool", content: JSON.stringify(result) });
+        toolResults.push({ toolName, result });
       }
 
-      // Second call with tool results - streaming
+      const toolContext = toolResults
+        .map(({ toolName, result }, index) => `Tool #${index + 1} (${toolName}) result:\n${JSON.stringify(result)}`)
+        .join("\n\n");
+
+      // Generate final user-facing answer from tool output
       const finalResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "google/gemini-3-flash-preview",
-          messages: [{ role: "system", content: systemPrompt }, ...messages, assistantMessage, ...toolResults],
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...messages,
+            {
+              role: "system",
+              content: `TOOL RESULTS (trusted app data):\n${toolContext}\n\nUse these results to answer the user's latest request directly and clearly. Do not call tools in this response.`,
+            },
+          ],
           stream: true,
         }),
       });
 
       if (!finalResponse.ok) {
+        const errorText = await finalResponse.text();
+        console.error("Final AI response error:", finalResponse.status, errorText);
+        if (finalResponse.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (finalResponse.status === 402) {
+          return new Response(JSON.stringify({ error: "AI service requires payment." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
         return new Response(JSON.stringify({ error: "AI service temporarily unavailable" }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
