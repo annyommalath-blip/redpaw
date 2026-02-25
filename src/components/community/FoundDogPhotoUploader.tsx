@@ -10,12 +10,14 @@ interface FoundDogPhotoUploaderProps {
   photoUrls: string[];
   onPhotosChange: (urls: string[]) => void;
   maxPhotos?: number;
+  bucket?: string;
 }
 
 export function FoundDogPhotoUploader({
   photoUrls,
   onPhotosChange,
   maxPhotos = 3,
+  bucket = "found-dog-photos",
 }: FoundDogPhotoUploaderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -50,7 +52,7 @@ export function FoundDogPhotoUploader({
         const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("found-dog-photos")
+          .from(bucket)
           .upload(filePath, processedFile, {
             contentType: "image/jpeg",
             upsert: false,
@@ -59,7 +61,7 @@ export function FoundDogPhotoUploader({
         if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage
-          .from("found-dog-photos")
+          .from(bucket)
           .getPublicUrl(filePath);
 
         newUrls.push(urlData.publicUrl);
