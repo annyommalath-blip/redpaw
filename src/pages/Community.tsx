@@ -195,7 +195,7 @@ export default function CommunityPage() {
           <TabsList className="grid w-full grid-cols-2 mb-4 glass-card-light p-1 rounded-2xl">
             <TabsTrigger value="help" className="gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <HandHeart className="h-4 w-4" />
-              {t("community.helpHub")}
+              {t("community.careHub")}
             </TabsTrigger>
             <TabsTrigger value="lost" className="gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <AlertTriangle className="h-4 w-4" />
@@ -204,7 +204,7 @@ export default function CommunityPage() {
           </TabsList>
 
           <TabsContent value="help" className="mt-0">
-            {/* Help Hub filter chips */}
+            {/* Care Hub filter chips */}
             <ToggleGroup
               type="single"
               value={helpFilter}
