@@ -547,6 +547,15 @@ export default function AIChatPage() {
             className="flex-1"
             disabled={isLoading}
           />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleListening}
+            disabled={isLoading}
+            className={cn("shrink-0", isListening && "text-destructive animate-pulse")}
+          >
+            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </Button>
           <Button onClick={handleSend} disabled={(!newMessage.trim() && attachedImages.length === 0) || isLoading}>
             <Send className="h-4 w-4" />
           </Button>
