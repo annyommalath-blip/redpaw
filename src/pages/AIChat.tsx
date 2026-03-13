@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X, Mic, MicOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
