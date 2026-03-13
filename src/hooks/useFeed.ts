@@ -3,6 +3,175 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { PostData } from "@/components/feed/PostCard";
 
+type FeedItem = {
+  post: {
+    id: string;
+    user_id: string;
+    caption: string | null;
+    photo_url: string | null;
+    photo_urls?: string[] | null;
+    created_at: string;
+    visibility?: PostData["visibility"];
+  };
+  repost_by?: string;
+  repost_created_at?: string;
+  sort_time: string;
+};
+
+type InteractionPost = {
+  id: string;
+  user_id: string;
+  caption: string | null;
+  photo_url: string | null;
+  photo_urls?: string[] | null;
+};
+
+type UserTasteProfile = {
+  preferredAuthors: Map<string, number>;
+  preferredTokens: Map<string, number>;
+  prefersPhotos: boolean;
+  prefersMultiPhoto: boolean;
+};
+
+const STOP_WORDS = new Set([
+  "the", "and", "for", "you", "your", "with", "this", "that", "have", "from",
+  "are", "was", "were", "been", "they", "them", "their", "our", "out", "but",
+  "not", "all", "too", "very", "just", "into", "over", "under", "after", "before",
+  "when", "what", "where", "here", "there", "how", "why", "who", "his", "her",
+  "its", "our", "dog", "dogs", "pet", "pets",
+]);
+
+const tokenizeCaption = (caption: string | null | undefined): string[] => {
+  if (!caption) return [];
+
+  return caption
+    .toLowerCase()
+    .split(/[^a-z0-9]+/i)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3 && !STOP_WORDS.has(token));
+};
+
+const getPhotoCount = (post: { photo_url: string | null; photo_urls?: string[] | null }) => {
+  if (post.photo_urls?.length) return post.photo_urls.length;
+  return post.photo_url ? 1 : 0;
+};
+
+const getRecencyScore = (timestamp: string) => {
+  const ageHours = Math.max(0, (Date.now() - new Date(timestamp).getTime()) / (1000 * 60 * 60));
+  return Math.exp(-ageHours / 36);
+};
+
+const getEngagementScore = (post: PostData) => {
+  const weightedEngagement =
+    post.like_count * 1 +
+    post.comment_count * 3 +
+    post.repost_count * 2 +
+    (post.is_saved ? 2 : 0);
+
+  return Math.log1p(weightedEngagement) / Math.log(20);
+};
+
+const buildUserTasteProfile = (interactionPosts: InteractionPost[]): UserTasteProfile => {
+  const preferredAuthors = new Map<string, number>();
+  const preferredTokens = new Map<string, number>();
+  let photoHeavyInteractions = 0;
+  let multiPhotoInteractions = 0;
+
+  interactionPosts.forEach((post) => {
+    preferredAuthors.set(post.user_id, (preferredAuthors.get(post.user_id) || 0) + 1);
+
+    tokenizeCaption(post.caption).forEach((token) => {
+      preferredTokens.set(token, (preferredTokens.get(token) || 0) + 1);
+    });
+
+    const photoCount = getPhotoCount(post);
+    if (photoCount > 0) photoHeavyInteractions += 1;
+    if (photoCount > 1) multiPhotoInteractions += 1;
+  });
+
+  const interactionCount = interactionPosts.length || 1;
+
+  return {
+    preferredAuthors,
+    preferredTokens,
+    prefersPhotos: photoHeavyInteractions / interactionCount >= 0.5,
+    prefersMultiPhoto: multiPhotoInteractions / interactionCount >= 0.3,
+  };
+};
+
+const getPreferenceScore = (
+  item: FeedItem,
+  userTasteProfile: UserTasteProfile | null,
+  followingIds: string[],
+) => {
+  const contentAuthorId = item.post.user_id;
+  const distributorId = item.repost_by || item.post.user_id;
+  let score = 0;
+
+  if (followingIds.includes(contentAuthorId)) score += 0.55;
+  if (distributorId !== contentAuthorId && followingIds.includes(distributorId)) score += 0.25;
+
+  if (!userTasteProfile) return score;
+
+  score += Math.min(0.7, (userTasteProfile.preferredAuthors.get(contentAuthorId) || 0) * 0.18);
+
+  const tokens = tokenizeCaption(item.post.caption);
+  const tokenAffinity = tokens.reduce(
+    (sum, token) => sum + (userTasteProfile.preferredTokens.get(token) || 0),
+    0,
+  );
+  score += Math.min(0.8, tokenAffinity * 0.08);
+
+  const photoCount = getPhotoCount(item.post);
+  if (userTasteProfile.prefersPhotos && photoCount > 0) score += 0.2;
+  if (userTasteProfile.prefersMultiPhoto && photoCount > 1) score += 0.15;
+
+  return score;
+};
+
+const getContentQualityScore = (post: FeedItem["post"]) => {
+  const photoCount = getPhotoCount(post);
+  const captionLength = post.caption?.trim().length || 0;
+  let score = 0;
+
+  if (photoCount > 0) score += 0.6;
+  if (photoCount > 1) score += 0.2;
+  if (captionLength >= 20) score += 0.1;
+  if (captionLength >= 80) score += 0.1;
+
+  return score;
+};
+
+const diversifyByAuthor = (posts: Array<PostData & { ranking_score: number }>) => {
+  const remaining = [...posts].sort((a, b) => b.ranking_score - a.ranking_score);
+  const authorOccurrences = new Map<string, number>();
+  const diversified: Array<PostData & { ranking_score: number }> = [];
+
+  while (remaining.length > 0) {
+    let bestIndex = 0;
+    let bestScore = Number.NEGATIVE_INFINITY;
+
+    for (let index = 0; index < remaining.length; index += 1) {
+      const candidate = remaining[index];
+      const authorId = candidate.original_post?.user_id || candidate.user_id;
+      const seenCount = authorOccurrences.get(authorId) || 0;
+      const diversifiedScore = candidate.ranking_score - seenCount * 0.12;
+
+      if (diversifiedScore > bestScore) {
+        bestScore = diversifiedScore;
+        bestIndex = index;
+      }
+    }
+
+    const [selected] = remaining.splice(bestIndex, 1);
+    const authorId = selected.original_post?.user_id || selected.user_id;
+    authorOccurrences.set(authorId, (authorOccurrences.get(authorId) || 0) + 1);
+    diversified.push(selected);
+  }
+
+  return diversified;
+};
+
 export function useFeed() {
   const { user } = useAuth();
   const [posts, setPosts] = useState<PostData[]>([]);
@@ -73,15 +242,6 @@ export function useFeed() {
       const profileMap = new Map(
         (profiles || []).map((p: any) => [p.user_id, p])
       );
-
-      // Build a combined feed: original posts + repost entries
-      // For reposts, use the repost's created_at as the sort time
-      type FeedItem = {
-        post: any;
-        repost_by?: string;
-        repost_created_at?: string;
-        sort_time: string;
-      };
 
       const feedItems: FeedItem[] = [];
 
@@ -184,10 +344,37 @@ export function useFeed() {
         (userReposts || []).forEach((r) => repostedSet.add(r.post_id));
       }
 
+      let userTasteProfile: UserTasteProfile | null = null;
+      if (user) {
+        const [{ data: likedHistory }, { data: savedHistory }, { data: repostHistory }] = await Promise.all([
+          supabase.from("post_likes").select("post_id").eq("user_id", user.id).limit(40),
+          supabase.from("saved_posts").select("post_id").eq("user_id", user.id).limit(30),
+          supabase.from("reposts").select("post_id").eq("user_id", user.id).limit(20),
+        ]);
+
+        const interactionPostIds = [
+          ...(likedHistory || []).map((item) => item.post_id),
+          ...(savedHistory || []).map((item) => item.post_id),
+          ...(repostHistory || []).map((item) => item.post_id),
+        ];
+
+        const uniqueInteractionPostIds = [...new Set(interactionPostIds)].filter(Boolean);
+        if (uniqueInteractionPostIds.length > 0) {
+          const { data: interactionPosts } = await supabase
+            .from("posts")
+            .select("id, user_id, caption, photo_url, photo_urls")
+            .in("id", uniqueInteractionPostIds.slice(0, 50));
+
+          if (interactionPosts?.length) {
+            userTasteProfile = buildUserTasteProfile(interactionPosts);
+          }
+        }
+      }
+
       // Build enriched posts
-      const enrichedPosts: PostData[] = uniqueItems.map((item) => {
+      const enrichedPosts: Array<PostData & { ranking_score: number }> = uniqueItems.map((item) => {
         const p = item.post;
-        return {
+        const basePost: PostData = {
           ...p,
           repost_id: item.repost_by ? "repost" : null, // marker for repost display
           author: profileMap.get(p.user_id) || undefined,
@@ -224,9 +411,29 @@ export function useFeed() {
               }
             : {}),
         };
+
+        const recencyScore = getRecencyScore(item.sort_time);
+        const engagementScore = getEngagementScore(basePost);
+        const preferenceScore = getPreferenceScore(item, userTasteProfile, followingIds);
+        const contentQualityScore = getContentQualityScore(item.post);
+        const explorationScore = recencyScore > 0.8 && engagementScore < 0.35 ? 0.12 : 0;
+
+        const rankingScore =
+          recencyScore * 0.4 +
+          engagementScore * 0.22 +
+          preferenceScore * 0.23 +
+          contentQualityScore * 0.1 +
+          explorationScore +
+          (item.repost_by ? 0.04 : 0);
+
+        return {
+          ...basePost,
+          ranking_score: rankingScore,
+        };
       });
 
-      setPosts(enrichedPosts);
+      const rankedPosts = diversifyByAuthor(enrichedPosts);
+      setPosts(rankedPosts);
     } catch (err) {
       console.error("Feed error:", err);
     } finally {
