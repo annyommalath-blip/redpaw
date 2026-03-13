@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { isHeicFile } from "@/lib/imageUtils";
+import { cn } from "@/lib/utils";
 
 interface MessageContent {
   type: "text" | "image_url";
