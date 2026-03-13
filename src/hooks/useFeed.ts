@@ -387,6 +387,7 @@ export function useFeed() {
           original_post: item.repost_by
             ? {
                 ...p,
+                repost_id: null,
                 author: profileMap.get(p.user_id) || undefined,
                 like_count: 0,
                 comment_count: 0,
@@ -402,6 +403,7 @@ export function useFeed() {
                 // Keep original post author in original_post
                 original_post: {
                   ...p,
+                  repost_id: null,
                   author: profileMap.get(p.user_id) || undefined,
                   like_count: likeCountMap.get(p.id) || 0,
                   comment_count: commentCountMap.get(p.id) || 0,

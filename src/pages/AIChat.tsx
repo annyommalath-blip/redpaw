@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X, Mic, MicOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { isHeicFile } from "@/lib/imageUtils";
+import { cn } from "@/lib/utils";
 
 interface MessageContent {
   type: "text" | "image_url";
@@ -125,8 +126,66 @@ export default function AIChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
+  const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Web Speech API voice-to-text
+  const toggleListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: "destructive", title: "Not supported", description: "Speech recognition is not supported in this browser." });
+      return;
+    }
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = navigator.language || "en-US";
+    recognitionRef.current = recognition;
+
+    let finalTranscript = "";
+
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      setNewMessage(prev => {
+        const base = prev.replace(/\s*🎤.*$/, "");
+        if (finalTranscript) return (base ? base + " " : "") + finalTranscript;
+        if (interim) return (base ? base + " " : "") + interim;
+        return base;
+      });
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+      if (finalTranscript) {
+        setNewMessage(prev => prev.replace(/\s*🎤.*$/, "").trim() + (finalTranscript ? " " + finalTranscript : ""));
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.start();
+    setIsListening(true);
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -489,6 +548,15 @@ export default function AIChatPage() {
             className="flex-1"
             disabled={isLoading}
           />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleListening}
+            disabled={isLoading}
+            className={cn("shrink-0", isListening && "text-destructive animate-pulse")}
+          >
+            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </Button>
           <Button onClick={handleSend} disabled={(!newMessage.trim() && attachedImages.length === 0) || isLoading}>
             <Send className="h-4 w-4" />
           </Button>
