@@ -33,6 +33,14 @@ function generateTimeOptions(): { value: string; label: string }[] {
 
 const timeOptions = generateTimeOptions();
 
+export interface FinderObservations {
+  behavior_observed: string;
+  collar_visible: string;
+  walking_normally: string;
+  direction_heading: string;
+  still_in_sight: string;
+}
+
 interface FoundDogFormProps {
   photoUrls: string[];
   onPhotosChange: (urls: string[]) => void;
@@ -55,6 +63,8 @@ interface FoundDogFormProps {
   onDateChange: (date: Date | undefined) => void;
   time: string;
   onTimeChange: (time: string) => void;
+  finderObservations: FinderObservations;
+  onFinderObservationsChange: (obs: FinderObservations) => void;
   submitting: boolean;
   onSubmit: () => void;
 }
@@ -69,6 +79,8 @@ export function FoundDogForm({
   onDateChange,
   time,
   onTimeChange,
+  finderObservations,
+  onFinderObservationsChange,
   submitting,
   onSubmit,
 }: FoundDogFormProps) {
@@ -162,6 +174,106 @@ export function FoundDogForm({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        </div>
+
+        {/* Quick Observations - Optional but helps matching */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Quick observations (helps us match the dog faster)</Label>
+          <p className="text-xs text-muted-foreground">Answer what you can — all fields are optional.</p>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">When the dog noticed you, did it...</Label>
+            <Select
+              value={finderObservations.behavior_observed}
+              onValueChange={(v) => onFinderObservationsChange({ ...finderObservations, behavior_observed: v })}
+            >
+              <SelectTrigger className={cn(!finderObservations.behavior_observed && "text-muted-foreground")}>
+                <SelectValue placeholder="Select behavior..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="approached">Come toward me</SelectItem>
+                <SelectItem value="stayed_still">Stay still</SelectItem>
+                <SelectItem value="ran_away">Run away</SelectItem>
+                <SelectItem value="ignored">Ignore me completely</SelectItem>
+                <SelectItem value="not_sure">Not sure / too far away</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Did you see anything around its neck? (collar, harness, bandana)</Label>
+            <Select
+              value={finderObservations.collar_visible}
+              onValueChange={(v) => onFinderObservationsChange({ ...finderObservations, collar_visible: v })}
+            >
+              <SelectTrigger className={cn(!finderObservations.collar_visible && "text-muted-foreground")}>
+                <SelectValue placeholder="Collar visible?" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="collar_yes">Yes — collar</SelectItem>
+                <SelectItem value="harness_yes">Yes — harness</SelectItem>
+                <SelectItem value="bandana">Yes — bandana or clothing</SelectItem>
+                <SelectItem value="nothing">No, nothing visible</SelectItem>
+                <SelectItem value="not_sure">Couldn't tell</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Did the dog walk normally, or favor one leg?</Label>
+            <Select
+              value={finderObservations.walking_normally}
+              onValueChange={(v) => onFinderObservationsChange({ ...finderObservations, walking_normally: v })}
+            >
+              <SelectTrigger className={cn(!finderObservations.walking_normally && "text-muted-foreground")}>
+                <SelectValue placeholder="Walking?" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="normal">Walking normally</SelectItem>
+                <SelectItem value="limping">Limping / favoring a leg</SelectItem>
+                <SelectItem value="not_moving">Not moving / lying down</SelectItem>
+                <SelectItem value="not_sure">Couldn't tell</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Direction heading?</Label>
+              <Select
+                value={finderObservations.direction_heading}
+                onValueChange={(v) => onFinderObservationsChange({ ...finderObservations, direction_heading: v })}
+              >
+                <SelectTrigger className={cn(!finderObservations.direction_heading && "text-muted-foreground")}>
+                  <SelectValue placeholder="Direction..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="north">North</SelectItem>
+                  <SelectItem value="south">South</SelectItem>
+                  <SelectItem value="east">East</SelectItem>
+                  <SelectItem value="west">West</SelectItem>
+                  <SelectItem value="stationary">Not moving</SelectItem>
+                  <SelectItem value="unknown">Don't know</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Still there now?</Label>
+              <Select
+                value={finderObservations.still_in_sight}
+                onValueChange={(v) => onFinderObservationsChange({ ...finderObservations, still_in_sight: v })}
+              >
+                <SelectTrigger className={cn(!finderObservations.still_in_sight && "text-muted-foreground")}>
+                  <SelectValue placeholder="Still there?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes_with_me">Yes, I have it with me</SelectItem>
+                  <SelectItem value="yes_nearby">Yes, still in sight</SelectItem>
+                  <SelectItem value="no">No, it moved on</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 

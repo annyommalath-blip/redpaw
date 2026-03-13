@@ -355,55 +355,127 @@ export type Database = {
           },
         ]
       }
+      dog_matches: {
+        Row: {
+          id: string
+          found_dog_id: string
+          lost_alert_id: string
+          match_score: number
+          confidence: string
+          match_details: Json
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          found_dog_id: string
+          lost_alert_id: string
+          match_score: number
+          confidence: string
+          match_details?: Json
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          found_dog_id?: string
+          lost_alert_id?: string
+          match_score?: number
+          confidence?: string
+          match_details?: Json
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dog_matches_found_dog_id_fkey"
+            columns: ["found_dog_id"]
+            isOneToOne: false
+            referencedRelation: "found_dogs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dog_matches_lost_alert_id_fkey"
+            columns: ["lost_alert_id"]
+            isOneToOne: false
+            referencedRelation: "lost_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dogs: {
         Row: {
           age: string | null
+          behavior_description: string | null
           breed: string | null
+          coat_shade: string | null
+          collar_description: string | null
           created_at: string
           date_of_birth: string | null
           id: string
           is_lost: boolean
+          markings: string[] | null
           microchip_no: string | null
           name: string
           notes: string | null
           owner_id: string
           photo_url: string | null
           photo_urls: string[] | null
+          unique_traits: string[] | null
           updated_at: string
+          verification_secret: string | null
+          visible_conditions: string | null
           weight: string | null
           weight_unit: string | null
         }
         Insert: {
           age?: string | null
+          behavior_description?: string | null
           breed?: string | null
+          coat_shade?: string | null
+          collar_description?: string | null
           created_at?: string
           date_of_birth?: string | null
           id?: string
           is_lost?: boolean
+          markings?: string[] | null
           microchip_no?: string | null
           name: string
           notes?: string | null
           owner_id: string
           photo_url?: string | null
           photo_urls?: string[] | null
+          unique_traits?: string[] | null
           updated_at?: string
+          verification_secret?: string | null
+          visible_conditions?: string | null
           weight?: string | null
           weight_unit?: string | null
         }
         Update: {
           age?: string | null
+          behavior_description?: string | null
           breed?: string | null
+          coat_shade?: string | null
+          collar_description?: string | null
           created_at?: string
           date_of_birth?: string | null
           id?: string
           is_lost?: boolean
+          markings?: string[] | null
           microchip_no?: string | null
           name?: string
           notes?: string | null
           owner_id?: string
           photo_url?: string | null
           photo_urls?: string[] | null
+          unique_traits?: string[] | null
           updated_at?: string
+          verification_secret?: string | null
+          visible_conditions?: string | null
           weight?: string | null
           weight_unit?: string | null
         }
@@ -541,42 +613,57 @@ export type Database = {
       }
       found_dogs: {
         Row: {
+          ai_attributes: Json
+          confidence_level: string
           created_at: string
           description: string | null
+          finder_observations: Json
           found_at: string
           id: string
+          image_quality: string | null
           latitude: number | null
           location_label: string
           location_source: string | null
           longitude: number | null
+          matched_alert_id: string | null
           photo_urls: string[]
           reporter_id: string
           status: Database["public"]["Enums"]["found_dog_status"]
           updated_at: string
         }
         Insert: {
+          ai_attributes?: Json
+          confidence_level?: string
           created_at?: string
           description?: string | null
+          finder_observations?: Json
           found_at: string
           id?: string
+          image_quality?: string | null
           latitude?: number | null
           location_label: string
           location_source?: string | null
           longitude?: number | null
+          matched_alert_id?: string | null
           photo_urls?: string[]
           reporter_id: string
           status?: Database["public"]["Enums"]["found_dog_status"]
           updated_at?: string
         }
         Update: {
+          ai_attributes?: Json
+          confidence_level?: string
           created_at?: string
           description?: string | null
+          finder_observations?: Json
           found_at?: string
           id?: string
+          image_quality?: string | null
           latitude?: number | null
           location_label?: string
           location_source?: string | null
           longitude?: number | null
+          matched_alert_id?: string | null
           photo_urls?: string[]
           reporter_id?: string
           status?: Database["public"]["Enums"]["found_dog_status"]
@@ -629,6 +716,7 @@ export type Database = {
           dog_id: string
           id: string
           last_seen_location: string
+          last_seen_time: string | null
           latitude: number | null
           location_label: string | null
           location_source: string | null
@@ -636,6 +724,7 @@ export type Database = {
           owner_id: string
           photo_url: string | null
           resolved_at: string | null
+          search_radius_km: number | null
           status: Database["public"]["Enums"]["alert_status"]
           title: string
           updated_at: string
@@ -646,6 +735,7 @@ export type Database = {
           dog_id: string
           id?: string
           last_seen_location: string
+          last_seen_time?: string | null
           latitude?: number | null
           location_label?: string | null
           location_source?: string | null
@@ -653,6 +743,7 @@ export type Database = {
           owner_id: string
           photo_url?: string | null
           resolved_at?: string | null
+          search_radius_km?: number | null
           status?: Database["public"]["Enums"]["alert_status"]
           title: string
           updated_at?: string
@@ -663,6 +754,7 @@ export type Database = {
           dog_id?: string
           id?: string
           last_seen_location?: string
+          last_seen_time?: string | null
           latitude?: number | null
           location_label?: string | null
           location_source?: string | null
@@ -670,6 +762,7 @@ export type Database = {
           owner_id?: string
           photo_url?: string | null
           resolved_at?: string | null
+          search_radius_km?: number | null
           status?: Database["public"]["Enums"]["alert_status"]
           title?: string
           updated_at?: string

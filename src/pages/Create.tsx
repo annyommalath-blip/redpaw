@@ -27,7 +27,7 @@ import { DogMultiSelector } from "@/components/dog/DogMultiSelector";
 import { LocationPicker } from "@/components/location/LocationPicker";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { FoundDogPhotoUploader } from "@/components/community/FoundDogPhotoUploader";
-import { FoundDogForm } from "@/components/community/FoundDogForm";
+import { FoundDogForm, FinderObservations } from "@/components/community/FoundDogForm";
 
 type CreateType = "log" | "lost" | "care" | "meds" | "found" | "donation" | "adoption" | null;
 
@@ -93,6 +93,13 @@ export default function CreatePage() {
   const foundLocation = useGeolocation();
   const [foundDate, setFoundDate] = useState<Date | undefined>();
   const [foundTime, setFoundTime] = useState<string>("");
+  const [finderObservations, setFinderObservations] = useState<FinderObservations>({
+    behavior_observed: "",
+    collar_visible: "",
+    walking_normally: "",
+    direction_heading: "",
+    still_in_sight: "",
+  });
 
   // Donation campaign form state
   const [donTitle, setDonTitle] = useState("");
@@ -230,7 +237,11 @@ export default function CreatePage() {
     foundAt.setHours(hours, minutes, 0, 0);
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("found_dogs").insert({ reporter_id: user!.id, photo_urls: foundPhotoUrls, description: foundDescription.trim() || null, location_label: foundLocation.locationLabel, latitude: foundLocation.latitude, longitude: foundLocation.longitude, location_source: foundLocation.locationSource, found_at: foundAt.toISOString(), status: "active" });
+      // Filter out empty observation values
+      const observations = Object.fromEntries(
+        Object.entries(finderObservations).filter(([_, v]) => v !== "")
+      );
+      const { error } = await supabase.from("found_dogs").insert({ reporter_id: user!.id, photo_urls: foundPhotoUrls, description: foundDescription.trim() || null, location_label: foundLocation.locationLabel, latitude: foundLocation.latitude, longitude: foundLocation.longitude, location_source: foundLocation.locationSource, found_at: foundAt.toISOString(), status: "active", finder_observations: Object.keys(observations).length > 0 ? observations : {} });
       if (error) throw error;
       toast({ title: t("found.foundDogReported"), description: t("found.thankYouHelping") });
       navigate("/community?tab=lost");
@@ -368,7 +379,7 @@ export default function CreatePage() {
       <div className="p-4">
         {/* Found Dog form */}
         {createType === "found" ? (
-          <FoundDogForm photoUrls={foundPhotoUrls} onPhotosChange={setFoundPhotoUrls} description={foundDescription} onDescriptionChange={setFoundDescription} location={foundLocation} date={foundDate} onDateChange={setFoundDate} time={foundTime} onTimeChange={setFoundTime} submitting={submitting} onSubmit={handleCreateFoundDog} />
+          <FoundDogForm photoUrls={foundPhotoUrls} onPhotosChange={setFoundPhotoUrls} description={foundDescription} onDescriptionChange={setFoundDescription} location={foundLocation} date={foundDate} onDateChange={setFoundDate} time={foundTime} onTimeChange={setFoundTime} finderObservations={finderObservations} onFinderObservationsChange={setFinderObservations} submitting={submitting} onSubmit={handleCreateFoundDog} />
         ) : createType === "donation" ? (
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5 text-primary" />Donation Campaign</CardTitle><CardDescription>Create a fundraiser for a pet in need</CardDescription></CardHeader>

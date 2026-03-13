@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, AlertTriangle, Loader2 } from "lucide-react";
+import { Clock, AlertTriangle, Loader2, Shield } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -41,6 +41,10 @@ export function LostModeDialog({
   const location = useGeolocation();
   const [lastSeenWhen, setLastSeenWhen] = useState("");
   const [extraNotes, setExtraNotes] = useState("");
+  const [coatShade, setCoatShade] = useState("");
+  const [collarDescription, setCollarDescription] = useState("");
+  const [markings, setMarkings] = useState("");
+  const [verificationSecret, setVerificationSecret] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -53,10 +57,16 @@ export function LostModeDialog({
 
     setIsSubmitting(true);
     try {
-      // Update dog's lost status
+      // Update dog's lost status + identity details for matching
+      const dogUpdate: any = { is_lost: true };
+      if (coatShade.trim()) dogUpdate.coat_shade = coatShade.trim();
+      if (collarDescription.trim()) dogUpdate.collar_description = collarDescription.trim();
+      if (markings.trim()) dogUpdate.markings = markings.split(",").map((m: string) => m.trim()).filter(Boolean);
+      if (verificationSecret.trim()) dogUpdate.verification_secret = verificationSecret.trim();
+
       const { error: dogError } = await supabase
         .from("dogs")
-        .update({ is_lost: true })
+        .update(dogUpdate)
         .eq("id", dog.id);
 
       if (dogError) throw dogError;
@@ -92,6 +102,10 @@ export function LostModeDialog({
       location.reset();
       setLastSeenWhen("");
       setExtraNotes("");
+      setCoatShade("");
+      setCollarDescription("");
+      setMarkings("");
+      setVerificationSecret("");
       onOpenChange(false);
       onSuccess();
 
@@ -114,13 +128,17 @@ export function LostModeDialog({
       location.reset();
       setLastSeenWhen("");
       setExtraNotes("");
+      setCoatShade("");
+      setCollarDescription("");
+      setMarkings("");
+      setVerificationSecret("");
       onOpenChange(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2 text-lost">
             <AlertTriangle className="h-5 w-5" />
@@ -163,6 +181,69 @@ export function LostModeDialog({
               onChange={(e) => setLastSeenWhen(e.target.value)}
               disabled={isSubmitting}
             />
+          </div>
+
+          {/* Identity Details for Matching */}
+          <div className="space-y-3 border-t pt-3">
+            <Label className="text-sm font-medium flex items-center gap-1.5">
+              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+              Help us match {dog.name} (optional but recommended)
+            </Label>
+
+            <div className="space-y-2">
+              <Label htmlFor="coat" className="text-xs text-muted-foreground">
+                Coat color shade (be specific, e.g. "deep reddish gold" not just "brown")
+              </Label>
+              <Input
+                id="coat"
+                placeholder="e.g., light cream, dark chocolate, brindle tan"
+                value={coatShade}
+                onChange={(e) => setCoatShade(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="collar" className="text-xs text-muted-foreground">
+                What was {dog.name} wearing? (collar, harness, tags)
+              </Label>
+              <Input
+                id="collar"
+                placeholder="e.g., red leather collar with bone tag"
+                value={collarDescription}
+                onChange={(e) => setCollarDescription(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="markings" className="text-xs text-muted-foreground">
+                Distinctive markings? (separate with commas)
+              </Label>
+              <Input
+                id="markings"
+                placeholder="e.g., white chest patch, scar on left ear, dark muzzle"
+                value={markings}
+                onChange={(e) => setMarkings(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="secret" className="text-xs text-muted-foreground">
+                Verification secret — something only you'd know about {dog.name}
+              </Label>
+              <Input
+                id="secret"
+                placeholder="e.g., birthmark on belly, responds to 'cookie' command"
+                value={verificationSecret}
+                onChange={(e) => setVerificationSecret(e.target.value)}
+                disabled={isSubmitting}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                This is never shared publicly. It's used to verify your ownership if someone claims to have found {dog.name}.
+              </p>
+            </div>
           </div>
 
           {/* Extra Notes */}
