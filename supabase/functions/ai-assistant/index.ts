@@ -1372,7 +1372,9 @@ CAPABILITIES:
 
 CRITICAL - CREATING LOST ALERTS:
 - When a user asks to create a lost alert, you MUST call the create_lost_alert tool. NEVER say you created an alert without actually calling this tool.
-- You need: dog_id (get from get_my_dogs if needed), title, description, and last_seen_location.
+- You only need: dog_id (get from get_my_dogs if needed) and last_seen_location (ask the user where they last saw the dog).
+- Do NOT ask the user for breed, color, markings, collar, or other identity details — these are AUTO-FILLED from the dog's profile by the tool.
+- Do NOT pass title or description unless the user explicitly wants custom text. The tool generates them automatically.
 - If you have coordinates from a previous estimate_search_radius call, include latitude and longitude.
 - After creating the alert, use the returned view_link to show the user the correct link to their alert.
 - If the tool returns already_exists, tell the user an alert already exists and show the link.
