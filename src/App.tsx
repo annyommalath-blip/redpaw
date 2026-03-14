@@ -65,6 +65,7 @@ const App = () => (
             <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/messages/ai" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
+            <Route path="/messages/new/:userId" element={<ProtectedRoute><NewConversation /></ProtectedRoute>} />
             <Route path="/messages/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/add-dog" element={<ProtectedRoute><AddDog /></ProtectedRoute>} />
