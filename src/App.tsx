@@ -28,6 +28,7 @@ import DonationCampaignDetail from "./pages/DonationCampaignDetail";
 import AdoptionPostDetail from "./pages/AdoptionPostDetail";
 import Settings from "./pages/Settings";
 import UserProfilePage from "./pages/UserProfile";
+import NewConversation from "./pages/NewConversation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
