@@ -573,6 +573,7 @@ async function executeMatchFoundDogToLost(supabase: any, args: any) {
       ? (dog.photo_url.startsWith("http") ? dog.photo_url : `${supabaseUrl}/storage/v1/object/public/dog-photos/${dog.photo_url}`)
       : null;
 
+    const confPct = Math.round(normalizedScore * 100);
     return {
       alert_id: alert.id,
       dog_name: dog.name,
@@ -581,6 +582,9 @@ async function executeMatchFoundDogToLost(supabase: any, args: any) {
       owner_id: alert.owner_id,
       match_score: Math.round(normalizedScore * 100) / 100,
       confidence,
+      confidence_pct: `${confPct}%`,
+      display_title: `🐕 ${dog.name} (${dog.breed || "unknown breed"}) — **${confPct}% match (${confidence} confidence)**`,
+      view_link: `/lost-alert/${alert.id}`,
       scores,
       last_seen_location: alert.location_label || alert.last_seen_location,
       lost_since: alert.created_at,
@@ -836,6 +840,8 @@ async function executeReverseMatchLostToFound(supabase: any, args: any) {
       ? (fd.photo_urls[0].startsWith("http") ? fd.photo_urls[0] : `${supabaseUrl}/storage/v1/object/public/found-dog-photos/${fd.photo_urls[0]}`)
       : null;
 
+    const conf = normalizedScore >= 0.7 ? "high" : normalizedScore >= 0.4 ? "medium" : "low";
+    const confPct = Math.round(normalizedScore * 100);
     return {
       found_dog_id: fd.id,
       reporter_id: fd.reporter_id,
@@ -844,8 +850,11 @@ async function executeReverseMatchLostToFound(supabase: any, args: any) {
       location_label: fd.location_label,
       found_at: fd.found_at,
       match_score: Math.round(normalizedScore * 100) / 100,
-      confidence: normalizedScore >= 0.7 ? "high" : normalizedScore >= 0.4 ? "medium" : "low",
-      confidence_pct: `${Math.round(normalizedScore * 100)}%`,
+      confidence: conf,
+      confidence_pct: `${confPct}%`,
+      display_title: `📍 ${fd.location_label} — **${confPct}% match (${conf} confidence)**`,
+      view_link: `/found-dog/${fd.id}`,
+      message_link: `/found-dog/${fd.id}?reply=true`,
       details,
     };
   }).filter(Boolean);
@@ -868,15 +877,16 @@ async function executeReverseMatchLostToFound(supabase: any, args: any) {
     matches: top,
     count: top.length,
     instruction: top.length > 0
-      ? `For EACH match you MUST include ALL of these:
-1. Photo (if available): ![Found Dog](cover_photo_url)
-2. Description and location
-3. Found date/time
-4. **Confidence: X% (high/medium/low)** — NEVER skip this
-5. Two action links:
-   - [Open Post](/found-dog/FOUND_DOG_ID) — to view the full report
-   - [Message Reporter](/found-dog/FOUND_DOG_ID?reply=true) — to contact the finder directly
-After listing matches, ask "Does any of these look like your dog?"`
+      ? `Use EXACTLY this format for each match (copy the display_title, view_link, message_link from the data):
+
+### Match #N
+{display_title}
+Found: {found_at date}
+Description: {description}
+👉 [Open Post]({view_link}) · [Message Reporter]({message_link})
+
+The display_title already contains the confidence %. DO NOT omit it. DO NOT rephrase it.
+After all matches, ask "Does any of these look like your dog?"`
       : "No matches found yet. Reassure the owner their alert is live and they'll be notified when found dogs are reported.",
   };
 }
