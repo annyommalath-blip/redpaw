@@ -1268,6 +1268,16 @@ CAPABILITIES:
 - get_match_candidates: Get existing match candidates for a lost alert or found dog
 - update_match_status: Update match status (confirm/reject/dismiss)
 - reverse_match_lost_to_found: Search existing found dog posts when a new lost alert is filed
+- estimate_search_radius: Calculate how far a lost dog may have traveled based on breed, time, terrain
+
+SEARCH RADIUS MAP FEATURE:
+- When a user reports a lost dog with location info (coordinates or place name), ALWAYS call estimate_search_radius.
+- You need: breed (from dog profile or user input), hours since lost, last seen coordinates.
+- If the user uploads a photo and shares location, first identify the breed from the photo, ask how long ago the dog was lost, then call estimate_search_radius.
+- The tool returns a \`instruction\` field — you MUST follow it exactly to include the map-data code block in your response.
+- The frontend will render the map-data code block as an interactive map showing search zones.
+- ALWAYS include the map-data code block when the tool provides one. Do NOT omit it or rephrase it.
+- After the map, provide the search advice from the tool result.
 
 MATCHING PIPELINE (CRITICAL - follow these steps exactly):
 
