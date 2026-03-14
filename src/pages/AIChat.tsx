@@ -242,6 +242,13 @@ export default function AIChatPage() {
   };
 
   useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop?.();
+      stopMicStream();
+    };
+  }, []);
+
+  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
