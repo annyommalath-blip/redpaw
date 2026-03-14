@@ -259,6 +259,27 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "estimate_search_radius",
+      description: "Estimate how far a lost dog may have traveled based on breed, time elapsed, and terrain. Returns a search radius in km and advice. Call this when the user shares details about a lost dog (breed, time lost, location). The result includes map data the frontend will render as an interactive map.",
+      parameters: {
+        type: "object",
+        properties: {
+          breed: { type: "string", description: "The breed of the lost dog" },
+          hours_lost: { type: "number", description: "Approximate number of hours since the dog was last seen" },
+          last_seen_lat: { type: "number", description: "Latitude of the last seen location" },
+          last_seen_lon: { type: "number", description: "Longitude of the last seen location" },
+          last_seen_label: { type: "string", description: "Human-readable description of last seen location" },
+          dog_size: { type: "string", enum: ["small", "medium", "large"], description: "Size of the dog if breed is unknown" },
+          is_leashed: { type: "boolean", description: "Whether the dog escaped while leashed (limits range)" },
+          terrain: { type: "string", enum: ["urban", "suburban", "rural", "wilderness"], description: "Type of terrain around last seen location. Default: suburban" },
+        },
+        required: ["breed", "hours_lost", "last_seen_lat", "last_seen_lon"],
+      },
+    },
+  },
 ];
 
 // Tool execution functions
@@ -1037,7 +1058,150 @@ After all matches, ask "Does any of these look like your dog?"`
   };
 }
 
-// Execute a tool call
+// Breed speed/range data for search radius estimation
+const BREED_RANGE_DATA: Record<string, { speed_kmh: number; endurance: "low" | "medium" | "high" }> = {
+  // High endurance / fast breeds
+  "Siberian Husky": { speed_kmh: 8, endurance: "high" },
+  "Alaskan Malamute": { speed_kmh: 7, endurance: "high" },
+  "German Shepherd Dog": { speed_kmh: 7, endurance: "high" },
+  "Belgian Malinois": { speed_kmh: 8, endurance: "high" },
+  "Border Collie": { speed_kmh: 8, endurance: "high" },
+  "Australian Shepherd": { speed_kmh: 7, endurance: "high" },
+  "Labrador Retriever": { speed_kmh: 6, endurance: "high" },
+  "Golden Retriever": { speed_kmh: 6, endurance: "high" },
+  "Weimaraner": { speed_kmh: 8, endurance: "high" },
+  "Vizsla": { speed_kmh: 8, endurance: "high" },
+  "Rhodesian Ridgeback": { speed_kmh: 7, endurance: "high" },
+  "Greyhound": { speed_kmh: 10, endurance: "medium" },
+  "Whippet": { speed_kmh: 9, endurance: "medium" },
+  "Dalmatian": { speed_kmh: 7, endurance: "high" },
+  "Jack Russell Terrier": { speed_kmh: 6, endurance: "high" },
+  // Medium endurance
+  "Beagle": { speed_kmh: 5, endurance: "medium" },
+  "Boxer": { speed_kmh: 6, endurance: "medium" },
+  "Cocker Spaniel": { speed_kmh: 5, endurance: "medium" },
+  "Poodle": { speed_kmh: 5, endurance: "medium" },
+  "Rottweiler": { speed_kmh: 5, endurance: "medium" },
+  "Doberman Pinscher": { speed_kmh: 7, endurance: "medium" },
+  "Great Dane": { speed_kmh: 5, endurance: "medium" },
+  // Low endurance / small breeds
+  "Chihuahua": { speed_kmh: 3, endurance: "low" },
+  "Pomeranian": { speed_kmh: 3, endurance: "low" },
+  "Shih Tzu": { speed_kmh: 3, endurance: "low" },
+  "French Bulldog": { speed_kmh: 3, endurance: "low" },
+  "Bulldog": { speed_kmh: 3, endurance: "low" },
+  "Pug": { speed_kmh: 3, endurance: "low" },
+  "Maltese": { speed_kmh: 3, endurance: "low" },
+  "Yorkshire Terrier": { speed_kmh: 3, endurance: "low" },
+  "Dachshund": { speed_kmh: 3, endurance: "low" },
+  "Cavalier King Charles Spaniel": { speed_kmh: 4, endurance: "low" },
+  "Bichon Frise": { speed_kmh: 3, endurance: "low" },
+};
+
+function getSizeDefaults(size: string): { speed_kmh: number; endurance: "low" | "medium" | "high" } {
+  switch (size) {
+    case "small": return { speed_kmh: 3, endurance: "low" };
+    case "large": return { speed_kmh: 7, endurance: "high" };
+    default: return { speed_kmh: 5, endurance: "medium" };
+  }
+}
+
+function executeEstimateSearchRadius(args: any) {
+  const { breed, hours_lost, last_seen_lat, last_seen_lon, last_seen_label, dog_size, is_leashed, terrain } = args;
+  
+  // Get breed data or use size defaults
+  let breedData = BREED_RANGE_DATA[breed];
+  if (!breedData) {
+    // Try partial match
+    const breedLower = (breed || "").toLowerCase();
+    for (const [key, val] of Object.entries(BREED_RANGE_DATA)) {
+      if (key.toLowerCase().includes(breedLower) || breedLower.includes(key.toLowerCase())) {
+        breedData = val;
+        break;
+      }
+    }
+  }
+  if (!breedData) breedData = getSizeDefaults(dog_size || "medium");
+  
+  const { speed_kmh, endurance } = breedData;
+  
+  // Terrain multiplier
+  const terrainMult: Record<string, number> = { urban: 0.5, suburban: 0.7, rural: 1.0, wilderness: 1.3 };
+  const tMult = terrainMult[terrain || "suburban"] || 0.7;
+  
+  // Time-decay: dogs slow down over time (fatigue, sleeping, hiding)
+  // First 6h: active travel. 6-24h: intermittent. 24h+: mostly stationary with occasional movement
+  let effectiveHours: number;
+  if (hours_lost <= 6) {
+    effectiveHours = hours_lost * 0.6; // 60% of time actively moving
+  } else if (hours_lost <= 24) {
+    effectiveHours = 6 * 0.6 + (hours_lost - 6) * 0.2; // Slows down significantly
+  } else if (hours_lost <= 72) {
+    effectiveHours = 6 * 0.6 + 18 * 0.2 + (hours_lost - 24) * 0.1;
+  } else {
+    effectiveHours = 6 * 0.6 + 18 * 0.2 + 48 * 0.1 + (hours_lost - 72) * 0.05;
+  }
+  
+  // Endurance multiplier  
+  const enduranceMult = endurance === "high" ? 1.3 : endurance === "low" ? 0.6 : 1.0;
+  
+  // Leash escape usually means dog is closer
+  const leashMult = is_leashed ? 0.7 : 1.0;
+  
+  // Calculate radius
+  let radiusKm = speed_kmh * effectiveHours * tMult * enduranceMult * leashMult;
+  
+  // Minimum 0.3km, maximum cap based on time
+  radiusKm = Math.max(0.3, Math.min(radiusKm, hours_lost <= 6 ? 15 : hours_lost <= 24 ? 30 : 50));
+  
+  // Calculate zones
+  const innerRadius = radiusKm * 0.4; // Most likely zone
+  const outerRadius = radiusKm; // Extended search zone
+  
+  // Time-based advice
+  let advice: string;
+  if (hours_lost <= 2) {
+    advice = "Your dog is very likely still nearby. Search within the immediate neighborhood, check familiar walking routes, parks, and spots where treats are given.";
+  } else if (hours_lost <= 6) {
+    advice = "Dogs often follow familiar scents in the first few hours. Check regular walking routes, nearby parks, and neighbors' yards. Leave your front door open with food and a worn clothing item outside.";
+  } else if (hours_lost <= 24) {
+    advice = "Your dog may have settled in a hiding spot. Search quieter areas, under porches, in bushes. Leave strong-smelling food and a worn piece of clothing at the last seen location.";
+  } else if (hours_lost <= 72) {
+    advice = "Dogs in survival mode become skittish. Don't chase — sit quietly with food in the area. Contact local shelters and vets. Post on community boards.";
+  } else {
+    advice = "Expand your search significantly. Dogs at this stage may have been taken in by someone, or found shelter far from home. Contact all local shelters, post flyers with photos, and check online lost/found databases.";
+  }
+
+  return {
+    search_radius_km: Math.round(outerRadius * 10) / 10,
+    inner_radius_km: Math.round(innerRadius * 10) / 10,
+    center_lat: last_seen_lat,
+    center_lon: last_seen_lon,
+    location_label: last_seen_label || `${last_seen_lat.toFixed(4)}, ${last_seen_lon.toFixed(4)}`,
+    hours_lost,
+    breed,
+    advice,
+    breed_speed_kmh: speed_kmh,
+    endurance_level: endurance,
+    terrain: terrain || "suburban",
+    map_data: {
+      type: "search_radius_map",
+      center: [last_seen_lat, last_seen_lon],
+      inner_radius_km: Math.round(innerRadius * 10) / 10,
+      outer_radius_km: Math.round(outerRadius * 10) / 10,
+      label: last_seen_label || "Last seen location",
+    },
+    instruction: `IMPORTANT: Include this EXACT code block in your response so the map renders:
+
+\`\`\`map-data
+${JSON.stringify({ type: "search_radius_map", center: [last_seen_lat, last_seen_lon], inner_radius_km: Math.round(innerRadius * 10) / 10, outer_radius_km: Math.round(outerRadius * 10) / 10, label: last_seen_label || "Last seen location" })}
+\`\`\`
+
+Present the search radius info BEFORE the map block, then add the map block, then the advice AFTER.`,
+  };
+}
+
+
 async function executeTool(supabase: any, userId: string, toolName: string, args: any) {
   console.log("Executing tool:", toolName);
   switch (toolName) {
@@ -1058,6 +1222,7 @@ async function executeTool(supabase: any, userId: string, toolName: string, args
     case "get_match_candidates": return await executeGetMatchCandidates(supabase, args);
     case "update_match_status": return await executeUpdateMatchStatus(supabase, args);
     case "reverse_match_lost_to_found": return await executeReverseMatchLostToFound(supabase, args);
+    case "estimate_search_radius": return executeEstimateSearchRadius(args);
     default: return { error: `Unknown tool: ${toolName}` };
   }
 }
@@ -1103,6 +1268,16 @@ CAPABILITIES:
 - get_match_candidates: Get existing match candidates for a lost alert or found dog
 - update_match_status: Update match status (confirm/reject/dismiss)
 - reverse_match_lost_to_found: Search existing found dog posts when a new lost alert is filed
+- estimate_search_radius: Calculate how far a lost dog may have traveled based on breed, time, terrain
+
+SEARCH RADIUS MAP FEATURE:
+- When a user reports a lost dog with location info (coordinates or place name), ALWAYS call estimate_search_radius.
+- You need: breed (from dog profile or user input), hours since lost, last seen coordinates.
+- If the user uploads a photo and shares location, first identify the breed from the photo, ask how long ago the dog was lost, then call estimate_search_radius.
+- The tool returns a \`instruction\` field — you MUST follow it exactly to include the map-data code block in your response.
+- The frontend will render the map-data code block as an interactive map showing search zones.
+- ALWAYS include the map-data code block when the tool provides one. Do NOT omit it or rephrase it.
+- After the map, provide the search advice from the tool result.
 
 MATCHING PIPELINE (CRITICAL - follow these steps exactly):
 

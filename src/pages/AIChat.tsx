@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X, Mic, MicOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { isHeicFile } from "@/lib/imageUtils";
+import { SearchRadiusMap } from "@/components/chat/SearchRadiusMap";
 
 interface MessageContent {
   type: "text" | "image_url";
@@ -216,7 +217,7 @@ export default function AIChatPage() {
       stopMicStream();
       const errorMap: Record<string, string> = {
         "not-allowed": "Microphone access denied. Please allow microphone permission in your browser settings.",
-        "service-not-allowed": "Speech service is blocked on this device/browser. On iPhone, enable Dictation in Settings > General > Keyboard, then retry.",
+        "service-not-allowed": "Speech recognition unavailable on this device. Use your keyboard's built-in dictation (🎙️ on the keyboard) instead.",
         "audio-capture": "No microphone was detected. Please check your audio input device.",
         "no-speech": "No speech detected. Please try again.",
         "network": "Network error. Please check your connection.",
@@ -527,9 +528,49 @@ export default function AIChatPage() {
                         strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                         a: renderLink,
                         img: renderImage,
-                        code: ({ children }) => (
-                          <code className="bg-background/50 px-1 py-0.5 rounded text-xs">{children}</code>
-                        ),
+                        code: ({ className, children }) => {
+                          const content = String(children).replace(/\n$/, "");
+                          // Detect map-data code blocks
+                          if (className === "language-map-data" || (typeof children === "string" && content.startsWith('{"type":"search_radius_map"'))) {
+                            try {
+                              const mapData = JSON.parse(content);
+                              if (mapData.type === "search_radius_map" && mapData.center) {
+                                return (
+                                  <SearchRadiusMap
+                                    center={mapData.center as [number, number]}
+                                    innerRadiusKm={mapData.inner_radius_km}
+                                    outerRadiusKm={mapData.outer_radius_km}
+                                    label={mapData.label || "Last seen"}
+                                  />
+                                );
+                              }
+                            } catch { /* not valid map JSON, render as code */ }
+                          }
+                          return (
+                            <code className="bg-background/50 px-1 py-0.5 rounded text-xs">{children}</code>
+                          );
+                        },
+                        pre: ({ children }) => {
+                          // Check if the child is a map-data code block already rendered
+                          const child = children as any;
+                          if (child?.props?.className === "language-map-data") {
+                            try {
+                              const content = String(child.props.children).replace(/\n$/, "");
+                              const mapData = JSON.parse(content);
+                              if (mapData.type === "search_radius_map" && mapData.center) {
+                                return (
+                                  <SearchRadiusMap
+                                    center={mapData.center as [number, number]}
+                                    innerRadiusKm={mapData.inner_radius_km}
+                                    outerRadiusKm={mapData.outer_radius_km}
+                                    label={mapData.label || "Last seen"}
+                                  />
+                                );
+                              }
+                            } catch { /* fall through */ }
+                          }
+                          return <pre className="overflow-x-auto">{children}</pre>;
+                        },
                       }}
                     >
                       {text || "..."}
