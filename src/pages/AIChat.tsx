@@ -487,7 +487,33 @@ export default function AIChatPage() {
   };
 
   const renderLink = ({ href, children }: { href?: string; children?: React.ReactNode }) => {
-    if (href?.startsWith("/")) {
+    if (!href) return <span>{children}</span>;
+
+    // Handle "Message Reporter" links - /messages/new/:userId
+    const newConvMatch = href.match(/^\/messages\/new\/([a-f0-9-]{36})$/);
+    if (newConvMatch) {
+      const targetUserId = newConvMatch[1];
+      return (
+        <button
+          onClick={() => openConversation(targetUserId)}
+          className="text-primary underline hover:text-primary/80 inline"
+        >
+          {children}
+        </button>
+      );
+    }
+
+    // Handle old-style found-dog reply links used as "Message Reporter"
+    const foundDogReplyMatch = href.match(/^\/found-dog\/([a-f0-9-]{36})\?reply=true$/);
+    if (foundDogReplyMatch) {
+      return (
+        <Link to={`/found-dog/${foundDogReplyMatch[1]}`} className="text-primary underline hover:text-primary/80">
+          {children}
+        </Link>
+      );
+    }
+
+    if (href.startsWith("/")) {
       return <Link to={normalizeAppLink(href)} className="text-primary underline hover:text-primary/80">{children}</Link>;
     }
     return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">{children}</a>;
