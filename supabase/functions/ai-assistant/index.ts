@@ -542,8 +542,8 @@ async function executeSearchLostDogsByAttributes(supabase: any, args: any) {
       score,
       confidence,
       display_title: `🐕 ${dog.name} (${dog.breed || "unknown"}) — **${score}% match (${confidence} confidence)**`,
-      view_link: `/found-dog/${alert.id}`,
-      message_link: `/found-dog/${alert.id}?reply=true`,
+      view_link: `/lost-alert/${alert.id}`,
+      message_link: `/messages/new/${alert.owner_id}`,
     };
   }).filter(Boolean);
 
