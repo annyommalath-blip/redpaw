@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { isHeicFile } from "@/lib/imageUtils";
 import { SearchRadiusMap } from "@/components/chat/SearchRadiusMap";
+import { useConversation } from "@/hooks/useConversation";
 
 // Flexible parser for map JSON - handles various formats the AI might output
 function tryParseMapData(content: string, className?: string): React.ReactElement | null {
