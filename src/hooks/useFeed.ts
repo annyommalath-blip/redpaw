@@ -387,6 +387,7 @@ export function useFeed() {
           original_post: item.repost_by
             ? {
                 ...p,
+                repost_id: null,
                 author: profileMap.get(p.user_id) || undefined,
                 like_count: 0,
                 comment_count: 0,
