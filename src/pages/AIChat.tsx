@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X, Mic, MicOff, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { isHeicFile } from "@/lib/imageUtils";
 import { SearchRadiusMap } from "@/components/chat/SearchRadiusMap";
+import { useConversation } from "@/hooks/useConversation";
 
 // Flexible parser for map JSON - handles various formats the AI might output
 function tryParseMapData(content: string, className?: string): React.ReactElement | null {
@@ -131,6 +132,7 @@ export default function AIChatPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
+  const { openConversation } = useConversation();
 
   const welcomeMessage: Message = {
     id: "welcome",
@@ -485,7 +487,33 @@ export default function AIChatPage() {
   };
 
   const renderLink = ({ href, children }: { href?: string; children?: React.ReactNode }) => {
-    if (href?.startsWith("/")) {
+    if (!href) return <span>{children}</span>;
+
+    // Handle "Message Reporter" links - /messages/new/:userId
+    const newConvMatch = href.match(/^\/messages\/new\/([a-f0-9-]{36})$/);
+    if (newConvMatch) {
+      const targetUserId = newConvMatch[1];
+      return (
+        <button
+          onClick={() => openConversation(targetUserId)}
+          className="text-primary underline hover:text-primary/80 inline"
+        >
+          {children}
+        </button>
+      );
+    }
+
+    // Handle old-style found-dog reply links used as "Message Reporter"
+    const foundDogReplyMatch = href.match(/^\/found-dog\/([a-f0-9-]{36})\?reply=true$/);
+    if (foundDogReplyMatch) {
+      return (
+        <Link to={`/found-dog/${foundDogReplyMatch[1]}`} className="text-primary underline hover:text-primary/80">
+          {children}
+        </Link>
+      );
+    }
+
+    if (href.startsWith("/")) {
       return <Link to={normalizeAppLink(href)} className="text-primary underline hover:text-primary/80">{children}</Link>;
     }
     return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">{children}</a>;
