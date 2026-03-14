@@ -173,9 +173,17 @@ export default function AIChatPage() {
       recognitionRef.current = null;
     };
 
-    recognition.onerror = () => {
+    recognition.onerror = (event: any) => {
       setIsListening(false);
       recognitionRef.current = null;
+      const errorMap: Record<string, string> = {
+        "not-allowed": "Microphone access denied. Please allow microphone permission in your browser settings.",
+        "no-speech": "No speech detected. Please try again.",
+        "network": "Network error. Please check your connection.",
+        "aborted": "Speech recognition was aborted.",
+      };
+      const msg = errorMap[event?.error] || `Speech recognition error: ${event?.error || "unknown"}`;
+      toast({ variant: "destructive", title: "Voice Input Error", description: msg });
     };
 
     recognition.start();
