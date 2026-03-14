@@ -151,31 +151,27 @@ export default function AIChatPage() {
     recognition.lang = navigator.language || "en-US";
     recognitionRef.current = recognition;
 
-    let finalTranscript = "";
+    // Store the message text that existed before we started listening
+    const baseTextRef = newMessage.trim();
 
     recognition.onresult = (event: any) => {
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      let finalParts = "";
+      let interimParts = "";
+      for (let i = 0; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+          finalParts += transcript;
         } else {
-          interim += event.results[i][0].transcript;
+          interimParts += transcript;
         }
       }
-      setNewMessage(prev => {
-        const base = prev.replace(/\s*🎤.*$/, "");
-        if (finalTranscript) return (base ? base + " " : "") + finalTranscript;
-        if (interim) return (base ? base + " " : "") + interim;
-        return base;
-      });
+      const spoken = (finalParts + interimParts).trim();
+      setNewMessage(baseTextRef ? baseTextRef + " " + spoken : spoken);
     };
 
     recognition.onend = () => {
       setIsListening(false);
       recognitionRef.current = null;
-      if (finalTranscript) {
-        setNewMessage(prev => prev.replace(/\s*🎤.*$/, "").trim() + (finalTranscript ? " " + finalTranscript : ""));
-      }
     };
 
     recognition.onerror = () => {
