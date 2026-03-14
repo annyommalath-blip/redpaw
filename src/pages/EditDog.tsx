@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Dog, Loader2, Trash2, Calendar } from "lucide-react";
+import { Dog, Loader2, Trash2, Calendar, Shield } from "lucide-react";
 import { format } from "date-fns";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -62,6 +62,10 @@ export default function EditDogPage() {
   const [notes, setNotes] = useState("");
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [additionalPhotos, setAdditionalPhotos] = useState<string[]>([]);
+  const [coatShade, setCoatShade] = useState("");
+  const [collarDescription, setCollarDescription] = useState("");
+  const [markings, setMarkings] = useState("");
+  const [verificationSecret, setVerificationSecret] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // Calculate age from DOB
@@ -104,6 +108,10 @@ export default function EditDogPage() {
       setNotes(data.notes || "");
       setProfilePhoto(data.photo_url);
       setAdditionalPhotos(data.photo_urls || []);
+      setCoatShade(data.coat_shade || "");
+      setCollarDescription(data.collar_description || "");
+      setMarkings(data.markings ? data.markings.join(", ") : "");
+      setVerificationSecret(data.verification_secret || "");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
       navigate("/profile");
@@ -135,6 +143,10 @@ export default function EditDogPage() {
           notes: notes.trim() || null,
           photo_url: profilePhoto,
           photo_urls: additionalPhotos,
+          coat_shade: coatShade.trim() || null,
+          collar_description: collarDescription.trim() || null,
+          markings: markings.trim() ? markings.split(",").map((m: string) => m.trim()).filter(Boolean) : null,
+          verification_secret: verificationSecret.trim() || null,
         })
         .eq("id", dogId);
 
@@ -323,6 +335,65 @@ export default function EditDogPage() {
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
                 />
+              </div>
+
+              {/* Identity Details for Matching */}
+              <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-sm font-medium">Identity Details (helps with lost dog matching)</Label>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="coat" className="text-xs text-muted-foreground">
+                    Coat color shade (be specific, e.g. "deep reddish gold" not just "brown")
+                  </Label>
+                  <Input
+                    id="coat"
+                    placeholder="e.g., light cream, dark chocolate, brindle tan"
+                    value={coatShade}
+                    onChange={(e) => setCoatShade(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="collar" className="text-xs text-muted-foreground">
+                    What does {name || "your dog"} usually wear? (collar, harness, tags)
+                  </Label>
+                  <Input
+                    id="collar"
+                    placeholder="e.g., red leather collar with bone tag"
+                    value={collarDescription}
+                    onChange={(e) => setCollarDescription(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="markings" className="text-xs text-muted-foreground">
+                    Distinctive markings (separate with commas)
+                  </Label>
+                  <Input
+                    id="markings"
+                    placeholder="e.g., white chest patch, scar on left ear, dark muzzle"
+                    value={markings}
+                    onChange={(e) => setMarkings(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="secret" className="text-xs text-muted-foreground">
+                    Verification secret — something only you'd know
+                  </Label>
+                  <Input
+                    id="secret"
+                    placeholder="e.g., birthmark on belly, responds to 'cookie' command"
+                    value={verificationSecret}
+                    onChange={(e) => setVerificationSecret(e.target.value)}
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Never shared publicly. Used to verify ownership if someone claims to find your dog.
+                  </p>
+                </div>
               </div>
 
               <Button type="submit" className="w-full" disabled={submitting}>

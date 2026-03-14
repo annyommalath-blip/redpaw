@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Dog, Edit, Calendar, Scale, FileText, Camera, Loader2, ArrowLeft, Cpu, Syringe, ChevronDown, ChevronRight } from "lucide-react";
+import { Dog, Edit, Calendar, Scale, FileText, Camera, Loader2, ArrowLeft, Cpu, Syringe, ChevronDown, ChevronRight, Palette, Tag, Shield, Eye, Fingerprint } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,6 +41,13 @@ interface DogData {
   date_of_birth: string | null;
   is_lost: boolean;
   owner_id: string;
+  coat_shade: string | null;
+  markings: string[] | null;
+  collar_description: string | null;
+  visible_conditions: string | null;
+  behavior_description: string | null;
+  unique_traits: string[] | null;
+  verification_secret: string | null;
 }
 
 interface HealthLog {
@@ -277,8 +284,117 @@ export default function DogDetailPage() {
               </div>
             )}
 
+            {/* Identity Details (for matching) — always visible */}
+            <div className="border-t pt-4 space-y-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                <Shield className="h-3.5 w-3.5" />
+                Identity Details
+              </p>
+
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Palette className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Coat Shade</p>
+                  <p className={`font-medium ${dog.coat_shade ? "text-foreground" : "text-muted-foreground italic"}`}>
+                    {dog.coat_shade || "Not set"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Tag className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Collar / Harness</p>
+                  <p className={`font-medium ${dog.collar_description ? "text-foreground" : "text-muted-foreground italic"}`}>
+                    {dog.collar_description || "Not set"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Fingerprint className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Distinctive Markings</p>
+                  <p className={`font-medium ${dog.markings?.length ? "text-foreground" : "text-muted-foreground italic"}`}>
+                    {dog.markings?.length ? dog.markings.join(", ") : "Not set"}
+                  </p>
+                </div>
+              </div>
+
+              {dog.visible_conditions && (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Eye className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Visible Conditions</p>
+                    <p className="font-medium text-foreground">{dog.visible_conditions}</p>
+                  </div>
+                </div>
+              )}
+
+              {dog.behavior_description && (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Dog className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Behavior</p>
+                    <p className="font-medium text-foreground">{dog.behavior_description}</p>
+                  </div>
+                </div>
+              )}
+
+              {dog.unique_traits && dog.unique_traits.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Fingerprint className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Unique Traits</p>
+                    <p className="font-medium text-foreground">{dog.unique_traits.join(", ")}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Verification Secret - Only visible to owner */}
+              {isOwner && (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Shield className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Verification Secret</p>
+                    <p className={`font-medium ${dog.verification_secret ? "text-foreground" : "text-muted-foreground italic"}`}>
+                      {dog.verification_secret || "Not set"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">Only visible to you</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Prompt to fill in if empty — owner only */}
+              {isOwner && !dog.coat_shade && !dog.collar_description && !dog.markings?.length && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => navigate(`/profile/edit-dog/${dog.id}`)}
+                >
+                  <Edit className="h-3.5 w-3.5 mr-1.5" />
+                  Add identity details to help find {dog.name} if lost
+                </Button>
+              )}
+            </div>
+
             {/* Microchip - Only visible to owner */}
-            {dog.microchip_no && dog.owner_id === user?.id && (
+            {dog.microchip_no && isOwner && (
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Cpu className="h-5 w-5 text-primary" />

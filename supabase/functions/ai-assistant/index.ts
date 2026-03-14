@@ -612,21 +612,67 @@ async function executeMatchFoundDogToLost(supabase: any, args: any) {
     };
   }
 
+  // Detect same-breed collision and build disambiguation questions
+  const sameBreedCollision = topMatches.filter((m: any) => m.dog_breed === topMatches[0]?.dog_breed).length > 1;
+  let disambiguationQuestions: string[] = [];
+
+  if (sameBreedCollision && topMatches.length > 1) {
+    // Find differentiating features between candidates
+    const candidates = topMatches.filter((m: any) => m.dog_breed === topMatches[0]?.dog_breed);
+    const names = candidates.map((c: any) => c.dog_name);
+
+    // Compare coat shades
+    const coatShades = candidates.map((c: any) => c.scores?.color?.detail || "unknown");
+    if (new Set(coatShades).size > 1) {
+      disambiguationQuestions.push(`Was the dog's coat more light/pale or dark/deep in color?`);
+    }
+
+    // Compare collar info
+    const collarInfos = candidates.map((c: any) => c.scores?.collar?.detail || "unknown");
+    if (new Set(collarInfos).size > 1) {
+      disambiguationQuestions.push(`What color was the collar or harness? Any tags or dangling charms?`);
+    }
+
+    // Compare locations
+    const locations = candidates.map((c: any) => c.last_seen_location || "unknown");
+    if (new Set(locations).size > 1) {
+      disambiguationQuestions.push(`Where exactly did you see the dog? (${locations.join(" vs ")})`);
+    }
+
+    // Always ask about size/age appearance for same-breed
+    disambiguationQuestions.push(`Did the dog look young and energetic, or older and calm?`);
+    disambiguationQuestions.push(`Compared to average for the breed, was it smaller, average, or bigger?`);
+
+    // Limit to 3 most useful questions
+    disambiguationQuestions = disambiguationQuestions.slice(0, 3);
+  }
+
   return {
     matches: topMatches,
     count: topMatches.length,
-    same_breed_collision: topMatches.filter((m: any) => m.dog_breed === topMatches[0]?.dog_breed).length > 1,
-    instruction: `Present each match clearly with:
-- Dog name, breed, and photo (if available as ![Dog](url))
-- Match confidence (high/medium/low) and score
-- Key reasons WHY it matched (color, location proximity, breed)
-- Key differences or uncertainties
-- Link to lost alert: [View Alert](/lost-alert/ALERT_ID)
-- If same_breed_collision is true, ask the finder disambiguation questions to narrow down:
-  "I found multiple [breed] dogs reported lost nearby. Let me ask a few questions to narrow it down..."
-  Then ask about differentiating features between the candidates (collar color, behavior, age appearance).
-- Ask the finder: "Does any of these look like the dog you found?"
-- If confidence is low for all, say so honestly.`,
+    same_breed_collision: sameBreedCollision,
+    disambiguation_questions: disambiguationQuestions,
+    instruction: sameBreedCollision
+      ? `STOP — DO NOT just list matches and stop. You MUST ask disambiguation questions before concluding.
+
+Say: "I found ${topMatches.length} ${topMatches[0]?.dog_breed || "dogs"} reported lost nearby. Before I can narrow it down, I need a few quick details about the dog you found:"
+
+Then ask these questions ONE BY ONE (wait for answers):
+${disambiguationQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+
+Show the match photos so the finder can visually compare:
+${topMatches.map((m: any) => `- ${m.dog_name} (${m.confidence} confidence): ${m.dog_photo_url ? `![${m.dog_name}](${m.dog_photo_url})` : "no photo"}`).join("\n")}
+
+After the finder answers, re-evaluate which match fits best and present your recommendation with reasoning.
+DO NOT just dump all matches and say "does any of these look like the dog you found?" — that's not helpful.`
+      : `For EACH match you MUST include ALL of these:
+1. Dog name, breed, and photo (if available as ![Dog](url))
+2. **Confidence: X% (high/medium/low)** — NEVER skip this
+3. Key reasons WHY it matched (color, location proximity, breed)
+4. Key differences or uncertainties
+5. [View Alert](/lost-alert/ALERT_ID) — link to the lost alert
+6. Ask the finder: "Does this look like the dog you found?"
+If confidence is low, say so honestly.`,
   };
 }
 
@@ -792,11 +838,14 @@ async function executeReverseMatchLostToFound(supabase: any, args: any) {
 
     return {
       found_dog_id: fd.id,
+      reporter_id: fd.reporter_id,
       cover_photo_url: coverPhoto,
+      description: fd.description,
       location_label: fd.location_label,
       found_at: fd.found_at,
       match_score: Math.round(normalizedScore * 100) / 100,
       confidence: normalizedScore >= 0.7 ? "high" : normalizedScore >= 0.4 ? "medium" : "low",
+      confidence_pct: `${Math.round(normalizedScore * 100)}%`,
       details,
     };
   }).filter(Boolean);
@@ -819,7 +868,15 @@ async function executeReverseMatchLostToFound(supabase: any, args: any) {
     matches: top,
     count: top.length,
     instruction: top.length > 0
-      ? `Show the owner potential matches. For each: show photo, location, found date, confidence, and link: [View Found Dog](/found-dog/FOUND_DOG_ID). Ask "Does any of these look like your dog?"`
+      ? `For EACH match you MUST include ALL of these:
+1. Photo (if available): ![Found Dog](cover_photo_url)
+2. Description and location
+3. Found date/time
+4. **Confidence: X% (high/medium/low)** — NEVER skip this
+5. Two action links:
+   - [Open Post](/found-dog/FOUND_DOG_ID) — to view the full report
+   - [Message Reporter](/found-dog/FOUND_DOG_ID?reply=true) — to contact the finder directly
+After listing matches, ask "Does any of these look like your dog?"`
       : "No matches found yet. Reassure the owner their alert is live and they'll be notified when found dogs are reported.",
   };
 }
@@ -915,8 +972,11 @@ When a FINDER reports a found dog with a photo:
 
 5. Run match_found_dog_to_lost to find candidates.
 
-6. Present results clearly. If same-breed collision detected, ask disambiguation questions
-   based on where the candidates DIFFER (collar color, behavior, age appearance).
+6. Present results clearly.
+   **CRITICAL: If same_breed_collision is true in the response, you MUST NOT just list matches and stop.**
+   You MUST ask the disambiguation_questions provided in the tool response, one at a time.
+   Wait for the finder's answers, then re-evaluate and recommend the best match.
+   This is the difference between a useful assistant and a useless one — don't skip this step.
 
 When an OWNER reports a lost dog:
 1. Collect identity details by asking:

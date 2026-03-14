@@ -7,6 +7,7 @@ import {
   Dog,
   Loader2,
   CheckCircle,
+  Sparkles,
 } from "lucide-react";
 import { LocationLink } from "@/components/location/LocationLink";
 import { MobileLayout } from "@/components/layout/MobileLayout";
@@ -46,6 +47,26 @@ interface FoundDog {
   found_at: string;
   status: "active" | "reunited" | "closed";
   created_at: string;
+  confidence_level: string | null;
+  ai_attributes: any;
+  finder_observations: any;
+}
+
+interface MatchCandidate {
+  id: string;
+  match_score: number;
+  confidence: string;
+  status: string;
+  lost_alerts: {
+    id: string;
+    title: string;
+    location_label: string;
+    dogs: {
+      name: string;
+      breed: string | null;
+      photo_url: string | null;
+    };
+  };
 }
 
 interface ReporterProfile {
@@ -76,6 +97,7 @@ export default function FoundDogDetailPage() {
   const [userDogs, setUserDogs] = useState<UserDog[]>([]);
   const [selectedDogId, setSelectedDogId] = useState<string>("");
   const [claiming, setClaiming] = useState(false);
+  const [matches, setMatches] = useState<MatchCandidate[]>([]);
 
   // Check if we should auto-focus the reply input
   const shouldFocusReply = searchParams.get("reply") === "true";
@@ -108,6 +130,16 @@ export default function FoundDogDetailPage() {
           .maybeSingle();
 
         setReporter(profileData);
+
+        // Fetch match candidates for this found dog
+        const { data: matchData } = await supabase
+          .from("dog_matches")
+          .select(`id, match_score, confidence, status,
+                   lost_alerts!inner(id, title, location_label, dogs!inner(name, breed, photo_url))`)
+          .eq("found_dog_id", foundData.id)
+          .order("match_score", { ascending: false })
+          .limit(5);
+        setMatches((matchData || []) as unknown as MatchCandidate[]);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -346,6 +378,71 @@ export default function FoundDogDetailPage() {
                 </p>
               </div>
             </div>
+
+            {/* AI Match Confidence */}
+            {foundDog.confidence_level && foundDog.confidence_level !== "unprocessed" && (
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">AI Analysis Confidence</span>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={
+                    foundDog.confidence_level === "high"
+                      ? "bg-success/10 text-success border-success"
+                      : foundDog.confidence_level === "medium"
+                      ? "bg-yellow-500/10 text-yellow-600 border-yellow-500"
+                      : "bg-muted text-muted-foreground"
+                  }
+                >
+                  {foundDog.confidence_level.charAt(0).toUpperCase() + foundDog.confidence_level.slice(1)} confidence
+                </Badge>
+              </div>
+            )}
+
+            {/* Match Results */}
+            {matches.length > 0 && (
+              <div className="mt-4 pt-4 border-t space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Potential Matches ({matches.length})</span>
+                </div>
+                {matches.map((match) => (
+                  <div
+                    key={match.id}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted"
+                    onClick={() => navigate(`/lost-alert/${match.lost_alerts.id}`)}
+                  >
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={match.lost_alerts.dogs.photo_url || undefined} />
+                      <AvatarFallback><Dog className="h-6 w-6" /></AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{match.lost_alerts.dogs.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {match.lost_alerts.dogs.breed} — {match.lost_alerts.location_label}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold">{Math.round(match.match_score * 100)}%</p>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] ${
+                          match.confidence === "high"
+                            ? "bg-success/10 text-success border-success"
+                            : match.confidence === "medium"
+                            ? "bg-yellow-500/10 text-yellow-600 border-yellow-500"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {match.confidence}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Actions */}
             {isActive && (
