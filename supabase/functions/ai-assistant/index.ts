@@ -59,7 +59,7 @@ const tools = [
     type: "function",
     function: {
       name: "get_lost_alerts",
-      description: "Get lost dog alerts for the user's dogs and any sightings.",
+      description: "Get lost dog alerts for the CURRENT USER's own dogs only. DO NOT use this for matching found dogs — use match_found_dog_to_lost instead.",
       parameters: {
         type: "object",
         properties: { status: { type: "string", enum: ["active", "resolved", "all"], description: "Filter by status. Defaults to 'active'." } },
@@ -83,7 +83,7 @@ const tools = [
     type: "function",
     function: {
       name: "get_found_dogs_nearby",
-      description: "Get found dog posts. Call this when user asks about found dogs in the community.",
+      description: "Get found dog posts for browsing. DO NOT use this for matching lost dogs — use reverse_match_lost_to_found instead.",
       parameters: {
         type: "object",
         properties: { status: { type: "string", enum: ["active", "reunited", "all"], description: "Filter by status. Defaults to 'active'." } },
@@ -147,7 +147,7 @@ const tools = [
     type: "function",
     function: {
       name: "match_found_dog_to_lost",
-      description: "Run the matching pipeline to find lost dog alerts that match a found dog report. Call this after analyzing a found dog's photo and saving attributes. Returns ranked candidates with match scores.",
+      description: "THE ONLY WAY to match a found dog to lost alerts. Uses breed elimination, weighted scoring, and identity verification. You MUST call this tool (not get_lost_alerts) whenever someone reports finding a dog or asks if a found dog matches any lost dog.",
       parameters: {
         type: "object",
         properties: {
@@ -977,6 +977,11 @@ CAPABILITIES:
 - reverse_match_lost_to_found: Search existing found dog posts when a new lost alert is filed
 
 MATCHING PIPELINE (CRITICAL - follow these steps exactly):
+
+⚠️ ABSOLUTE RULE: NEVER use get_lost_alerts or get_found_dogs_nearby for matching.
+- To match a FOUND dog → call match_found_dog_to_lost
+- To match a LOST dog → call reverse_match_lost_to_found
+These tools have breed elimination logic. If you skip them and use get_lost_alerts instead, you WILL show wrong breeds (e.g., Husky matched to Pomeranian). This is a critical error.
 
 When a FINDER reports a found dog with a photo:
 1. First, assess the image quality and extract all possible features from the photo.
