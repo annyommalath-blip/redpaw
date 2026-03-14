@@ -1291,6 +1291,14 @@ CAPABILITIES:
 - update_match_status: Update match status (confirm/reject/dismiss)
 - reverse_match_lost_to_found: Search existing found dog posts when a new lost alert is filed
 - estimate_search_radius: Calculate how far a lost dog may have traveled based on breed, time, terrain
+- create_lost_alert: Create a lost dog alert in the community feed. ALWAYS use this tool when the user asks to create/post a lost alert. Never pretend to create an alert without calling this tool.
+
+CRITICAL - CREATING LOST ALERTS:
+- When a user asks to create a lost alert, you MUST call the create_lost_alert tool. NEVER say you created an alert without actually calling this tool.
+- You need: dog_id (get from get_my_dogs if needed), title, description, and last_seen_location.
+- If you have coordinates from a previous estimate_search_radius call, include latitude and longitude.
+- After creating the alert, use the returned view_link to show the user the correct link to their alert.
+- If the tool returns already_exists, tell the user an alert already exists and show the link.
 
 SEARCH RADIUS MAP FEATURE:
 - When a user reports a lost dog with location info (coordinates or place name), ALWAYS call estimate_search_radius.
