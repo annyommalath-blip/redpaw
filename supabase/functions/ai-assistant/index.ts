@@ -1477,14 +1477,19 @@ serve(async (req) => {
     if (authHeader?.startsWith("Bearer ")) {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-      supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      // User-scoped client for auth verification
+      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } },
       });
       const token = authHeader.replace("Bearer ", "");
-      const { data: claimsData, error: claimsError } = await supabase.auth.getUser(token);
+      const { data: claimsData, error: claimsError } = await userClient.auth.getUser(token);
       if (!claimsError && claimsData?.user) {
         userId = claimsData.user.id;
       }
+      // Service-role client for tool execution — bypasses RLS so cross-user
+      // queries (e.g. Account B searching Account A's lost alerts/dogs) work
+      supabase = createClient(supabaseUrl, supabaseServiceKey);
     }
 
     // Detect if the latest user message contains an image
