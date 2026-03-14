@@ -109,7 +109,7 @@ export default function AIChatPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const welcomeMessage: Message = {
     id: "welcome",
@@ -131,7 +131,7 @@ export default function AIChatPage() {
   const recognitionRef = useRef<any>(null);
 
   // Web Speech API voice-to-text
-  const toggleListening = () => {
+  const toggleListening = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast({ variant: "destructive", title: "Not supported", description: "Speech recognition is not supported in this browser." });
@@ -140,18 +140,45 @@ export default function AIChatPage() {
 
     if (isListening && recognitionRef.current) {
       recognitionRef.current.stop();
-      setIsListening(false);
+      return;
+    }
+
+    try {
+      if (navigator.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    } catch (error: any) {
+      const isDenied = error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError";
+      toast({
+        variant: "destructive",
+        title: "Voice Input Error",
+        description: isDenied
+          ? "Microphone access denied. Please allow microphone permission in your browser settings."
+          : "Could not access microphone. Please check your device/browser settings.",
+      });
       return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = navigator.language || "en-US";
+
+    const languageMap: Record<string, string> = {
+      en: "en-US",
+      lo: "lo-LA",
+      th: "th-TH",
+      "zh-Hans": "zh-CN",
+    };
+    recognition.lang = languageMap[i18n.language] || navigator.language || "en-US";
     recognitionRef.current = recognition;
 
     // Store the message text that existed before we started listening
     const baseTextRef = newMessage.trim();
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
 
     recognition.onresult = (event: any) => {
       let finalParts = "";
@@ -186,8 +213,17 @@ export default function AIChatPage() {
       toast({ variant: "destructive", title: "Voice Input Error", description: msg });
     };
 
-    recognition.start();
-    setIsListening(true);
+    try {
+      recognition.start();
+    } catch {
+      setIsListening(false);
+      recognitionRef.current = null;
+      toast({
+        variant: "destructive",
+        title: "Voice Input Error",
+        description: "Unable to start speech recognition. Please try again.",
+      });
+    }
   };
 
   useEffect(() => {
