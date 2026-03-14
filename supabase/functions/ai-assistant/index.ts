@@ -407,7 +407,7 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
 
   const { data, error } = await supabase
     .from("found_dogs")
-    .select("id, description, location_label, found_at, status, created_at, photo_urls, latitude, longitude")
+    .select("id, description, location_label, found_at, status, created_at, photo_urls, latitude, longitude, reporter_id")
     .eq("status", "active")
     .gte("created_at", cutoffDate.toISOString())
     .order("created_at", { ascending: false })
@@ -431,6 +431,9 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
       cover_photo_url: coverPhoto,
       latitude: fd.latitude,
       longitude: fd.longitude,
+      reporter_id: fd.reporter_id,
+      view_link: `/found-dog/${fd.id}`,
+      message_link: `/messages/new/${fd.reporter_id}`,
     };
   });
 
@@ -453,8 +456,9 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
 For each genuine match, format as:
 **#N - [Location] — [Found date]**
 Reason: [explain color/size/breed similarity]
-👉 [Open Post](/found-dog/POST_ID) · [Message Reporter](/messages)
+👉 [Open Post](/found-dog/POST_ID) · [Message Reporter](/messages/new/REPORTER_ID)
 
+Use the view_link and message_link from each post object for the actual links.
 If the post has a cover_photo_url, show it as: ![Found dog](cover_photo_url)`,
   };
 }
@@ -538,8 +542,8 @@ async function executeSearchLostDogsByAttributes(supabase: any, args: any) {
       score,
       confidence,
       display_title: `🐕 ${dog.name} (${dog.breed || "unknown"}) — **${score}% match (${confidence} confidence)**`,
-      view_link: `/found-dog/${alert.id}`,
-      message_link: `/found-dog/${alert.id}?reply=true`,
+      view_link: `/lost-alert/${alert.id}`,
+      message_link: `/messages/new/${alert.owner_id}`,
     };
   }).filter(Boolean);
 
@@ -1042,7 +1046,7 @@ async function executeReverseMatchLostToFound(supabase: any, args: any) {
       confidence_pct: `${confPct}%`,
       display_title: `📍 ${fd.location_label} — **${confPct}% match (${conf} confidence)**`,
       view_link: `/found-dog/${fd.id}`,
-      message_link: `/found-dog/${fd.id}?reply=true`,
+      message_link: `/messages/new/${fd.reporter_id}`,
       details,
     };
   }).filter(Boolean);
@@ -1318,7 +1322,7 @@ PHOTO MATCH FEATURE:
   4. Return ONLY genuine matches ranked by similarity with:
      - Match reason (e.g., "Similar brown coat + small size + matches Pomeranian description")
      - Found location + time
-     - Links: [Open Post](/found-dog/POST_ID) and [Message Reporter](/messages)
+     - Links: Use the view_link and message_link from the tool results for [Open Post] and [Message Reporter]
   5. If confidence is low for all matches, say so honestly and suggest widening the search or checking back later
   6. If NO matches found, reassure the user and suggest posting a Lost alert
 
