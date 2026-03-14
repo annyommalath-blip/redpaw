@@ -27,6 +27,11 @@ interface LostModeDialogProps {
     name: string;
     breed: string | null;
     photo_url: string | null;
+    coat_shade?: string | null;
+    collar_description?: string | null;
+    markings?: string[] | null;
+    verification_secret?: string | null;
+    notes?: string | null;
   };
   onSuccess: () => void;
 }
