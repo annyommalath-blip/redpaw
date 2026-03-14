@@ -1227,11 +1227,11 @@ Present the search radius info BEFORE the map block, then add the map block, the
 }
 
 async function executeCreateLostAlert(supabase: any, userId: string, args: any) {
-  const { dog_id, title, description, last_seen_location, latitude, longitude, last_seen_time, search_radius_km } = args;
+  const { dog_id, last_seen_location, latitude, longitude, last_seen_time, search_radius_km } = args;
 
-  // Verify ownership
+  // Fetch full dog profile to auto-fill details
   const { data: dog, error: dogErr } = await supabase
-    .from("dogs").select("id, name, breed, photo_url").eq("id", dog_id).eq("owner_id", userId).maybeSingle();
+    .from("dogs").select("*").eq("id", dog_id).eq("owner_id", userId).maybeSingle();
   if (dogErr || !dog) return { error: "Dog not found or you don't own this dog." };
 
   // Check for existing active alert for this dog
@@ -1245,6 +1245,26 @@ async function executeCreateLostAlert(supabase: any, userId: string, args: any) 
       message: `An active lost alert already exists for ${dog.name}.`,
       view_link: `/lost-alert/${existing.id}`,
     };
+  }
+
+  // Auto-generate title from dog name
+  const title = args.title || `${dog.name} is Missing!`;
+
+  // Auto-generate description from dog profile if not provided
+  let description = args.description;
+  if (!description) {
+    const parts: string[] = [];
+    if (dog.breed) parts.push(`Breed: ${dog.breed}`);
+    if (dog.coat_shade) parts.push(`Color: ${dog.coat_shade}`);
+    if (dog.weight && dog.weight_unit) parts.push(`Weight: ${dog.weight} ${dog.weight_unit}`);
+    if (dog.markings?.length) parts.push(`Markings: ${dog.markings.join(", ")}`);
+    if (dog.collar_description) parts.push(`Collar: ${dog.collar_description}`);
+    if (dog.visible_conditions) parts.push(`Visible conditions: ${dog.visible_conditions}`);
+    if (dog.behavior_description) parts.push(`Behavior: ${dog.behavior_description}`);
+    if (dog.unique_traits?.length) parts.push(`Unique traits: ${dog.unique_traits.join(", ")}`);
+    if (dog.microchip_no) parts.push(`Microchip: ${dog.microchip_no}`);
+    if (dog.notes) parts.push(dog.notes);
+    description = parts.length > 0 ? parts.join(". ") + "." : `${dog.name} is missing. Please help find them!`;
   }
 
   // Create the alert
@@ -1274,7 +1294,8 @@ async function executeCreateLostAlert(supabase: any, userId: string, args: any) 
     success: true,
     alert_id: alert.id,
     dog_name: dog.name,
-    message: `Lost alert created for ${dog.name}! The community can now see it.`,
+    auto_filled_from_profile: true,
+    message: `Lost alert created for ${dog.name}! All identity details were auto-filled from their profile.`,
     view_link: `/lost-alert/${alert.id}`,
   };
 }
