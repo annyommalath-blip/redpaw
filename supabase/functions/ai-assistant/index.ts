@@ -495,11 +495,21 @@ async function executeMatchFoundDogToLost(supabase: any, args: any) {
       maxPossibleScore += 0.15;
     }
 
-    // --- BREED MATCH (weight: 15%) ---
+    // --- BREED MATCH (weight: 15%) — ELIMINATES on clear mismatch ---
     const foundBreed = (aiAttrs.breed_guess || "").toLowerCase();
     if (foundBreed && lostBreed) {
+      const foundWords = foundBreed.split(/[\s/]+/).filter((w: string) => w.length > 2);
+      const lostWords = lostBreed.split(/[\s/]+/).filter((w: string) => w.length > 2);
       const breedMatch = foundBreed.includes(lostBreed) || lostBreed.includes(foundBreed) ||
-        foundBreed.split(/[\s/]+/).some((w: string) => lostBreed.includes(w));
+        foundWords.some((w: string) => lostBreed.includes(w)) ||
+        lostWords.some((w: string) => foundBreed.includes(w));
+
+      // If both breeds are known and clearly different, ELIMINATE this candidate
+      if (!breedMatch && !foundBreed.includes("mix") && !lostBreed.includes("mix") &&
+          !foundBreed.includes("unknown") && !lostBreed.includes("unknown")) {
+        return null; // Hard elimination — Husky ≠ Pomeranian
+      }
+
       scores.breed = { score: breedMatch ? 1 : 0, weight: 0.15, detail: `Found: "${foundBreed}" vs Lost: "${lostBreed}"` };
       totalScore += scores.breed.score * scores.breed.weight;
       maxPossibleScore += 0.15;
@@ -593,7 +603,7 @@ async function executeMatchFoundDogToLost(supabase: any, args: any) {
 
   // Sort by score descending, take top N
   candidates.sort((a: any, b: any) => b.match_score - a.match_score);
-  const topMatches = candidates.slice(0, max_results).filter((c: any) => c.match_score > 0.15);
+  const topMatches = candidates.slice(0, max_results).filter((c: any) => c.match_score > 0.3);
 
   // Save matches to dog_matches table
   for (const match of topMatches) {
@@ -799,12 +809,21 @@ async function executeReverseMatchLostToFound(supabase: any, args: any) {
       details.color = { matched: colorMatch, found: fdColor, lost: dogShade };
     }
 
-    // Breed
+    // Breed — ELIMINATES on clear mismatch
     const fdBreed = (aiAttrs.breed_guess || "").toLowerCase();
     const dogBreed = (dog.breed || "").toLowerCase();
     if (fdBreed && dogBreed) {
+      const breedMatch = fdBreed.includes(dogBreed) || dogBreed.includes(fdBreed) ||
+        fdBreed.split(/[\s/]+/).filter((w: string) => w.length > 2).some((w: string) => dogBreed.includes(w)) ||
+        dogBreed.split(/[\s/]+/).filter((w: string) => w.length > 2).some((w: string) => fdBreed.includes(w));
+
+      // Hard elimination for clearly different breeds
+      if (!breedMatch && !fdBreed.includes("mix") && !dogBreed.includes("mix") &&
+          !fdBreed.includes("unknown") && !dogBreed.includes("unknown")) {
+        return null;
+      }
+
       maxScore += 0.15;
-      const breedMatch = fdBreed.includes(dogBreed) || dogBreed.includes(fdBreed);
       score += breedMatch ? 0.15 : 0;
       details.breed = { matched: breedMatch, found: fdBreed, lost: dogBreed };
     }
@@ -833,7 +852,7 @@ async function executeReverseMatchLostToFound(supabase: any, args: any) {
     }
 
     const normalizedScore = maxScore > 0 ? score / maxScore : 0;
-    if (normalizedScore < 0.15) return null;
+    if (normalizedScore < 0.3) return null;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const coverPhoto = fd.photo_urls?.[0]
