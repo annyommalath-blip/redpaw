@@ -456,8 +456,9 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
 For each genuine match, format as:
 **#N - [Location] — [Found date]**
 Reason: [explain color/size/breed similarity]
-👉 [Open Post](/found-dog/POST_ID) · [Message Reporter](/messages)
+👉 [Open Post](/found-dog/POST_ID) · [Message Reporter](/messages/new/REPORTER_ID)
 
+Use the view_link and message_link from each post object for the actual links.
 If the post has a cover_photo_url, show it as: ![Found dog](cover_photo_url)`,
   };
 }
