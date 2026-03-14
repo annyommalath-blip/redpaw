@@ -11,6 +11,26 @@ import ReactMarkdown from "react-markdown";
 import { isHeicFile } from "@/lib/imageUtils";
 import { SearchRadiusMap } from "@/components/chat/SearchRadiusMap";
 
+// Flexible parser for map JSON - handles various formats the AI might output
+function tryParseMapData(content: string, className?: string): React.ReactElement | null {
+  const isMapHint = className === "language-map-data" || className === "language-json";
+  const looksLikeMapJson = content.includes('"center"') || content.includes('"zones"') || content.includes('"search_radius_map"');
+  if (!isMapHint && !looksLikeMapJson) return null;
+  try {
+    const data = JSON.parse(content);
+    if (data.center && data.inner_radius_km != null) {
+      return <SearchRadiusMap center={data.center} innerRadiusKm={data.inner_radius_km} outerRadiusKm={data.outer_radius_km} label={data.label || "Last seen"} />;
+    }
+    if (data.center && Array.isArray(data.zones) && data.zones.length >= 2) {
+      const sorted = [...data.zones].sort((a: any, b: any) => (a.radius_miles || a.radius_km || 0) - (b.radius_miles || b.radius_km || 0));
+      const inner = sorted[0].radius_km || (sorted[0].radius_miles * 1.60934);
+      const outer = sorted[sorted.length - 1].radius_km || (sorted[sorted.length - 1].radius_miles * 1.60934);
+      return <SearchRadiusMap center={data.center} innerRadiusKm={inner} outerRadiusKm={outer} label={data.label || "Last seen"} />;
+    }
+  } catch { /* not valid JSON */ }
+  return null;
+}
+
 interface MessageContent {
   type: "text" | "image_url";
   text?: string;
@@ -563,45 +583,17 @@ export default function AIChatPage() {
                         img: renderImage,
                         code: ({ className, children }) => {
                           const content = String(children).replace(/\n$/, "");
-                          // Detect map-data code blocks
-                          if (className === "language-map-data" || (typeof children === "string" && content.startsWith('{"type":"search_radius_map"'))) {
-                            try {
-                              const mapData = JSON.parse(content);
-                              if (mapData.type === "search_radius_map" && mapData.center) {
-                                return (
-                                  <SearchRadiusMap
-                                    center={mapData.center as [number, number]}
-                                    innerRadiusKm={mapData.inner_radius_km}
-                                    outerRadiusKm={mapData.outer_radius_km}
-                                    label={mapData.label || "Last seen"}
-                                  />
-                                );
-                              }
-                            } catch { /* not valid map JSON, render as code */ }
-                          }
+                          const mapComponent = tryParseMapData(content, className);
+                          if (mapComponent) return mapComponent;
                           return (
                             <code className="bg-background/50 px-1 py-0.5 rounded text-xs">{children}</code>
                           );
                         },
                         pre: ({ children }) => {
-                          // Check if the child is a map-data code block already rendered
                           const child = children as any;
-                          if (child?.props?.className === "language-map-data") {
-                            try {
-                              const content = String(child.props.children).replace(/\n$/, "");
-                              const mapData = JSON.parse(content);
-                              if (mapData.type === "search_radius_map" && mapData.center) {
-                                return (
-                                  <SearchRadiusMap
-                                    center={mapData.center as [number, number]}
-                                    innerRadiusKm={mapData.inner_radius_km}
-                                    outerRadiusKm={mapData.outer_radius_km}
-                                    label={mapData.label || "Last seen"}
-                                  />
-                                );
-                              }
-                            } catch { /* fall through */ }
-                          }
+                          const childContent = String(child?.props?.children || "").replace(/\n$/, "");
+                          const mapComponent = tryParseMapData(childContent, child?.props?.className);
+                          if (mapComponent) return mapComponent;
                           return <pre className="overflow-x-auto">{children}</pre>;
                         },
                       }}
