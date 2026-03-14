@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X, Mic, MicOff } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { isHeicFile } from "@/lib/imageUtils";
-import { cn } from "@/lib/utils";
 
 interface MessageContent {
   type: "text" | "image_url";
@@ -126,7 +125,6 @@ export default function AIChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
-  const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -544,15 +542,6 @@ export default function AIChatPage() {
             className="flex-1"
             disabled={isLoading}
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleListening}
-            disabled={isLoading}
-            className={cn("shrink-0", isListening && "text-destructive animate-pulse")}
-          >
-            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-          </Button>
           <Button onClick={handleSend} disabled={(!newMessage.trim() && attachedImages.length === 0) || isLoading}>
             <Send className="h-4 w-4" />
           </Button>
