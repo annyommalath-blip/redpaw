@@ -1222,6 +1222,58 @@ Present the search radius info BEFORE the map block, then add the map block, the
   };
 }
 
+async function executeCreateLostAlert(supabase: any, userId: string, args: any) {
+  const { dog_id, title, description, last_seen_location, latitude, longitude, last_seen_time, search_radius_km } = args;
+
+  // Verify ownership
+  const { data: dog, error: dogErr } = await supabase
+    .from("dogs").select("id, name, breed, photo_url").eq("id", dog_id).eq("owner_id", userId).maybeSingle();
+  if (dogErr || !dog) return { error: "Dog not found or you don't own this dog." };
+
+  // Check for existing active alert for this dog
+  const { data: existing } = await supabase
+    .from("lost_alerts").select("id").eq("dog_id", dog_id).eq("status", "active").maybeSingle();
+  if (existing) {
+    return {
+      already_exists: true,
+      alert_id: existing.id,
+      dog_name: dog.name,
+      message: `An active lost alert already exists for ${dog.name}.`,
+      view_link: `/lost-alert/${existing.id}`,
+    };
+  }
+
+  // Create the alert
+  const insertData: any = {
+    dog_id,
+    owner_id: userId,
+    title,
+    description,
+    last_seen_location,
+    location_label: last_seen_location,
+    status: "active",
+  };
+  if (latitude != null) insertData.latitude = latitude;
+  if (longitude != null) insertData.longitude = longitude;
+  if (last_seen_time) insertData.last_seen_time = last_seen_time;
+  if (search_radius_km != null) insertData.search_radius_km = search_radius_km;
+  if (dog.photo_url) insertData.photo_url = dog.photo_url;
+
+  const { data: alert, error: insertErr } = await supabase
+    .from("lost_alerts").insert(insertData).select("id").single();
+  if (insertErr) return { error: insertErr.message };
+
+  // Mark the dog as lost
+  await supabase.from("dogs").update({ is_lost: true }).eq("id", dog_id);
+
+  return {
+    success: true,
+    alert_id: alert.id,
+    dog_name: dog.name,
+    message: `Lost alert created for ${dog.name}! The community can now see it.`,
+    view_link: `/lost-alert/${alert.id}`,
+  };
+}
 
 async function executeTool(supabase: any, userId: string, toolName: string, args: any) {
   console.log("Executing tool:", toolName);
