@@ -1244,6 +1244,7 @@ async function executeTool(supabase: any, userId: string, toolName: string, args
     case "update_match_status": return await executeUpdateMatchStatus(supabase, args);
     case "reverse_match_lost_to_found": return await executeReverseMatchLostToFound(supabase, args);
     case "estimate_search_radius": return executeEstimateSearchRadius(args);
+    case "create_lost_alert": return await executeCreateLostAlert(supabase, userId, args);
     default: return { error: `Unknown tool: ${toolName}` };
   }
 }
