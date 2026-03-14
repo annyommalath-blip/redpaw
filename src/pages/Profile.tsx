@@ -56,6 +56,11 @@ interface UserDog {
   breed: string | null;
   photo_url: string | null;
   is_lost: boolean;
+  coat_shade: string | null;
+  collar_description: string | null;
+  markings: string[] | null;
+  verification_secret: string | null;
+  notes: string | null;
 }
 
 interface OwnerProfile {
