@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X, Mic, MicOff } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X, Mic, MicOff, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -408,11 +408,32 @@ export default function AIChatPage() {
     setIsLoading(true);
 
     try {
-      // Build API messages (exclude welcome)
-      const apiMessages = messages
+      // Build API messages: sliding window of last 20 messages + strip images from older ones
+      const MAX_HISTORY = 20;
+      const IMAGE_KEEP_LAST = 2; // only keep images in the last 2 messages
+
+      const allMessages = messages
         .filter(m => m.id !== "welcome")
-        .map(m => ({ role: m.role, content: m.content }))
-        .concat({ role: "user", content: userContent });
+        .map(m => ({ role: m.role, content: m.content }));
+      allMessages.push({ role: "user", content: userContent });
+
+      // Take only the last MAX_HISTORY messages
+      const trimmed = allMessages.slice(-MAX_HISTORY);
+
+      // Strip base64 image data from older messages to save tokens
+      const apiMessages = trimmed.map((m, idx) => {
+        const isRecent = idx >= trimmed.length - IMAGE_KEEP_LAST;
+        if (isRecent || typeof m.content === "string") return m;
+        // For older messages with image arrays, keep only text parts
+        if (Array.isArray(m.content)) {
+          const textOnly = (m.content as any[])
+            .filter((c: any) => c.type === "text")
+            .map((c: any) => c.text)
+            .join("\n");
+          return { role: m.role, content: textOnly || "[image sent]" };
+        }
+        return m;
+      });
 
       await streamChat(apiMessages);
     } catch (error) {
@@ -482,6 +503,18 @@ export default function AIChatPage() {
               {user ? t("messages.aiPersonalAssistant") : t("messages.aiGeneralHelp")}
             </p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              localStorage.removeItem(STORAGE_KEY);
+              setMessages([welcomeMessage]);
+              toast({ title: "Chat cleared" });
+            }}
+            title="Clear chat history"
+          >
+            <Trash2 className="h-4 w-4 text-muted-foreground" />
+          </Button>
         </div>
       </header>
 
