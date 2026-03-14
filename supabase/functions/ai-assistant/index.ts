@@ -109,6 +109,26 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "search_lost_dogs_by_attributes",
+      description: "Search lost dog alerts by visual attributes. Call this when someone reports finding a dog (photo or description) and you want to check if it matches any lost dog. This tool has breed elimination — it will NOT return a Pomeranian when you describe a Husky. Use this instead of get_lost_alerts for ANY matching scenario.",
+      parameters: {
+        type: "object",
+        properties: {
+          breed_guess: { type: "string", description: "Best guess of the breed (e.g., 'Siberian Husky', 'Pomeranian', 'Labrador mix')" },
+          color: { type: "string", description: "Primary coat color (e.g., 'black and white', 'golden', 'brown')" },
+          size: { type: "string", enum: ["small", "medium", "large"], description: "Estimated size category" },
+          latitude: { type: "number", description: "Latitude where the dog was found (optional)" },
+          longitude: { type: "number", description: "Longitude where the dog was found (optional)" },
+          markings: { type: "string", description: "Notable markings, collar, harness details" },
+          days_back: { type: "number", description: "How many days back to search. Default 14." },
+        },
+        required: ["breed_guess", "color", "size"],
+      },
+    },
+  },
   // --- NEW MATCHING PIPELINE TOOLS ---
   {
     type: "function",
@@ -394,6 +414,113 @@ Reason: [explain color/size/breed similarity]
 👉 [Open Post](/found-dog/POST_ID) · [Message Reporter](/messages)
 
 If the post has a cover_photo_url, show it as: ![Found dog](cover_photo_url)`,
+  };
+}
+
+async function executeSearchLostDogsByAttributes(supabase: any, args: any) {
+  const daysBack = args.days_back || 14;
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+
+  const { data: alerts, error } = await supabase
+    .from("lost_alerts")
+    .select(`id, title, description, location_label, latitude, longitude, created_at, status,
+             dogs!inner(id, name, breed, photo_url, coat_shade, markings, collar_description, weight, weight_unit)`)
+    .eq("status", "active")
+    .gte("created_at", cutoffDate.toISOString())
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) return { error: error.message };
+  if (!alerts || alerts.length === 0) return { matches: [], count: 0, message: "No active lost dog alerts in the last " + daysBack + " days." };
+
+  const foundBreed = (args.breed_guess || "").toLowerCase();
+  const foundColor = (args.color || "").toLowerCase();
+  const foundSize = (args.size || "").toLowerCase();
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+
+  const matches = alerts.map((alert: any) => {
+    const dog = alert.dogs;
+    const lostBreed = (dog.breed || "").toLowerCase();
+
+    // HARD BREED ELIMINATION — different known breeds = instant reject
+    if (foundBreed && lostBreed) {
+      const breedMatch = foundBreed.includes(lostBreed) || lostBreed.includes(foundBreed) ||
+        foundBreed.split(/[\s/]+/).filter((w: string) => w.length > 2).some((w: string) => lostBreed.includes(w)) ||
+        lostBreed.split(/[\s/]+/).filter((w: string) => w.length > 2).some((w: string) => foundBreed.includes(w));
+      if (!breedMatch && !foundBreed.includes("mix") && !lostBreed.includes("mix") &&
+          !foundBreed.includes("unknown") && !lostBreed.includes("unknown")) {
+        return null; // Husky ≠ Pomeranian → eliminated
+      }
+    }
+
+    // SIZE ELIMINATION
+    if (foundSize && dog.weight) {
+      const w = parseFloat(dog.weight);
+      const lostSize = w < 10 ? "small" : w > 25 ? "large" : "medium";
+      if (foundSize !== lostSize) return null;
+    }
+
+    // Score remaining candidates
+    let score = 0;
+    if (foundBreed && lostBreed && (foundBreed.includes(lostBreed) || lostBreed.includes(foundBreed))) score += 40;
+    const lostColor = (dog.coat_shade || "").toLowerCase();
+    if (foundColor && lostColor && (foundColor.includes(lostColor) || lostColor.includes(foundColor))) score += 30;
+    else if (foundColor && lostColor) score -= 10;
+
+    // Location proximity bonus
+    if (args.latitude && args.longitude && alert.latitude && alert.longitude) {
+      const R = 6371;
+      const dLat = (args.latitude - alert.latitude) * Math.PI / 180;
+      const dLon = (args.longitude - alert.longitude) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(alert.latitude * Math.PI / 180) * Math.cos(args.latitude * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+      const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      if (dist <= 5) score += 20;
+      else if (dist <= 15) score += 10;
+    }
+
+    if (score <= 0) return null;
+
+    const confidence = score >= 70 ? "high" : score >= 40 ? "medium" : "low";
+    const dogPhoto = dog.photo_url
+      ? (dog.photo_url.startsWith("http") ? dog.photo_url : `${supabaseUrl}/storage/v1/object/public/dog-photos/${dog.photo_url}`)
+      : null;
+
+    return {
+      alert_id: alert.id,
+      dog_name: dog.name,
+      dog_breed: dog.breed,
+      dog_photo_url: dogPhoto,
+      location_label: alert.location_label,
+      created_at: alert.created_at,
+      score,
+      confidence,
+      display_title: `🐕 ${dog.name} (${dog.breed || "unknown"}) — **${score}% match (${confidence} confidence)**`,
+      view_link: `/found-dog/${alert.id}`,
+      message_link: `/found-dog/${alert.id}?reply=true`,
+    };
+  }).filter(Boolean);
+
+  matches.sort((a: any, b: any) => b.score - a.score);
+  const top = matches.slice(0, 5);
+
+  return {
+    search_criteria: { breed: args.breed_guess, color: args.color, size: args.size },
+    matches: top,
+    count: top.length,
+    instruction: top.length > 0
+      ? `Use EXACTLY this format for each match:
+
+### Match #N
+{display_title}
+Location: {location_label}
+Date: {created_at}
+{dog_photo_url ? "![Dog photo](dog_photo_url)" : ""}
+👉 [Open Post]({view_link}) · [Message Reporter]({message_link})
+
+DO NOT show dogs that were eliminated by breed. If you only see 1 match, show only 1. Do NOT pad with unrelated dogs.
+After listing, ask "Does this look like the dog you found?"`
+      : "No matching lost dogs found. Suggest the user post a Found Dog alert so owners can find them.",
   };
 }
 
@@ -922,6 +1049,7 @@ async function executeTool(supabase: any, userId: string, toolName: string, args
     case "get_sitter_logs": return await executeGetSitterLogs(supabase, userId, args.request_id);
     case "get_found_dogs_nearby": return await executeGetFoundDogsNearby(supabase, userId, args.status);
     case "search_found_dogs_by_attributes": return await executeSearchFoundDogsByAttributes(supabase, args);
+    case "search_lost_dogs_by_attributes": return await executeSearchLostDogsByAttributes(supabase, args);
     case "analyze_found_dog_photo": return await executeAnalyzeFoundDogPhoto(supabase, args);
     case "save_found_dog_attributes": return await executeSaveFoundDogAttributes(supabase, args);
     case "match_found_dog_to_lost": return await executeMatchFoundDogToLost(supabase, args);
@@ -979,9 +1107,12 @@ CAPABILITIES:
 MATCHING PIPELINE (CRITICAL - follow these steps exactly):
 
 ⚠️ ABSOLUTE RULE: NEVER use get_lost_alerts or get_found_dogs_nearby for matching.
-- To match a FOUND dog → call match_found_dog_to_lost
-- To match a LOST dog → call reverse_match_lost_to_found
-These tools have breed elimination logic. If you skip them and use get_lost_alerts instead, you WILL show wrong breeds (e.g., Husky matched to Pomeranian). This is a critical error.
+- When someone says "I found a dog" or uploads a photo of a found dog:
+  → call search_lost_dogs_by_attributes with the breed, color, and size you see in the photo.
+  → This tool has BREED ELIMINATION. Husky ≠ Pomeranian. It will only return same-breed matches.
+- If you have a saved found_dog_id, you can also use match_found_dog_to_lost.
+- To match a LOST dog → call reverse_match_lost_to_found.
+- NEVER call get_lost_alerts and then manually pick matches. That tool has NO breed filtering and WILL show wrong breeds.
 
 When a FINDER reports a found dog with a photo:
 1. First, assess the image quality and extract all possible features from the photo.
