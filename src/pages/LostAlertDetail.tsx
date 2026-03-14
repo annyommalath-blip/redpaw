@@ -13,6 +13,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { LocationLink } from "@/components/location/LocationLink";
+import { LocationMapView } from "@/components/location/LocationMapView";
 import { calculateAge } from "@/lib/ageCalculator";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -326,6 +327,23 @@ export default function LostAlertDetailPage() {
                 <span>Posted {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}</span>
               </div>
             </div>
+
+            {/* Embedded map showing last seen location */}
+            {(alert as any).latitude && (alert as any).longitude && (
+              <div className="mt-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Last seen location
+                </p>
+                <LocationMapView
+                  latitude={(alert as any).latitude}
+                  longitude={(alert as any).longitude}
+                  label={(alert as any).location_label || alert.last_seen_location}
+                  color="#ef4444"
+                  height={200}
+                />
+              </div>
+            )}
 
             {/* Actions */}
             {isActive && (

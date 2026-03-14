@@ -13,7 +13,8 @@ import {
   Users,
   AtSign,
   Heart,
-  Repeat2
+  Repeat2,
+  PawPrint
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDateLocale } from "@/hooks/useDateLocale";
@@ -35,7 +36,7 @@ const typeIcons: Record<string, typeof Bell> = {
   care_reapply: UserPlus,
   assigned_job_owner: UserCheck,
   assigned_job_sitter: UserCheck,
-  lost_dog_nearby: AlertTriangle,
+  lost_dog_nearby: PawPrint,
   care_request_nearby: Calendar,
   medication_expiring: Syringe,
   sighting_reported: Eye,
@@ -110,6 +111,10 @@ export function NotificationItem({
         }
         return t("notifications.bodies.assigned_job_sitter_multi", { ...bodyParams, careType });
       }
+      case "lost_dog_nearby":
+        return bodyParams.dog_name
+          ? `${bodyParams.dog_name} was last seen ${bodyParams.distance} mi away near ${bodyParams.location}.`
+          : body;
       case "sighting_reported":
         return t("notifications.bodies.sighting_reported", bodyParams);
       case "found_dog_reply":

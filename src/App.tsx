@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useLostDogNearbyAlerts } from "@/hooks/useLostDogNearbyAlerts";
+import { useViewerLocation } from "@/hooks/useViewerLocation";
+import { useAuth } from "@/hooks/useAuth";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Community from "./pages/Community";
@@ -29,6 +32,17 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+/** Runs global background watchers — only active for authenticated non-guest users */
+function GlobalWatchers() {
+  const { user, isGuest, loading } = useAuth();
+  const viewerLocation = useViewerLocation();
+  // Pass null coords if not yet authenticated so the hook doesn't scan prematurely
+  const lat = !loading && user && !isGuest ? viewerLocation.latitude : null;
+  const lon = !loading && user && !isGuest ? viewerLocation.longitude : null;
+  useLostDogNearbyAlerts(lat, lon);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -36,6 +50,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <GlobalWatchers />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
