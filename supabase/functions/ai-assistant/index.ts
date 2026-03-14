@@ -407,7 +407,7 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
 
   const { data, error } = await supabase
     .from("found_dogs")
-    .select("id, description, location_label, found_at, status, created_at, photo_urls, latitude, longitude")
+    .select("id, description, location_label, found_at, status, created_at, photo_urls, latitude, longitude, reporter_id")
     .eq("status", "active")
     .gte("created_at", cutoffDate.toISOString())
     .order("created_at", { ascending: false })
