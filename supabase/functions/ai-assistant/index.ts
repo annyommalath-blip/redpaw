@@ -1046,7 +1046,7 @@ async function executeReverseMatchLostToFound(supabase: any, args: any) {
       confidence_pct: `${confPct}%`,
       display_title: `📍 ${fd.location_label} — **${confPct}% match (${conf} confidence)**`,
       view_link: `/found-dog/${fd.id}`,
-      message_link: `/found-dog/${fd.id}?reply=true`,
+      message_link: `/messages/new/${fd.reporter_id}`,
       details,
     };
   }).filter(Boolean);
