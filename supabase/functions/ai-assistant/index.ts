@@ -280,6 +280,27 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "create_lost_alert",
+      description: "Create a lost dog alert in the community. Call this when a user wants to post/create a lost alert for their dog. Requires the dog_id, a title, description, and last seen location. Optionally accepts coordinates, last_seen_time, and search_radius_km.",
+      parameters: {
+        type: "object",
+        properties: {
+          dog_id: { type: "string", description: "UUID of the dog to report lost" },
+          title: { type: "string", description: "Alert title, e.g. 'Mochi is Missing!'" },
+          description: { type: "string", description: "Description including key identifiers like breed, color, collar" },
+          last_seen_location: { type: "string", description: "Text description of where the dog was last seen" },
+          latitude: { type: "number", description: "Latitude of last seen location" },
+          longitude: { type: "number", description: "Longitude of last seen location" },
+          last_seen_time: { type: "string", description: "ISO timestamp of when the dog was last seen" },
+          search_radius_km: { type: "number", description: "Estimated search radius in km" },
+        },
+        required: ["dog_id", "title", "description", "last_seen_location"],
+      },
+    },
+  },
 ];
 
 // Tool execution functions
@@ -1201,6 +1222,58 @@ Present the search radius info BEFORE the map block, then add the map block, the
   };
 }
 
+async function executeCreateLostAlert(supabase: any, userId: string, args: any) {
+  const { dog_id, title, description, last_seen_location, latitude, longitude, last_seen_time, search_radius_km } = args;
+
+  // Verify ownership
+  const { data: dog, error: dogErr } = await supabase
+    .from("dogs").select("id, name, breed, photo_url").eq("id", dog_id).eq("owner_id", userId).maybeSingle();
+  if (dogErr || !dog) return { error: "Dog not found or you don't own this dog." };
+
+  // Check for existing active alert for this dog
+  const { data: existing } = await supabase
+    .from("lost_alerts").select("id").eq("dog_id", dog_id).eq("status", "active").maybeSingle();
+  if (existing) {
+    return {
+      already_exists: true,
+      alert_id: existing.id,
+      dog_name: dog.name,
+      message: `An active lost alert already exists for ${dog.name}.`,
+      view_link: `/lost-alert/${existing.id}`,
+    };
+  }
+
+  // Create the alert
+  const insertData: any = {
+    dog_id,
+    owner_id: userId,
+    title,
+    description,
+    last_seen_location,
+    location_label: last_seen_location,
+    status: "active",
+  };
+  if (latitude != null) insertData.latitude = latitude;
+  if (longitude != null) insertData.longitude = longitude;
+  if (last_seen_time) insertData.last_seen_time = last_seen_time;
+  if (search_radius_km != null) insertData.search_radius_km = search_radius_km;
+  if (dog.photo_url) insertData.photo_url = dog.photo_url;
+
+  const { data: alert, error: insertErr } = await supabase
+    .from("lost_alerts").insert(insertData).select("id").single();
+  if (insertErr) return { error: insertErr.message };
+
+  // Mark the dog as lost
+  await supabase.from("dogs").update({ is_lost: true }).eq("id", dog_id);
+
+  return {
+    success: true,
+    alert_id: alert.id,
+    dog_name: dog.name,
+    message: `Lost alert created for ${dog.name}! The community can now see it.`,
+    view_link: `/lost-alert/${alert.id}`,
+  };
+}
 
 async function executeTool(supabase: any, userId: string, toolName: string, args: any) {
   console.log("Executing tool:", toolName);
@@ -1223,6 +1296,7 @@ async function executeTool(supabase: any, userId: string, toolName: string, args
     case "update_match_status": return await executeUpdateMatchStatus(supabase, args);
     case "reverse_match_lost_to_found": return await executeReverseMatchLostToFound(supabase, args);
     case "estimate_search_radius": return executeEstimateSearchRadius(args);
+    case "create_lost_alert": return await executeCreateLostAlert(supabase, userId, args);
     default: return { error: `Unknown tool: ${toolName}` };
   }
 }
@@ -1269,6 +1343,14 @@ CAPABILITIES:
 - update_match_status: Update match status (confirm/reject/dismiss)
 - reverse_match_lost_to_found: Search existing found dog posts when a new lost alert is filed
 - estimate_search_radius: Calculate how far a lost dog may have traveled based on breed, time, terrain
+- create_lost_alert: Create a lost dog alert in the community feed. ALWAYS use this tool when the user asks to create/post a lost alert. Never pretend to create an alert without calling this tool.
+
+CRITICAL - CREATING LOST ALERTS:
+- When a user asks to create a lost alert, you MUST call the create_lost_alert tool. NEVER say you created an alert without actually calling this tool.
+- You need: dog_id (get from get_my_dogs if needed), title, description, and last_seen_location.
+- If you have coordinates from a previous estimate_search_radius call, include latitude and longitude.
+- After creating the alert, use the returned view_link to show the user the correct link to their alert.
+- If the tool returns already_exists, tell the user an alert already exists and show the link.
 
 SEARCH RADIUS MAP FEATURE:
 - When a user reports a lost dog with location info (coordinates or place name), ALWAYS call estimate_search_radius.
