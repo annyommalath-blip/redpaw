@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, AlertTriangle, Loader2, Shield } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -27,6 +27,11 @@ interface LostModeDialogProps {
     name: string;
     breed: string | null;
     photo_url: string | null;
+    coat_shade?: string | null;
+    collar_description?: string | null;
+    markings?: string[] | null;
+    verification_secret?: string | null;
+    notes?: string | null;
   };
   onSuccess: () => void;
 }
@@ -51,6 +56,16 @@ export function LostModeDialog({
   const navigate = useNavigate();
 
   const isValid = location.locationLabel.trim() !== "" && lastSeenWhen.trim() !== "";
+
+  useEffect(() => {
+    if (!open) return;
+
+    setCoatShade(dog.coat_shade || "");
+    setCollarDescription(dog.collar_description || "");
+    setMarkings((dog.markings || []).join(", "));
+    setVerificationSecret(dog.verification_secret || "");
+    setExtraNotes(dog.notes || "");
+  }, [open, dog]);
 
   const handlePost = async () => {
     if (!isValid || !user) return;

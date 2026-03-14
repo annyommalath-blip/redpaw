@@ -56,6 +56,11 @@ interface UserDog {
   breed: string | null;
   photo_url: string | null;
   is_lost: boolean;
+  coat_shade: string | null;
+  collar_description: string | null;
+  markings: string[] | null;
+  verification_secret: string | null;
+  notes: string | null;
 }
 
 interface OwnerProfile {
@@ -414,7 +419,7 @@ export default function ProfilePage() {
 
       const { data: ownedDogs } = await supabase
         .from("dogs")
-        .select("id, name, breed, photo_url, is_lost")
+        .select("id, name, breed, photo_url, is_lost, coat_shade, collar_description, markings, verification_secret, notes")
         .eq("owner_id", user.id)
         .order("created_at", { ascending: true });
 
@@ -429,7 +434,7 @@ export default function ProfilePage() {
         const dogIds = coParentedMemberships.map((m) => m.dog_id);
         const { data: sharedDogs } = await supabase
           .from("dogs")
-          .select("id, name, breed, photo_url, is_lost")
+          .select("id, name, breed, photo_url, is_lost, coat_shade, collar_description, markings, verification_secret, notes")
           .in("id", dogIds)
           .order("created_at", { ascending: true });
         coParentedDogs = (sharedDogs || []) as UserDog[];
@@ -1307,6 +1312,11 @@ export default function ProfilePage() {
             name: activeDog.name,
             breed: activeDog.breed,
             photo_url: activeDog.photo_url,
+            coat_shade: activeDog.coat_shade,
+            collar_description: activeDog.collar_description,
+            markings: activeDog.markings,
+            verification_secret: activeDog.verification_secret,
+            notes: activeDog.notes,
           }}
           onSuccess={handleLostModeSuccess}
         />
