@@ -1322,7 +1322,7 @@ PHOTO MATCH FEATURE:
   4. Return ONLY genuine matches ranked by similarity with:
      - Match reason (e.g., "Similar brown coat + small size + matches Pomeranian description")
      - Found location + time
-     - Links: [Open Post](/found-dog/POST_ID) and [Message Reporter](/messages)
+     - Links: Use the view_link and message_link from the tool results for [Open Post] and [Message Reporter]
   5. If confidence is low for all matches, say so honestly and suggest widening the search or checking back later
   6. If NO matches found, reassure the user and suggest posting a Lost alert
 
