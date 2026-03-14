@@ -1312,6 +1312,11 @@ export default function ProfilePage() {
             name: activeDog.name,
             breed: activeDog.breed,
             photo_url: activeDog.photo_url,
+            coat_shade: activeDog.coat_shade,
+            collar_description: activeDog.collar_description,
+            markings: activeDog.markings,
+            verification_secret: activeDog.verification_secret,
+            notes: activeDog.notes,
           }}
           onSuccess={handleLostModeSuccess}
         />

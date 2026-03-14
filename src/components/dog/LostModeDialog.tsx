@@ -57,6 +57,16 @@ export function LostModeDialog({
 
   const isValid = location.locationLabel.trim() !== "" && lastSeenWhen.trim() !== "";
 
+  useEffect(() => {
+    if (!open) return;
+
+    setCoatShade(dog.coat_shade || "");
+    setCollarDescription(dog.collar_description || "");
+    setMarkings((dog.markings || []).join(", "));
+    setVerificationSecret(dog.verification_secret || "");
+    setExtraNotes(dog.notes || "");
+  }, [open, dog]);
+
   const handlePost = async () => {
     if (!isValid || !user) return;
 
