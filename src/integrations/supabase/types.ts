@@ -314,6 +314,57 @@ export type Database = {
         }
         Relationships: []
       }
+      dog_matches: {
+        Row: {
+          confidence: string
+          created_at: string
+          found_dog_id: string
+          id: string
+          lost_alert_id: string
+          match_details: Json | null
+          match_score: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          confidence: string
+          created_at?: string
+          found_dog_id: string
+          id?: string
+          lost_alert_id: string
+          match_details?: Json | null
+          match_score: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          confidence?: string
+          created_at?: string
+          found_dog_id?: string
+          id?: string
+          lost_alert_id?: string
+          match_details?: Json | null
+          match_score?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dog_matches_found_dog_id_fkey"
+            columns: ["found_dog_id"]
+            isOneToOne: false
+            referencedRelation: "found_dogs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dog_matches_lost_alert_id_fkey"
+            columns: ["lost_alert_id"]
+            isOneToOne: false
+            referencedRelation: "lost_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dog_members: {
         Row: {
           created_at: string
@@ -351,57 +402,6 @@ export type Database = {
             columns: ["dog_id"]
             isOneToOne: false
             referencedRelation: "dogs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      dog_matches: {
-        Row: {
-          id: string
-          found_dog_id: string
-          lost_alert_id: string
-          match_score: number
-          confidence: string
-          match_details: Json
-          status: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          found_dog_id: string
-          lost_alert_id: string
-          match_score: number
-          confidence: string
-          match_details?: Json
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          found_dog_id?: string
-          lost_alert_id?: string
-          match_score?: number
-          confidence?: string
-          match_details?: Json
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "dog_matches_found_dog_id_fkey"
-            columns: ["found_dog_id"]
-            isOneToOne: false
-            referencedRelation: "found_dogs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "dog_matches_lost_alert_id_fkey"
-            columns: ["lost_alert_id"]
-            isOneToOne: false
-            referencedRelation: "lost_alerts"
             referencedColumns: ["id"]
           },
         ]
@@ -613,11 +613,11 @@ export type Database = {
       }
       found_dogs: {
         Row: {
-          ai_attributes: Json
-          confidence_level: string
+          ai_attributes: Json | null
+          confidence_level: string | null
           created_at: string
           description: string | null
-          finder_observations: Json
+          finder_observations: Json | null
           found_at: string
           id: string
           image_quality: string | null
@@ -632,11 +632,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          ai_attributes?: Json
-          confidence_level?: string
+          ai_attributes?: Json | null
+          confidence_level?: string | null
           created_at?: string
           description?: string | null
-          finder_observations?: Json
+          finder_observations?: Json | null
           found_at: string
           id?: string
           image_quality?: string | null
@@ -651,11 +651,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          ai_attributes?: Json
-          confidence_level?: string
+          ai_attributes?: Json | null
+          confidence_level?: string | null
           created_at?: string
           description?: string | null
-          finder_observations?: Json
+          finder_observations?: Json | null
           found_at?: string
           id?: string
           image_quality?: string | null
@@ -669,7 +669,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["found_dog_status"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "found_dogs_matched_alert_id_fkey"
+            columns: ["matched_alert_id"]
+            isOneToOne: false
+            referencedRelation: "lost_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       health_logs: {
         Row: {
