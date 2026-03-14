@@ -528,9 +528,49 @@ export default function AIChatPage() {
                         strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                         a: renderLink,
                         img: renderImage,
-                        code: ({ children }) => (
-                          <code className="bg-background/50 px-1 py-0.5 rounded text-xs">{children}</code>
-                        ),
+                        code: ({ className, children }) => {
+                          const content = String(children).replace(/\n$/, "");
+                          // Detect map-data code blocks
+                          if (className === "language-map-data" || (typeof children === "string" && content.startsWith('{"type":"search_radius_map"'))) {
+                            try {
+                              const mapData = JSON.parse(content);
+                              if (mapData.type === "search_radius_map" && mapData.center) {
+                                return (
+                                  <SearchRadiusMap
+                                    center={mapData.center as [number, number]}
+                                    innerRadiusKm={mapData.inner_radius_km}
+                                    outerRadiusKm={mapData.outer_radius_km}
+                                    label={mapData.label || "Last seen"}
+                                  />
+                                );
+                              }
+                            } catch { /* not valid map JSON, render as code */ }
+                          }
+                          return (
+                            <code className="bg-background/50 px-1 py-0.5 rounded text-xs">{children}</code>
+                          );
+                        },
+                        pre: ({ children }) => {
+                          // Check if the child is a map-data code block already rendered
+                          const child = children as any;
+                          if (child?.props?.className === "language-map-data") {
+                            try {
+                              const content = String(child.props.children).replace(/\n$/, "");
+                              const mapData = JSON.parse(content);
+                              if (mapData.type === "search_radius_map" && mapData.center) {
+                                return (
+                                  <SearchRadiusMap
+                                    center={mapData.center as [number, number]}
+                                    innerRadiusKm={mapData.inner_radius_km}
+                                    outerRadiusKm={mapData.outer_radius_km}
+                                    label={mapData.label || "Last seen"}
+                                  />
+                                );
+                              }
+                            } catch { /* fall through */ }
+                          }
+                          return <pre className="overflow-x-auto">{children}</pre>;
+                        },
                       }}
                     >
                       {text || "..."}
