@@ -419,7 +419,7 @@ export default function ProfilePage() {
 
       const { data: ownedDogs } = await supabase
         .from("dogs")
-        .select("id, name, breed, photo_url, is_lost")
+        .select("id, name, breed, photo_url, is_lost, coat_shade, collar_description, markings, verification_secret, notes")
         .eq("owner_id", user.id)
         .order("created_at", { ascending: true });
 
