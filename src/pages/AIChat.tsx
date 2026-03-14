@@ -217,7 +217,7 @@ export default function AIChatPage() {
       stopMicStream();
       const errorMap: Record<string, string> = {
         "not-allowed": "Microphone access denied. Please allow microphone permission in your browser settings.",
-        "service-not-allowed": "Speech service is blocked on this device/browser. On iPhone, enable Dictation in Settings > General > Keyboard, then retry.",
+        "service-not-allowed": "Speech recognition unavailable on this device. Use your keyboard's built-in dictation (🎙️ on the keyboard) instead.",
         "audio-capture": "No microphone was detected. Please check your audio input device.",
         "no-speech": "No speech detected. Please try again.",
         "network": "Network error. Please check your connection.",
