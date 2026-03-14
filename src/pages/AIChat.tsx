@@ -109,7 +109,7 @@ export default function AIChatPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const welcomeMessage: Message = {
     id: "welcome",
