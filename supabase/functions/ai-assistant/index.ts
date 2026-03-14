@@ -431,6 +431,9 @@ async function executeSearchFoundDogsByAttributes(supabase: any, args: any) {
       cover_photo_url: coverPhoto,
       latitude: fd.latitude,
       longitude: fd.longitude,
+      reporter_id: fd.reporter_id,
+      view_link: `/found-dog/${fd.id}`,
+      message_link: `/messages/new/${fd.reporter_id}`,
     };
   });
 
