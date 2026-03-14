@@ -1230,9 +1230,27 @@ serve(async (req) => {
       }
     }
 
-    // Messages may contain multimodal content (text + images)
-    // The Gemini model supports vision natively, so we pass them through
-    console.log("AI request - messages:", messages.length, "userId:", userId);
+    // Detect if the latest user message contains an image
+    const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
+    const hasImage = lastUserMsg && Array.isArray(lastUserMsg.content) &&
+      lastUserMsg.content.some((c: any) => c.type === "image_url");
+    const lastText = lastUserMsg
+      ? (typeof lastUserMsg.content === "string" ? lastUserMsg.content : lastUserMsg.content?.filter((c: any) => c.type === "text").map((c: any) => c.text).join(" ") || "")
+      : "";
+    const mentionsFound = /found|spotted|saw|seen|stray|loose/i.test(lastText);
+    const mentionsLost = /lost|missing|escaped|ran away/i.test(lastText);
+
+    // Force tool call when image + found/lost context detected
+    const forceToolChoice = userId && hasImage && (mentionsFound || mentionsLost)
+      ? { type: "function", function: { name: "search_lost_dogs_by_attributes" } }
+      : (userId ? "auto" : undefined);
+
+    console.log("AI request - messages:", messages.length, "userId:", userId, "hasImage:", !!hasImage, "forceToolChoice:", JSON.stringify(forceToolChoice));
+
+    // If we're forcing search_lost_dogs_by_attributes, inject a system message telling AI to extract breed/color/size first
+    const extraSystemMsg = forceToolChoice && typeof forceToolChoice === "object"
+      ? [{ role: "system", content: "You MUST call search_lost_dogs_by_attributes now. Look at the photo and extract: breed_guess (specific breed name), color (primary coat color), and size (small/medium/large). Pass these as arguments to the tool. Do NOT skip the tool call." }]
+      : [];
 
     // First API call with tools (non-streaming to handle tool calls)
     const initialResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -1243,9 +1261,9 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        messages: [{ role: "system", content: systemPrompt }, ...extraSystemMsg, ...messages],
         tools: userId ? tools : undefined,
-        tool_choice: userId ? "auto" : undefined,
+        tool_choice: forceToolChoice,
         stream: false,
       }),
     });
