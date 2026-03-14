@@ -1300,7 +1300,7 @@ serve(async (req) => {
             ...messages,
             {
               role: "system",
-              content: `TOOL RESULTS (trusted app data):\n${toolContext}\n\nUse these results to answer the user's latest request directly and clearly. Do not call tools in this response.`,
+              content: `TOOL RESULTS (trusted app data):\n${toolContext}\n\nIMPORTANT: Use ONLY these tool results to answer. Do NOT reference matches or dogs from earlier in the conversation — they may be outdated. Only present dogs that appear in the tool results above. Do not call tools in this response.`,
             },
           ],
           stream: true,
