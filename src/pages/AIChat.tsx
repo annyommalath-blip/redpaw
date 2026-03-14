@@ -11,6 +11,26 @@ import ReactMarkdown from "react-markdown";
 import { isHeicFile } from "@/lib/imageUtils";
 import { SearchRadiusMap } from "@/components/chat/SearchRadiusMap";
 
+// Flexible parser for map JSON - handles various formats the AI might output
+function tryParseMapData(content: string, className?: string): React.ReactElement | null {
+  const isMapHint = className === "language-map-data" || className === "language-json";
+  const looksLikeMapJson = content.includes('"center"') || content.includes('"zones"') || content.includes('"search_radius_map"');
+  if (!isMapHint && !looksLikeMapJson) return null;
+  try {
+    const data = JSON.parse(content);
+    if (data.center && data.inner_radius_km != null) {
+      return <SearchRadiusMap center={data.center} innerRadiusKm={data.inner_radius_km} outerRadiusKm={data.outer_radius_km} label={data.label || "Last seen"} />;
+    }
+    if (data.center && Array.isArray(data.zones) && data.zones.length >= 2) {
+      const sorted = [...data.zones].sort((a: any, b: any) => (a.radius_miles || a.radius_km || 0) - (b.radius_miles || b.radius_km || 0));
+      const inner = sorted[0].radius_km || (sorted[0].radius_miles * 1.60934);
+      const outer = sorted[sorted.length - 1].radius_km || (sorted[sorted.length - 1].radius_miles * 1.60934);
+      return <SearchRadiusMap center={data.center} innerRadiusKm={inner} outerRadiusKm={outer} label={data.label || "Last seen"} />;
+    }
+  } catch { /* not valid JSON */ }
+  return null;
+}
+
 interface MessageContent {
   type: "text" | "image_url";
   text?: string;
