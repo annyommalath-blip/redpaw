@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, HandHeart, Dog, Heart, PawPrint, Search } from "lucide-react";
+import { AlertTriangle, HandHeart, Dog, Heart, PawPrint, Search, List, Map } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -10,8 +10,10 @@ import { CareRequestCard } from "@/components/community/CareRequestCard";
 import { FoundDogCard } from "@/components/community/FoundDogCard";
 import { DonationCampaignCard } from "@/components/community/DonationCampaignCard";
 import { AdoptionPostCard } from "@/components/community/AdoptionPostCard";
+import { LostDogsMap } from "@/components/community/LostDogsMap";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedList } from "@/components/ui/animated-list";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +58,7 @@ export default function CommunityPage() {
   const [lostAlerts, setLostAlerts] = useState<LostAlert[]>([]);
   const [foundDogs, setFoundDogs] = useState<FoundDog[]>([]);
   const [lostFoundFilter, setLostFoundFilter] = useState<string>("all");
+  const [lostFoundView, setLostFoundView] = useState<"list" | "map">("list");
   const [careRequests, setCareRequests] = useState<CareRequest[]>([]);
   const [donationCampaigns, setDonationCampaigns] = useState<any[]>([]);
   const [adoptionPosts, setAdoptionPosts] = useState<any[]>([]);
@@ -333,24 +336,77 @@ export default function CommunityPage() {
           </TabsContent>
 
           <TabsContent value="lost" className="mt-0">
-            <ToggleGroup
-              type="single"
-              value={lostFoundFilter}
-              onValueChange={(val) => val && setLostFoundFilter(val)}
-              className="justify-start bg-muted/30 p-1 rounded-xl w-fit mb-4"
-            >
-              <ToggleGroupItem value="all" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
-                {t("common.all")}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="lost" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
-                {t("community.lost")}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="found" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
-                {t("community.found")}
-              </ToggleGroupItem>
-            </ToggleGroup>
+            {/* Controls row: filter chips + map/list toggle */}
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <ToggleGroup
+                type="single"
+                value={lostFoundFilter}
+                onValueChange={(val) => val && setLostFoundFilter(val)}
+                className="justify-start bg-muted/30 p-1 rounded-xl w-fit"
+              >
+                <ToggleGroupItem value="all" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
+                  {t("common.all")}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="lost" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
+                  {t("community.lost")}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="found" size="sm" className="text-xs px-4 rounded-lg data-[state=on]:bg-white data-[state=on]:shadow-sm">
+                  {t("community.found")}
+                </ToggleGroupItem>
+              </ToggleGroup>
 
-            {combinedFeed.length > 0 ? (
+              {/* Map / List toggle */}
+              <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-xl">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-7 px-2.5 rounded-lg text-xs gap-1 ${lostFoundView === "list" ? "bg-white shadow-sm" : ""}`}
+                  onClick={() => setLostFoundView("list")}
+                >
+                  <List className="h-3.5 w-3.5" />
+                  List
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-7 px-2.5 rounded-lg text-xs gap-1 ${lostFoundView === "map" ? "bg-white shadow-sm" : ""}`}
+                  onClick={() => setLostFoundView("map")}
+                >
+                  <Map className="h-3.5 w-3.5" />
+                  Map
+                </Button>
+              </div>
+            </div>
+
+            {lostFoundView === "map" ? (
+              <LostDogsMap
+                key={`map-${lostFoundFilter}`}
+                lostAlerts={filteredLostAlerts
+                  .filter(a => a.latitude !== null && a.longitude !== null)
+                  .map(a => ({
+                    id: a.id,
+                    dogName: a.dogs?.name || "Unknown",
+                    breed: a.dogs?.breed || null,
+                    photoUrl: a.photo_url || (a.dogs as any)?.photo_url || null,
+                    latitude: a.latitude!,
+                    longitude: a.longitude!,
+                    locationLabel: a.location_label,
+                    createdAt: new Date(a.created_at),
+                  }))}
+                foundDogs={filteredFoundDogs
+                  .filter(f => f.latitude !== null && f.longitude !== null)
+                  .map(f => ({
+                    id: f.id,
+                    photoUrl: f.photo_urls?.[0] || null,
+                    locationLabel: f.location_label,
+                    latitude: f.latitude!,
+                    longitude: f.longitude!,
+                    foundAt: new Date(f.found_at),
+                  }))}
+                viewerLatitude={viewerLocation.latitude}
+                viewerLongitude={viewerLocation.longitude}
+              />
+            ) : combinedFeed.length > 0 ? (
               <AnimatedList className="space-y-4">
                 {combinedFeed.map((item) =>
                   item.type === "lost" ? (
