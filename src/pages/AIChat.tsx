@@ -129,9 +129,16 @@ export default function AIChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
+
+  const stopMicStream = () => {
+    if (!micStreamRef.current) return;
+    micStreamRef.current.getTracks().forEach((track) => track.stop());
+    micStreamRef.current = null;
+  };
 
   // Web Speech API voice-to-text
-  const toggleListening = () => {
+  const toggleListening = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast({ variant: "destructive", title: "Not supported", description: "Speech recognition is not supported in this browser." });
@@ -140,11 +147,30 @@ export default function AIChatPage() {
 
     if (isListening && recognitionRef.current) {
       recognitionRef.current.stop();
+      stopMicStream();
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast({ variant: "destructive", title: "Voice Input Error", description: "Microphone APIs are unavailable in this browser." });
+      return;
+    }
+
+    try {
+      // Must run in this tap handler so Safari keeps user-gesture context
+      micStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (error: any) {
+      const name = error?.name || "";
+      const permissionMsg = (name === "NotAllowedError" || name === "PermissionDeniedError")
+        ? "Microphone access denied. Please allow microphone permission in Safari settings."
+        : "Unable to access microphone. Please check your device/browser settings.";
+      toast({ variant: "destructive", title: "Voice Input Error", description: permissionMsg });
       return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    recognition.continuous = !isIOS;
     recognition.interimResults = true;
 
     const languageMap: Record<string, string> = {
@@ -181,29 +207,32 @@ export default function AIChatPage() {
     recognition.onend = () => {
       setIsListening(false);
       recognitionRef.current = null;
+      stopMicStream();
     };
 
     recognition.onerror = (event: any) => {
       setIsListening(false);
       recognitionRef.current = null;
+      stopMicStream();
       const errorMap: Record<string, string> = {
         "not-allowed": "Microphone access denied. Please allow microphone permission in your browser settings.",
-        "service-not-allowed": "Speech service is blocked in this environment. Please try the published app and allow microphone access.",
+        "service-not-allowed": "Speech service is blocked on this device/browser. On iPhone, enable Dictation in Settings > General > Keyboard, then retry.",
         "audio-capture": "No microphone was detected. Please check your audio input device.",
         "no-speech": "No speech detected. Please try again.",
         "network": "Network error. Please check your connection.",
         "aborted": "Speech recognition was aborted.",
       };
       const msg = errorMap[event?.error] || `Speech recognition error: ${event?.error || "unknown"}`;
+      console.error("Speech recognition error", { error: event?.error, userAgent: navigator.userAgent });
       toast({ variant: "destructive", title: "Voice Input Error", description: msg });
     };
 
-    // Must be called directly from user gesture (button tap/click)
     try {
       recognition.start();
     } catch {
       setIsListening(false);
       recognitionRef.current = null;
+      stopMicStream();
       toast({
         variant: "destructive",
         title: "Voice Input Error",
@@ -211,6 +240,13 @@ export default function AIChatPage() {
       });
     }
   };
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop?.();
+      stopMicStream();
+    };
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
