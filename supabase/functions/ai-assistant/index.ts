@@ -259,6 +259,27 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "estimate_search_radius",
+      description: "Estimate how far a lost dog may have traveled based on breed, time elapsed, and terrain. Returns a search radius in km and advice. Call this when the user shares details about a lost dog (breed, time lost, location). The result includes map data the frontend will render as an interactive map.",
+      parameters: {
+        type: "object",
+        properties: {
+          breed: { type: "string", description: "The breed of the lost dog" },
+          hours_lost: { type: "number", description: "Approximate number of hours since the dog was last seen" },
+          last_seen_lat: { type: "number", description: "Latitude of the last seen location" },
+          last_seen_lon: { type: "number", description: "Longitude of the last seen location" },
+          last_seen_label: { type: "string", description: "Human-readable description of last seen location" },
+          dog_size: { type: "string", enum: ["small", "medium", "large"], description: "Size of the dog if breed is unknown" },
+          is_leashed: { type: "boolean", description: "Whether the dog escaped while leashed (limits range)" },
+          terrain: { type: "string", enum: ["urban", "suburban", "rural", "wilderness"], description: "Type of terrain around last seen location. Default: suburban" },
+        },
+        required: ["breed", "hours_lost", "last_seen_lat", "last_seen_lon"],
+      },
+    },
+  },
 ];
 
 // Tool execution functions
