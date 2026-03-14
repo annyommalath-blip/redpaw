@@ -301,6 +301,7 @@ export default function ChatPage() {
               isOwn={message.sender_id === user?.id}
               senderName={message.sender_id !== user?.id ? otherParticipantName : undefined}
               imageUrl={message.image_url}
+              showTranslate={true}
               onReplyToImage={() => {
                 const input = document.querySelector<HTMLInputElement>('input[placeholder]');
                 input?.focus();

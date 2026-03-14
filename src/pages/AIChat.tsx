@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Bot, Sparkles, ImagePlus, X, Mic, MicOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -543,6 +543,15 @@ export default function AIChatPage() {
             className="flex-1"
             disabled={isLoading}
           />
+          <Button
+            variant={isListening ? "destructive" : "ghost"}
+            size="icon"
+            onClick={toggleListening}
+            disabled={isLoading}
+            className="shrink-0"
+          >
+            {isListening ? <MicOff className="h-5 w-5 animate-pulse" /> : <Mic className="h-5 w-5" />}
+          </Button>
           <Button onClick={handleSend} disabled={(!newMessage.trim() && attachedImages.length === 0) || isLoading}>
             <Send className="h-4 w-4" />
           </Button>
