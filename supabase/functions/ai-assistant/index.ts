@@ -280,6 +280,27 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "create_lost_alert",
+      description: "Create a lost dog alert in the community. Call this when a user wants to post/create a lost alert for their dog. Requires the dog_id, a title, description, and last seen location. Optionally accepts coordinates, last_seen_time, and search_radius_km.",
+      parameters: {
+        type: "object",
+        properties: {
+          dog_id: { type: "string", description: "UUID of the dog to report lost" },
+          title: { type: "string", description: "Alert title, e.g. 'Mochi is Missing!'" },
+          description: { type: "string", description: "Description including key identifiers like breed, color, collar" },
+          last_seen_location: { type: "string", description: "Text description of where the dog was last seen" },
+          latitude: { type: "number", description: "Latitude of last seen location" },
+          longitude: { type: "number", description: "Longitude of last seen location" },
+          last_seen_time: { type: "string", description: "ISO timestamp of when the dog was last seen" },
+          search_radius_km: { type: "number", description: "Estimated search radius in km" },
+        },
+        required: ["dog_id", "title", "description", "last_seen_location"],
+      },
+    },
+  },
 ];
 
 // Tool execution functions
