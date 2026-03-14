@@ -131,7 +131,7 @@ export default function AIChatPage() {
   const recognitionRef = useRef<any>(null);
 
   // Web Speech API voice-to-text
-  const toggleListening = async () => {
+  const toggleListening = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast({ variant: "destructive", title: "Not supported", description: "Speech recognition is not supported in this browser." });
@@ -140,23 +140,6 @@ export default function AIChatPage() {
 
     if (isListening && recognitionRef.current) {
       recognitionRef.current.stop();
-      return;
-    }
-
-    try {
-      if (navigator.mediaDevices?.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    } catch (error: any) {
-      const isDenied = error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError";
-      toast({
-        variant: "destructive",
-        title: "Voice Input Error",
-        description: isDenied
-          ? "Microphone access denied. Please allow microphone permission in your browser settings."
-          : "Could not access microphone. Please check your device/browser settings.",
-      });
       return;
     }
 
@@ -192,7 +175,7 @@ export default function AIChatPage() {
         }
       }
       const spoken = (finalParts + interimParts).trim();
-      setNewMessage(baseTextRef ? baseTextRef + " " + spoken : spoken);
+      setNewMessage(baseTextRef ? `${baseTextRef} ${spoken}` : spoken);
     };
 
     recognition.onend = () => {
@@ -205,6 +188,8 @@ export default function AIChatPage() {
       recognitionRef.current = null;
       const errorMap: Record<string, string> = {
         "not-allowed": "Microphone access denied. Please allow microphone permission in your browser settings.",
+        "service-not-allowed": "Speech service is blocked in this environment. Please try the published app and allow microphone access.",
+        "audio-capture": "No microphone was detected. Please check your audio input device.",
         "no-speech": "No speech detected. Please try again.",
         "network": "Network error. Please check your connection.",
         "aborted": "Speech recognition was aborted.",
@@ -213,6 +198,7 @@ export default function AIChatPage() {
       toast({ variant: "destructive", title: "Voice Input Error", description: msg });
     };
 
+    // Must be called directly from user gesture (button tap/click)
     try {
       recognition.start();
     } catch {
