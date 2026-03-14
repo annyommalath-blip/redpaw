@@ -434,7 +434,7 @@ export default function ProfilePage() {
         const dogIds = coParentedMemberships.map((m) => m.dog_id);
         const { data: sharedDogs } = await supabase
           .from("dogs")
-          .select("id, name, breed, photo_url, is_lost")
+          .select("id, name, breed, photo_url, is_lost, coat_shade, collar_description, markings, verification_secret, notes")
           .in("id", dogIds)
           .order("created_at", { ascending: true });
         coParentedDogs = (sharedDogs || []) as UserDog[];
