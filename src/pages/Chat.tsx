@@ -97,6 +97,10 @@ export default function ChatPage() {
               if (prev.some(m => m.id === newMsg.id)) return prev;
               return [...prev, newMsg];
             });
+            // Resolve signed URL for new message images
+            if (newMsg.image_url && !newMsg.image_url.startsWith("http")) {
+              resolveImageUrls([newMsg]);
+            }
             markAsRead();
           }
         )
