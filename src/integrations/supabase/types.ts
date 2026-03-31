@@ -1256,6 +1256,10 @@ export type Database = {
         Returns: undefined
       }
       generate_participant_key: { Args: { p_ids: string[] }; Returns: string }
+      get_dog_verification_secret: {
+        Args: { p_dog_id: string }
+        Returns: string
+      }
       get_mention_suggestions: {
         Args: { p_limit?: number; p_query?: string; p_user_id: string }
         Returns: {
