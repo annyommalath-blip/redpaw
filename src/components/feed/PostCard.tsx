@@ -59,6 +59,27 @@ interface PostCardProps {
   onEdit?: (postId: string, caption: string, visibility: PostVisibility) => Promise<void>;
 }
 
+const CAPTION_MAX_LENGTH = 150;
+
+function CaptionText({ caption }: { caption: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = caption.length > CAPTION_MAX_LENGTH;
+
+  return (
+    <div className="px-4 pb-2 text-sm text-foreground whitespace-pre-line">
+      <MentionText text={expanded || !isLong ? caption : caption.slice(0, CAPTION_MAX_LENGTH) + "..."} />
+      {isLong && !expanded && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+          className="ml-1 text-muted-foreground font-medium hover:text-foreground transition-colors"
+        >
+          See more
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onShare, onEdit }: PostCardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
