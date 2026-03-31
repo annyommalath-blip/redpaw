@@ -1488,6 +1488,37 @@ serve(async (req) => {
       );
     }
 
+    // Input validation: limit message count
+    if (messages.length > 50) {
+      return new Response(
+        JSON.stringify({ error: "Too many messages in conversation" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Input validation: limit individual and total message size
+    let totalSize = 0;
+    for (const msg of messages) {
+      const contentLength = typeof msg.content === "string"
+        ? msg.content.length
+        : Array.isArray(msg.content)
+          ? msg.content.reduce((sum: number, c: any) => sum + (c.text?.length || 0), 0)
+          : 0;
+      if (contentLength > 10000) {
+        return new Response(
+          JSON.stringify({ error: "Individual message too large" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      totalSize += contentLength;
+    }
+    if (totalSize > 100000) {
+      return new Response(
+        JSON.stringify({ error: "Total message content too large" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(
