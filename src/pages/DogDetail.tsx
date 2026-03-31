@@ -65,6 +65,7 @@ export default function DogDetailPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [dog, setDog] = useState<DogData | null>(null);
+  const [verificationSecret, setVerificationSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<HealthLog[]>([]);
   const [medRecords, setMedRecords] = useState<MedRecordWithStatus[]>([]);
