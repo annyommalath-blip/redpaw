@@ -170,9 +170,7 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
 
       {/* Caption */}
       {displayPost.caption && (
-        <p className="px-4 pb-2 text-sm text-foreground whitespace-pre-line">
-          <MentionText text={displayPost.caption} />
-        </p>
+        <CaptionText caption={displayPost.caption} />
       )}
 
       {/* Photos - carousel or single */}
