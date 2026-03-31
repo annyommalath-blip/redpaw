@@ -41,8 +41,39 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Resolve signed URLs for chat images (bucket is private)
+  const resolveImageUrls = async (msgs: Message[]) => {
+    const paths = msgs
+      .filter(m => m.image_url && !m.image_url.startsWith("http"))
+      .map(m => m.image_url!)
+      .filter(p => !signedUrls[p]);
+    
+    if (paths.length === 0) return;
+
+    const results: Record<string, string> = {};
+    await Promise.all(paths.map(async (path) => {
+      const { data } = await supabase.storage
+        .from("chat-images")
+        .createSignedUrl(path, 3600);
+      if (data?.signedUrl) results[path] = data.signedUrl;
+    }));
+
+    if (Object.keys(results).length > 0) {
+      setSignedUrls(prev => ({ ...prev, ...results }));
+    }
+  };
+
+  const getImageUrl = (imageUrl: string | null | undefined): string | null | undefined => {
+    if (!imageUrl) return imageUrl;
+    // Legacy public URLs still work as-is
+    if (imageUrl.startsWith("http")) return imageUrl;
+    // Private path → use signed URL
+    return signedUrls[imageUrl] || null;
+  };
 
   useEffect(() => {
     if (conversationId && user) {
@@ -66,6 +97,10 @@ export default function ChatPage() {
               if (prev.some(m => m.id === newMsg.id)) return prev;
               return [...prev, newMsg];
             });
+            // Resolve signed URL for new message images
+            if (newMsg.image_url && !newMsg.image_url.startsWith("http")) {
+              resolveImageUrls([newMsg]);
+            }
             markAsRead();
           }
         )
@@ -161,7 +196,9 @@ export default function ChatPage() {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      const msgs = data || [];
+      setMessages(msgs);
+      resolveImageUrls(msgs);
     } catch (error: any) {
       console.error("Error fetching messages:", error);
     } finally {
@@ -206,11 +243,8 @@ export default function ChatPage() {
       throw error;
     }
 
-    const { data: urlData } = supabase.storage
-      .from("chat-images")
-      .getPublicUrl(path);
-
-    return urlData.publicUrl;
+    // Store the internal path, not a public URL (bucket is now private)
+    return path;
   };
 
   const handleSend = async () => {
@@ -300,7 +334,7 @@ export default function ChatPage() {
               timestamp={new Date(message.created_at)}
               isOwn={message.sender_id === user?.id}
               senderName={message.sender_id !== user?.id ? otherParticipantName : undefined}
-              imageUrl={message.image_url}
+              imageUrl={getImageUrl(message.image_url)}
               showTranslate={true}
               onReplyToImage={() => {
                 const input = document.querySelector<HTMLInputElement>('input[placeholder]');
