@@ -206,11 +206,8 @@ export default function ChatPage() {
       throw error;
     }
 
-    const { data: urlData } = supabase.storage
-      .from("chat-images")
-      .getPublicUrl(path);
-
-    return urlData.publicUrl;
+    // Store the internal path, not a public URL (bucket is now private)
+    return path;
   };
 
   const handleSend = async () => {
