@@ -65,6 +65,7 @@ export default function DogDetailPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [dog, setDog] = useState<DogData | null>(null);
+  const [verificationSecret, setVerificationSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<HealthLog[]>([]);
   const [medRecords, setMedRecords] = useState<MedRecordWithStatus[]>([]);
@@ -98,7 +99,15 @@ export default function DogDetailPage() {
         return;
       }
 
-      setDog(data);
+      // Clear verification_secret from general query data (it may leak via RLS)
+      const { verification_secret: _removed, ...safeDogData } = data;
+      setDog({ ...safeDogData, verification_secret: null } as DogData);
+
+      // Fetch verification_secret securely via RPC (owner-only)
+      if (data.owner_id === user.id) {
+        const { data: secret } = await supabase.rpc("get_dog_verification_secret", { p_dog_id: dogId });
+        setVerificationSecret(secret || null);
+      }
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
       navigate("/");
@@ -371,8 +380,8 @@ export default function DogDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Verification Secret</p>
-                    <p className={`font-medium ${dog.verification_secret ? "text-foreground" : "text-muted-foreground italic"}`}>
-                      {dog.verification_secret || "Not set"}
+                    <p className={`font-medium ${verificationSecret ? "text-foreground" : "text-muted-foreground italic"}`}>
+                      {verificationSecret || "Not set"}
                     </p>
                     <p className="text-[11px] text-muted-foreground">Only visible to you</p>
                   </div>
