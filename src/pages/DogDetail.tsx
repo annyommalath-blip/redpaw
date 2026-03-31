@@ -99,7 +99,15 @@ export default function DogDetailPage() {
         return;
       }
 
-      setDog(data);
+      // Clear verification_secret from general query data (it may leak via RLS)
+      const { verification_secret: _removed, ...safeDogData } = data;
+      setDog({ ...safeDogData, verification_secret: null } as DogData);
+
+      // Fetch verification_secret securely via RPC (owner-only)
+      if (data.owner_id === user.id) {
+        const { data: secret } = await supabase.rpc("get_dog_verification_secret", { p_dog_id: dogId });
+        setVerificationSecret(secret || null);
+      }
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
       navigate("/");
