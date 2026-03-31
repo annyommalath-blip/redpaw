@@ -192,7 +192,9 @@ export default function ChatPage() {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      const msgs = data || [];
+      setMessages(msgs);
+      resolveImageUrls(msgs);
     } catch (error: any) {
       console.error("Error fetching messages:", error);
     } finally {
