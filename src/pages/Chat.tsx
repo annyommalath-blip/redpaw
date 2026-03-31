@@ -334,7 +334,7 @@ export default function ChatPage() {
               timestamp={new Date(message.created_at)}
               isOwn={message.sender_id === user?.id}
               senderName={message.sender_id !== user?.id ? otherParticipantName : undefined}
-              imageUrl={message.image_url}
+              imageUrl={getImageUrl(message.image_url)}
               showTranslate={true}
               onReplyToImage={() => {
                 const input = document.querySelector<HTMLInputElement>('input[placeholder]');
