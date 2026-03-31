@@ -380,8 +380,8 @@ export default function DogDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Verification Secret</p>
-                    <p className={`font-medium ${dog.verification_secret ? "text-foreground" : "text-muted-foreground italic"}`}>
-                      {dog.verification_secret || "Not set"}
+                    <p className={`font-medium ${verificationSecret ? "text-foreground" : "text-muted-foreground italic"}`}>
+                      {verificationSecret || "Not set"}
                     </p>
                     <p className="text-[11px] text-muted-foreground">Only visible to you</p>
                   </div>
