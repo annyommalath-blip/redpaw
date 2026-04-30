@@ -106,6 +106,31 @@ export default function AddProductPage() {
     }
   };
 
+  if (spLoading) {
+    return (
+      <MobileLayout>
+        <PageHeader title="List a product" showBack />
+        <div className="p-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
+      </MobileLayout>
+    );
+  }
+
+  if (!sellerProfile || !sellerProfile.is_active) {
+    return (
+      <MobileLayout>
+        <PageHeader title="List a product" showBack />
+        <div className="p-4">
+          <EmptyState
+            icon={<Store className="h-8 w-8" />}
+            title="Open your store first"
+            description="You need to set up a seller profile before you can list products."
+            action={{ label: "Open my store", onClick: () => navigate("/seller/start") }}
+          />
+        </div>
+      </MobileLayout>
+    );
+  }
+
   return (
     <MobileLayout>
       <PageHeader title="List a product" subtitle="Sell to the community" showBack />
