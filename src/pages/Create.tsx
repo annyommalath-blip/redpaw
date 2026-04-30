@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { GuestAuthPrompt } from "@/components/auth/GuestAuthPrompt";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe, Dog, Clock, Heart, Home } from "lucide-react";
+import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe, Dog, Clock, Heart, Home, PawPrint } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -29,7 +29,7 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { FoundDogPhotoUploader } from "@/components/community/FoundDogPhotoUploader";
 import { FoundDogForm, FinderObservations } from "@/components/community/FoundDogForm";
 
-type CreateType = "log" | "lost" | "care" | "meds" | "found" | "donation" | "adoption" | null;
+type CreateType = "log" | "lost" | "care" | "meds" | "found" | "donation" | "adoption" | "spot" | null;
 
 interface DogData {
   id: string;
@@ -125,6 +125,17 @@ export default function CreatePage() {
   const [adoptPhone, setAdoptPhone] = useState("");
   const adoptLocation = useGeolocation();
   const [adoptPhotoUrls, setAdoptPhotoUrls] = useState<string[]>([]);
+
+  // Pet-friendly Spot form state
+  const [spotName, setSpotName] = useState("");
+  const [spotCategory, setSpotCategory] = useState<"food_drink" | "shops_malls" | "outdoor_stays" | "pet_services">("food_drink");
+  const [spotDescription, setSpotDescription] = useState("");
+  const [spotPhone, setSpotPhone] = useState("");
+  const [spotWebsite, setSpotWebsite] = useState("");
+  const [spotHours, setSpotHours] = useState("");
+  const [spotOffersBookings, setSpotOffersBookings] = useState(false);
+  const spotLocation = useGeolocation();
+  const [spotPhotoUrls, setSpotPhotoUrls] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) fetchDogs();
@@ -295,6 +306,33 @@ export default function CreatePage() {
     finally { setSubmitting(false); }
   };
 
+  const handleCreatePetSpot = async () => {
+    if (!spotName.trim() || !spotLocation.locationLabel) {
+      toast({ variant: "destructive", title: t("create.fillAllFields") }); return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("pet_spots").insert({
+        created_by: user!.id,
+        name: spotName.trim(),
+        category: spotCategory,
+        description: spotDescription.trim() || null,
+        location_label: spotLocation.locationLabel,
+        latitude: spotLocation.latitude,
+        longitude: spotLocation.longitude,
+        photo_urls: spotPhotoUrls,
+        contact_phone: spotPhone.trim() || null,
+        website: spotWebsite.trim() || null,
+        opening_hours: spotHours.trim() || null,
+        offers_bookings: spotOffersBookings,
+      });
+      if (error) throw error;
+      toast({ title: "Pet-friendly spot added! 🐾" });
+      navigate("/spots");
+    } catch (error: any) { toast({ variant: "destructive", title: t("common.error"), description: error.message }); }
+    finally { setSubmitting(false); }
+  };
+
   if (isGuest) {
     return (
       <MobileLayout>
@@ -355,6 +393,13 @@ export default function CreatePage() {
               <div><h3 className="font-semibold text-foreground">Adoption Post</h3><p className="text-sm text-muted-foreground">Find a loving home for a pet</p></div>
             </CardContent>
           </Card>
+
+          <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => setCreateType("spot")}>
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center"><PawPrint className="h-6 w-6 text-primary" /></div>
+              <div><h3 className="font-semibold text-foreground">Pet-Friendly Spot</h3><p className="text-sm text-muted-foreground">Register a café, shop, park or service that welcomes pets</p></div>
+            </CardContent>
+          </Card>
         </div>
       </MobileLayout>
     );
@@ -369,6 +414,7 @@ export default function CreatePage() {
       case "care": return t("care.postCareRequest");
       case "donation": return "Donation Campaign";
       case "adoption": return "Adoption Post";
+      case "spot": return "Pet-Friendly Spot";
       default: return t("create.title");
     }
   };
@@ -453,6 +499,77 @@ export default function CreatePage() {
               <Button className="w-full" onClick={handleCreateAdoptionPost} disabled={submitting || !adoptPetName.trim() || adoptPhotoUrls.length === 0 || !adoptLocation.locationLabel}>
                 {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Home className="h-4 w-4 mr-2" />}
                 Post Adoption
+              </Button>
+            </CardContent>
+          </Card>
+        ) : createType === "spot" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><PawPrint className="h-5 w-5 text-primary" />Pet-Friendly Spot</CardTitle>
+              <CardDescription>Share a place that welcomes pets so the community can find it</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Spot Name *</Label>
+                <Input placeholder="e.g., Bark & Brew Café" value={spotName} onChange={(e) => setSpotName(e.target.value.slice(0, 120))} maxLength={120} />
+              </div>
+              <div className="space-y-2">
+                <Label>Category *</Label>
+                <Select value={spotCategory} onValueChange={(v) => setSpotCategory(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="food_drink">☕ Food & Drink</SelectItem>
+                    <SelectItem value="shops_malls">🛍️ Shops & Malls</SelectItem>
+                    <SelectItem value="outdoor_stays">🌳 Outdoor & Stays</SelectItem>
+                    <SelectItem value="pet_services">🩺 Pet Services</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Photos {t("common.optional")}</Label>
+                <FoundDogPhotoUploader photoUrls={spotPhotoUrls} onPhotosChange={setSpotPhotoUrls} maxPhotos={5} bucket="spot-photos" />
+              </div>
+              <LocationPicker
+                latitude={spotLocation.latitude} longitude={spotLocation.longitude}
+                locationLabel={spotLocation.locationLabel} locationSource={spotLocation.locationSource}
+                loading={spotLocation.loading} error={spotLocation.error}
+                permissionDenied={spotLocation.permissionDenied}
+                onRequestLocation={spotLocation.requestLocation}
+                onManualLocation={spotLocation.setManualLocation}
+                onLocationTextChange={spotLocation.setLocationFromText}
+                onSearchAddress={spotLocation.searchAddress}
+                required placeholder="Spot address"
+              />
+              <div className="space-y-2">
+                <Label>Description {t("common.optional")}</Label>
+                <Textarea placeholder="What makes this place pet-friendly? Any rules pet parents should know?" value={spotDescription} onChange={(e) => setSpotDescription(e.target.value.slice(0, 1000))} rows={3} maxLength={1000} />
+              </div>
+              <div className="space-y-2">
+                <Label>Opening Hours {t("common.optional")}</Label>
+                <Textarea placeholder="e.g., Mon–Fri 8am–8pm, Sat–Sun 9am–6pm" value={spotHours} onChange={(e) => setSpotHours(e.target.value.slice(0, 300))} rows={2} maxLength={300} />
+              </div>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-2">
+                  <Label>Phone {t("common.optional")}</Label>
+                  <Input placeholder="+1 555 123 4567" value={spotPhone} onChange={(e) => setSpotPhone(e.target.value.slice(0, 30))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Website {t("common.optional")}</Label>
+                  <Input placeholder="https://example.com" value={spotWebsite} onChange={(e) => setSpotWebsite(e.target.value.slice(0, 200))} />
+                </div>
+              </div>
+              {spotCategory === "pet_services" && (
+                <div className="flex items-center justify-between rounded-xl border bg-muted/30 p-3">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm">This business accepts bookings</Label>
+                    <p className="text-xs text-muted-foreground">We'll surface this so users know to ask. Booking flow coming soon.</p>
+                  </div>
+                  <Switch checked={spotOffersBookings} onCheckedChange={setSpotOffersBookings} />
+                </div>
+              )}
+              <Button className="w-full" onClick={handleCreatePetSpot} disabled={submitting || !spotName.trim() || !spotLocation.locationLabel}>
+                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PawPrint className="h-4 w-4 mr-2" />}
+                Add Pet-Friendly Spot
               </Button>
             </CardContent>
           </Card>
