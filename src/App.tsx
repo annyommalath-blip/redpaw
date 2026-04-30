@@ -36,6 +36,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import Storefront from "./pages/Storefront";
 import Cart from "./pages/Cart";
 import MyOrders from "./pages/MyOrders";
+import AdminSellers from "./pages/AdminSellers";
 import Settings from "./pages/Settings";
 import UserProfilePage from "./pages/UserProfile";
 import NewConversation from "./pages/NewConversation";
@@ -83,6 +84,7 @@ const App = () => (
             <Route path="/store/:userId" element={<ProtectedRoute><Storefront /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+            <Route path="/admin/sellers" element={<ProtectedRoute><AdminSellers /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/messages/ai" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />

@@ -115,16 +115,17 @@ export default function AddProductPage() {
     );
   }
 
-  if (!sellerProfile || !sellerProfile.is_active) {
+  if (!sellerProfile || sellerProfile.seller_status !== "approved") {
+    const isPending = sellerProfile?.seller_status === "pending_verification";
     return (
       <MobileLayout>
         <PageHeader title="List a product" showBack />
         <div className="p-4">
           <EmptyState
             icon={<Store className="h-8 w-8" />}
-            title="Open your store first"
-            description="You need to set up a seller profile before you can list products."
-            action={{ label: "Open my store", onClick: () => navigate("/seller/start") }}
+            title={isPending ? "Application under review" : "Become a verified seller"}
+            description={isPending ? "We'll notify you once your application is approved." : "You need an approved seller profile before listing products."}
+            action={{ label: isPending ? "View status" : "Start application", onClick: () => navigate("/seller/start") }}
           />
         </div>
       </MobileLayout>
