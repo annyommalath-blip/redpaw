@@ -22,6 +22,7 @@ const MAX_PHOTOS = 5;
 export default function AddProductPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { sellerProfile, loading: spLoading } = useSellerProfile();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
