@@ -912,6 +912,63 @@ export type Database = {
         }
         Relationships: []
       }
+      pet_spots: {
+        Row: {
+          category: Database["public"]["Enums"]["spot_category"]
+          contact_phone: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          latitude: number | null
+          location_label: string
+          longitude: number | null
+          name: string
+          offers_bookings: boolean
+          opening_hours: string | null
+          photo_urls: string[]
+          status: Database["public"]["Enums"]["spot_status"]
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["spot_category"]
+          contact_phone?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          location_label: string
+          longitude?: number | null
+          name: string
+          offers_bookings?: boolean
+          opening_hours?: string | null
+          photo_urls?: string[]
+          status?: Database["public"]["Enums"]["spot_status"]
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["spot_category"]
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          location_label?: string
+          longitude?: number | null
+          name?: string
+          offers_bookings?: boolean
+          opening_hours?: string | null
+          photo_urls?: string[]
+          status?: Database["public"]["Enums"]["spot_status"]
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           created_at: string
@@ -1212,6 +1269,44 @@ export type Database = {
           },
         ]
       }
+      spot_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          spot_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          spot_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          spot_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spot_reviews_spot_id_fkey"
+            columns: ["spot_id"]
+            isOneToOne: false
+            referencedRelation: "pet_spots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_follows: {
         Row: {
           created_at: string
@@ -1354,6 +1449,12 @@ export type Database = {
       post_visibility: "public" | "friends" | "private"
       request_status: "open" | "closed"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
+      spot_category:
+        | "food_drink"
+        | "shops_malls"
+        | "outdoor_stays"
+        | "pet_services"
+      spot_status: "active" | "closed" | "flagged"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1513,6 +1614,13 @@ export const Constants = {
       post_visibility: ["public", "friends", "private"],
       request_status: ["open", "closed"],
       sitter_log_type: ["walk", "meal", "potty", "play", "note"],
+      spot_category: [
+        "food_drink",
+        "shops_malls",
+        "outdoor_stays",
+        "pet_services",
+      ],
+      spot_status: ["active", "closed", "flagged"],
     },
   },
 } as const
