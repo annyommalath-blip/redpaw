@@ -41,7 +41,7 @@ export default function AddProductPage() {
     try {
       const processed = await Promise.all(
         slice.map(async (f) => {
-          const blob = await processImageFile(f, { maxWidth: 1200, maxHeight: 1200, quality: 0.85 });
+          const blob = await processImageFile(f, {});
           return { blob, preview: URL.createObjectURL(blob) };
         })
       );
