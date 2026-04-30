@@ -400,6 +400,10 @@ export default function CreatePage() {
               <div><h3 className="font-semibold text-foreground">Pet-Friendly Spot</h3><p className="text-sm text-muted-foreground">Register a café, shop, park or service that welcomes pets</p></div>
             </CardContent>
           </Card>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   const getTitle = () => {
     switch (createType) {
