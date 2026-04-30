@@ -414,6 +414,7 @@ export default function CreatePage() {
       case "care": return t("care.postCareRequest");
       case "donation": return "Donation Campaign";
       case "adoption": return "Adoption Post";
+      case "spot": return "Pet-Friendly Spot";
       default: return t("create.title");
     }
   };
