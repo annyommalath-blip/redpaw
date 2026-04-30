@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useConversation } from "@/hooks/useConversation";
 import { useViewerLocation } from "@/hooks/useViewerLocation";
 import { GuestAuthPrompt } from "@/components/auth/GuestAuthPrompt";
+import { motion } from "framer-motion";
 
 interface LostAlert {
   id: string; title: string; description: string; last_seen_location: string;
