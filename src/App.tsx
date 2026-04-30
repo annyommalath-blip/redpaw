@@ -31,6 +31,11 @@ import PetSpotDetail from "./pages/PetSpotDetail";
 import Shop from "./pages/Shop";
 import AddProduct from "./pages/AddProduct";
 import ProductDetail from "./pages/ProductDetail";
+import SellerOnboarding from "./pages/SellerOnboarding";
+import SellerDashboard from "./pages/SellerDashboard";
+import Storefront from "./pages/Storefront";
+import Cart from "./pages/Cart";
+import MyOrders from "./pages/MyOrders";
 import Settings from "./pages/Settings";
 import UserProfilePage from "./pages/UserProfile";
 import NewConversation from "./pages/NewConversation";
@@ -73,6 +78,11 @@ const App = () => (
             <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
             <Route path="/shop/new" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
             <Route path="/product/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+            <Route path="/seller/start" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
+            <Route path="/seller" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
+            <Route path="/store/:userId" element={<ProtectedRoute><Storefront /></ProtectedRoute>} />
+            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/messages/ai" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />

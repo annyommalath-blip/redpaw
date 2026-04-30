@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, X, Loader2 } from "lucide-react";
+import { Camera, X, Loader2, Store } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EmptyState } from "@/components/ui/empty-state";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSellerProfile } from "@/hooks/useSellerProfile";
 import { toast } from "sonner";
 import { processImageFile } from "@/lib/imageUtils";
 
@@ -20,6 +22,7 @@ const MAX_PHOTOS = 5;
 export default function AddProductPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { sellerProfile, loading: spLoading } = useSellerProfile();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
@@ -102,6 +105,31 @@ export default function AddProductPage() {
       setSubmitting(false);
     }
   };
+
+  if (spLoading) {
+    return (
+      <MobileLayout>
+        <PageHeader title="List a product" showBack />
+        <div className="p-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
+      </MobileLayout>
+    );
+  }
+
+  if (!sellerProfile || !sellerProfile.is_active) {
+    return (
+      <MobileLayout>
+        <PageHeader title="List a product" showBack />
+        <div className="p-4">
+          <EmptyState
+            icon={<Store className="h-8 w-8" />}
+            title="Open your store first"
+            description="You need to set up a seller profile before you can list products."
+            action={{ label: "Open my store", onClick: () => navigate("/seller/start") }}
+          />
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout>

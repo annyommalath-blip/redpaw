@@ -222,6 +222,33 @@ export type Database = {
           },
         ]
       }
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       community_comments: {
         Row: {
           context_id: string
@@ -912,6 +939,86 @@ export type Database = {
         }
         Relationships: []
       }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          price: number
+          product_id: string
+          product_image: string | null
+          product_title: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          price: number
+          product_id: string
+          product_image?: string | null
+          product_title: string
+          quantity?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          price?: number
+          product_id?: string
+          product_image?: string | null
+          product_title?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          buyer_id: string
+          contact_info: string | null
+          created_at: string
+          currency: string
+          id: string
+          seller_id: string
+          shipping_note: string | null
+          status: string
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          contact_info?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          seller_id: string
+          shipping_note?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          contact_info?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          seller_id?: string
+          shipping_note?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pet_spots: {
         Row: {
           category: Database["public"]["Enums"]["spot_category"]
@@ -1263,6 +1370,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seller_profiles: {
+        Row: {
+          contact_info: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          status: string
+          store_description: string | null
+          store_logo_url: string | null
+          store_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          status?: string
+          store_description?: string | null
+          store_logo_url?: string | null
+          store_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          status?: string
+          store_description?: string | null
+          store_logo_url?: string | null
+          store_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       sightings: {
         Row: {

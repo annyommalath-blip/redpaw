@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Phone, ExternalLink, MessageCircle, Loader2, Trash2, ShoppingBag } from "lucide-react";
+import { Phone, ExternalLink, MessageCircle, Loader2, Trash2, ShoppingBag, ShoppingCart, Store } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversation } from "@/hooks/useConversation";
+import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import PostPhotoCarousel from "@/components/feed/PostPhotoCarousel";
 
@@ -38,9 +39,12 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { openConversation } = useConversation();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [seller, setSeller] = useState<Seller | null>(null);
+  const [storeName, setStoreName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -49,16 +53,26 @@ export default function ProductDetailPage() {
       const { data: prod } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
       if (prod) {
         setProduct(prod as Product);
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("user_id,display_name,username,avatar_url")
-          .eq("user_id", (prod as Product).seller_id)
-          .maybeSingle();
+        const sellerId = (prod as Product).seller_id;
+        const [{ data: profile }, { data: store }] = await Promise.all([
+          supabase.from("profiles").select("user_id,display_name,username,avatar_url").eq("user_id", sellerId).maybeSingle(),
+          supabase.from("seller_profiles").select("store_name").eq("user_id", sellerId).maybeSingle(),
+        ]);
         if (profile) setSeller(profile as Seller);
+        if (store) setStoreName((store as any).store_name);
       }
       setLoading(false);
     })();
   }, [id]);
+
+  const handleAddToCart = async () => {
+    if (!product || !user) return;
+    setAdding(true);
+    const { error } = await addToCart(product.id, 1);
+    setAdding(false);
+    if (error) toast.error(error.message);
+    else toast.success("Added to cart");
+  };
 
   const handleDelete = async () => {
     if (!product || !confirm("Delete this product?")) return;
@@ -133,29 +147,38 @@ export default function ProductDetailPage() {
           {seller && (
             <GlassCard variant="light" className="p-3 flex items-center gap-3">
               <button
-                onClick={() => navigate(`/user/${seller.user_id}`)}
+                onClick={() => navigate(`/store/${seller.user_id}`)}
                 className="flex items-center gap-3 flex-1 min-w-0 text-left"
               >
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                   {seller.avatar_url ? (
                     <img src={seller.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <ShoppingBag className="h-4 w-4 text-primary" />
+                    <Store className="h-4 w-4 text-primary" />
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Seller</p>
+                  <p className="text-xs text-muted-foreground">Store</p>
                   <p className="text-sm font-medium truncate">
-                    {seller.username ? `@${seller.username}` : seller.display_name || "User"}
+                    {storeName || (seller.username ? `@${seller.username}` : seller.display_name || "User")}
                   </p>
                 </div>
               </button>
+              <Button size="sm" variant="outline" onClick={() => navigate(`/store/${seller.user_id}`)}>
+                Visit
+              </Button>
             </GlassCard>
           )}
 
           <div className="grid grid-cols-1 gap-2">
+            {!isOwn && product.stock > 0 && (
+              <Button onClick={handleAddToCart} disabled={adding} size="lg" className="w-full">
+                {adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShoppingCart className="h-4 w-4 mr-2" />}
+                Add to cart
+              </Button>
+            )}
             {!isOwn && (
-              <Button onClick={handleMessage} size="lg" className="w-full">
+              <Button onClick={handleMessage} variant="outline" size="lg" className="w-full">
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Message seller
               </Button>

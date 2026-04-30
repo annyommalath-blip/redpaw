@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Grid3X3, Bookmark, Repeat2 } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Grid3X3, Bookmark, Repeat2, Store, ShoppingBag, Package } from "lucide-react";
+import { useSellerProfile } from "@/hooks/useSellerProfile";
 import { Switch } from "@/components/ui/switch";
 
 import { format } from "date-fns";
@@ -132,6 +133,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { unreadCount: notificationCount } = useNotifications();
+  const { sellerProfile } = useSellerProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState("");
@@ -796,6 +798,30 @@ export default function ProfilePage() {
                   >
                     <Languages className="h-5 w-5 text-muted-foreground" />
                     <span className="text-foreground">Language Setting</span>
+                  </button>
+                  <Separator />
+                  <button
+                    className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left"
+                    onClick={() => navigate(sellerProfile ? "/seller" : "/seller/start")}
+                  >
+                    <Store className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-foreground">{sellerProfile ? "Seller Dashboard" : "Open Your Store"}</span>
+                  </button>
+                  <Separator />
+                  <button
+                    className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left"
+                    onClick={() => navigate("/orders")}
+                  >
+                    <Package className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-foreground">My Orders</span>
+                  </button>
+                  <Separator />
+                  <button
+                    className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left"
+                    onClick={() => navigate("/cart")}
+                  >
+                    <ShoppingBag className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-foreground">My Cart</span>
                   </button>
                   <Separator />
                   <button 
