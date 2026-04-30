@@ -53,16 +53,26 @@ export default function ProductDetailPage() {
       const { data: prod } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
       if (prod) {
         setProduct(prod as Product);
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("user_id,display_name,username,avatar_url")
-          .eq("user_id", (prod as Product).seller_id)
-          .maybeSingle();
+        const sellerId = (prod as Product).seller_id;
+        const [{ data: profile }, { data: store }] = await Promise.all([
+          supabase.from("profiles").select("user_id,display_name,username,avatar_url").eq("user_id", sellerId).maybeSingle(),
+          supabase.from("seller_profiles").select("store_name").eq("user_id", sellerId).maybeSingle(),
+        ]);
         if (profile) setSeller(profile as Seller);
+        if (store) setStoreName((store as any).store_name);
       }
       setLoading(false);
     })();
   }, [id]);
+
+  const handleAddToCart = async () => {
+    if (!product || !user) return;
+    setAdding(true);
+    const { error } = await addToCart(product.id, 1);
+    setAdding(false);
+    if (error) toast.error(error.message);
+    else toast.success("Added to cart");
+  };
 
   const handleDelete = async () => {
     if (!product || !confirm("Delete this product?")) return;
