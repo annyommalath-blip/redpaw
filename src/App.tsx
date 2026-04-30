@@ -28,6 +28,9 @@ import DonationCampaignDetail from "./pages/DonationCampaignDetail";
 import AdoptionPostDetail from "./pages/AdoptionPostDetail";
 import PetSpots from "./pages/PetSpots";
 import PetSpotDetail from "./pages/PetSpotDetail";
+import Shop from "./pages/Shop";
+import AddProduct from "./pages/AddProduct";
+import ProductDetail from "./pages/ProductDetail";
 import Settings from "./pages/Settings";
 import UserProfilePage from "./pages/UserProfile";
 import NewConversation from "./pages/NewConversation";
@@ -67,6 +70,9 @@ const App = () => (
             <Route path="/adoption/:id" element={<ProtectedRoute><AdoptionPostDetail /></ProtectedRoute>} />
             <Route path="/spots" element={<ProtectedRoute><PetSpots /></ProtectedRoute>} />
             <Route path="/spot/:id" element={<ProtectedRoute><PetSpotDetail /></ProtectedRoute>} />
+            <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
+            <Route path="/shop/new" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
+            <Route path="/product/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/messages/ai" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
