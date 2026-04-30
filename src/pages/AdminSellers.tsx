@@ -119,7 +119,7 @@ export default function AdminSellersPage() {
 
   return (
     <MobileLayout>
-      <PageHeader title="Seller Reviews" subtitle="Admin dashboard" showBack icon={<ShieldCheck className="h-5 w-5" />} />
+      <PageHeader title="Seller Reviews" subtitle="Admin dashboard" showBack />
       <div className="p-4 space-y-3 pb-24">
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid grid-cols-4 w-full">

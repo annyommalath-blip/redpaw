@@ -47,7 +47,7 @@ export default function SellerDashboard() {
 
   useEffect(() => {
     if (spLoading) return;
-    if (!sellerProfile) { navigate("/seller/start"); return; }
+    if (!sellerProfile || sellerProfile.seller_status !== "approved") { navigate("/seller/start"); return; }
     if (!user) return;
     (async () => {
       setLoading(true);
