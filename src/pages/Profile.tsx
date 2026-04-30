@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Grid3X3, Bookmark, Repeat2 } from "lucide-react";
+import { User, Dog, Settings, LogOut, Edit, Camera, HandHeart, Loader2, Plus, Save, MapPin, Archive, ChevronRight, ArchiveX, AlertTriangle, Bell, ChevronDown, AtSign, Menu, Languages, Grid3X3, Bookmark, Repeat2, Store, ShoppingBag, Package } from "lucide-react";
+import { useSellerProfile } from "@/hooks/useSellerProfile";
 import { Switch } from "@/components/ui/switch";
 
 import { format } from "date-fns";
