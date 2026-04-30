@@ -502,6 +502,77 @@ export default function CreatePage() {
               </Button>
             </CardContent>
           </Card>
+        ) : createType === "spot" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><PawPrint className="h-5 w-5 text-primary" />Pet-Friendly Spot</CardTitle>
+              <CardDescription>Share a place that welcomes pets so the community can find it</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Spot Name *</Label>
+                <Input placeholder="e.g., Bark & Brew Café" value={spotName} onChange={(e) => setSpotName(e.target.value.slice(0, 120))} maxLength={120} />
+              </div>
+              <div className="space-y-2">
+                <Label>Category *</Label>
+                <Select value={spotCategory} onValueChange={(v) => setSpotCategory(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="food_drink">☕ Food & Drink</SelectItem>
+                    <SelectItem value="shops_malls">🛍️ Shops & Malls</SelectItem>
+                    <SelectItem value="outdoor_stays">🌳 Outdoor & Stays</SelectItem>
+                    <SelectItem value="pet_services">🩺 Pet Services</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Photos {t("common.optional")}</Label>
+                <FoundDogPhotoUploader photoUrls={spotPhotoUrls} onPhotosChange={setSpotPhotoUrls} maxPhotos={5} bucket="spot-photos" />
+              </div>
+              <LocationPicker
+                latitude={spotLocation.latitude} longitude={spotLocation.longitude}
+                locationLabel={spotLocation.locationLabel} locationSource={spotLocation.locationSource}
+                loading={spotLocation.loading} error={spotLocation.error}
+                permissionDenied={spotLocation.permissionDenied}
+                onRequestLocation={spotLocation.requestLocation}
+                onManualLocation={spotLocation.setManualLocation}
+                onLocationTextChange={spotLocation.setLocationFromText}
+                onSearchAddress={spotLocation.searchAddress}
+                required placeholder="Spot address"
+              />
+              <div className="space-y-2">
+                <Label>Description {t("common.optional")}</Label>
+                <Textarea placeholder="What makes this place pet-friendly? Any rules pet parents should know?" value={spotDescription} onChange={(e) => setSpotDescription(e.target.value.slice(0, 1000))} rows={3} maxLength={1000} />
+              </div>
+              <div className="space-y-2">
+                <Label>Opening Hours {t("common.optional")}</Label>
+                <Textarea placeholder="e.g., Mon–Fri 8am–8pm, Sat–Sun 9am–6pm" value={spotHours} onChange={(e) => setSpotHours(e.target.value.slice(0, 300))} rows={2} maxLength={300} />
+              </div>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-2">
+                  <Label>Phone {t("common.optional")}</Label>
+                  <Input placeholder="+1 555 123 4567" value={spotPhone} onChange={(e) => setSpotPhone(e.target.value.slice(0, 30))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Website {t("common.optional")}</Label>
+                  <Input placeholder="https://example.com" value={spotWebsite} onChange={(e) => setSpotWebsite(e.target.value.slice(0, 200))} />
+                </div>
+              </div>
+              {spotCategory === "pet_services" && (
+                <div className="flex items-center justify-between rounded-xl border bg-muted/30 p-3">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm">This business accepts bookings</Label>
+                    <p className="text-xs text-muted-foreground">We'll surface this so users know to ask. Booking flow coming soon.</p>
+                  </div>
+                  <Switch checked={spotOffersBookings} onCheckedChange={setSpotOffersBookings} />
+                </div>
+              )}
+              <Button className="w-full" onClick={handleCreatePetSpot} disabled={submitting || !spotName.trim() || !spotLocation.locationLabel}>
+                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PawPrint className="h-4 w-4 mr-2" />}
+                Add Pet-Friendly Spot
+              </Button>
+            </CardContent>
+          </Card>
         ) : loadingDogs ? (
           <div className="flex items-center justify-center h-32"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : dogs.length === 0 ? (
