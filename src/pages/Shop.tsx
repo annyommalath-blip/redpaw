@@ -26,6 +26,8 @@ const CATEGORIES = [
 
 export default function ShopPage() {
   const navigate = useNavigate();
+  const { totalQty } = useCart();
+  const { sellerProfile } = useSellerProfile();
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
