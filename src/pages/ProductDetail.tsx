@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Phone, ExternalLink, MessageCircle, Loader2, Trash2, ShoppingBag } from "lucide-react";
+import { Phone, ExternalLink, MessageCircle, Loader2, Trash2, ShoppingBag, ShoppingCart, Store } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversation } from "@/hooks/useConversation";
+import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import PostPhotoCarousel from "@/components/feed/PostPhotoCarousel";
 
