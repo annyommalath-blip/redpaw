@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { GuestAuthPrompt } from "@/components/auth/GuestAuthPrompt";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe, Dog, Clock, Heart, Home } from "lucide-react";
+import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe, Dog, Clock, Heart, Home, PawPrint } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -29,7 +29,7 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { FoundDogPhotoUploader } from "@/components/community/FoundDogPhotoUploader";
 import { FoundDogForm, FinderObservations } from "@/components/community/FoundDogForm";
 
-type CreateType = "log" | "lost" | "care" | "meds" | "found" | "donation" | "adoption" | null;
+type CreateType = "log" | "lost" | "care" | "meds" | "found" | "donation" | "adoption" | "spot" | null;
 
 interface DogData {
   id: string;
@@ -125,6 +125,17 @@ export default function CreatePage() {
   const [adoptPhone, setAdoptPhone] = useState("");
   const adoptLocation = useGeolocation();
   const [adoptPhotoUrls, setAdoptPhotoUrls] = useState<string[]>([]);
+
+  // Pet-friendly Spot form state
+  const [spotName, setSpotName] = useState("");
+  const [spotCategory, setSpotCategory] = useState<"food_drink" | "shops_malls" | "outdoor_stays" | "pet_services">("food_drink");
+  const [spotDescription, setSpotDescription] = useState("");
+  const [spotPhone, setSpotPhone] = useState("");
+  const [spotWebsite, setSpotWebsite] = useState("");
+  const [spotHours, setSpotHours] = useState("");
+  const [spotOffersBookings, setSpotOffersBookings] = useState(false);
+  const spotLocation = useGeolocation();
+  const [spotPhotoUrls, setSpotPhotoUrls] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) fetchDogs();
