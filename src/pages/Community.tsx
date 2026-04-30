@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, HandHeart, Dog, Heart, PawPrint, Search, List, Map, ShoppingBag } from "lucide-react";
+import { AlertTriangle, HandHeart, Dog, Heart, PawPrint, Search, List, Map, ShoppingBag, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
