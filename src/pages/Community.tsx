@@ -185,40 +185,38 @@ export default function CommunityPage() {
       <PageHeader
         title={t("community.title")}
         subtitle={t("community.subtitle")}
-        action={
-          <>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => navigate("/spots")}
-              aria-label="Pet-friendly spots near you"
-              title="Pet-friendly spots near you"
-              className="h-10 w-10 rounded-xl bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
-            >
-              <MapPin className="h-5 w-5 text-primary" />
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => navigate("/shop")}
-              aria-label="Shop pet products"
-              title="Shop pet products"
-              className="h-10 w-10 rounded-xl bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
-            >
-              <ShoppingBag className="h-5 w-5 text-primary" />
-            </motion.button>
-          </>
-        }
       />
 
       <div className="p-4">
-        <button
-          onClick={() => navigate("/search")}
-          className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-2xl bg-card border shadow-sm text-muted-foreground text-sm transition-all hover:shadow-md active:scale-[0.98]"
-        >
-          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Search className="h-4 w-4 text-primary" />
-          </div>
-          <span>{t("search.placeholder", "Search care, lost, found, or people...")}</span>
-        </button>
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => navigate("/search")}
+            className="flex-1 min-w-0 flex items-center gap-3 px-4 py-3 rounded-2xl bg-card border shadow-sm text-muted-foreground text-sm transition-all hover:shadow-md active:scale-[0.98]"
+          >
+            <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Search className="h-4 w-4 text-primary" />
+            </div>
+            <span className="truncate">{t("search.placeholder", "Search care, lost, found, or people...")}</span>
+          </button>
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            onClick={() => navigate("/spots")}
+            aria-label="Pet-friendly spots near you"
+            title="Pet-friendly spots near you"
+            className="h-[52px] w-[52px] shrink-0 rounded-2xl bg-card border shadow-sm flex items-center justify-center transition-all hover:shadow-md"
+          >
+            <MapPin className="h-5 w-5 text-primary" />
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            onClick={() => navigate("/shop")}
+            aria-label="Shop pet products"
+            title="Shop pet products"
+            className="h-[52px] w-[52px] shrink-0 rounded-2xl bg-card border shadow-sm flex items-center justify-center transition-all hover:shadow-md"
+          >
+            <ShoppingBag className="h-5 w-5 text-primary" />
+          </motion.button>
+        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4 glass-card-light p-1 rounded-2xl">
