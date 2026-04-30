@@ -147,29 +147,38 @@ export default function ProductDetailPage() {
           {seller && (
             <GlassCard variant="light" className="p-3 flex items-center gap-3">
               <button
-                onClick={() => navigate(`/user/${seller.user_id}`)}
+                onClick={() => navigate(`/store/${seller.user_id}`)}
                 className="flex items-center gap-3 flex-1 min-w-0 text-left"
               >
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                   {seller.avatar_url ? (
                     <img src={seller.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <ShoppingBag className="h-4 w-4 text-primary" />
+                    <Store className="h-4 w-4 text-primary" />
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Seller</p>
+                  <p className="text-xs text-muted-foreground">Store</p>
                   <p className="text-sm font-medium truncate">
-                    {seller.username ? `@${seller.username}` : seller.display_name || "User"}
+                    {storeName || (seller.username ? `@${seller.username}` : seller.display_name || "User")}
                   </p>
                 </div>
               </button>
+              <Button size="sm" variant="outline" onClick={() => navigate(`/store/${seller.user_id}`)}>
+                Visit
+              </Button>
             </GlassCard>
           )}
 
           <div className="grid grid-cols-1 gap-2">
+            {!isOwn && product.stock > 0 && (
+              <Button onClick={handleAddToCart} disabled={adding} size="lg" className="w-full">
+                {adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShoppingCart className="h-4 w-4 mr-2" />}
+                Add to cart
+              </Button>
+            )}
             {!isOwn && (
-              <Button onClick={handleMessage} size="lg" className="w-full">
+              <Button onClick={handleMessage} variant="outline" size="lg" className="w-full">
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Message seller
               </Button>
