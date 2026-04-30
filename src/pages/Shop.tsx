@@ -68,6 +68,15 @@ export default function ShopPage() {
               className="pl-9 rounded-2xl bg-card"
             />
           </div>
+          <Button onClick={() => navigate("/cart")} size="icon" variant="outline" className="rounded-2xl relative">
+            <ShoppingCart className="h-5 w-5" />
+            {totalQty > 0 && (
+              <Badge className="absolute -top-1 -right-1 h-5 min-w-5 p-0 flex items-center justify-center text-[10px]">{totalQty}</Badge>
+            )}
+          </Button>
+          <Button onClick={() => navigate(sellerProfile ? "/seller" : "/seller/start")} size="icon" variant="outline" className="rounded-2xl">
+            <Store className="h-5 w-5" />
+          </Button>
           <Button onClick={() => navigate("/shop/new")} size="icon" className="rounded-2xl">
             <Plus className="h-5 w-5" />
           </Button>
