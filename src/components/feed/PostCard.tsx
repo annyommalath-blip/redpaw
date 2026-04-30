@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2, Globe, Users, Lock, Bookmark, Pencil } from "lucide-react";
+import { Heart, MessageCircle, Send, Repeat2, MoreHorizontal, Trash2, Globe, Users, Lock, Bookmark, Pencil, ShoppingBag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { FollowButton } from "@/components/social/FollowButton";
 import { motion } from "framer-motion";
@@ -21,6 +21,8 @@ import PostComments from "./PostComments";
 import PostPhotoCarousel from "./PostPhotoCarousel";
 import MentionText from "./MentionText";
 import EditPostDialog from "./EditPostDialog";
+import { ProductTagOverlay } from "@/components/shop/ProductTagOverlay";
+import { TagProductsDialog } from "@/components/shop/TagProductsDialog";
 
 interface PostAuthor {
   user_id: string;
@@ -88,6 +90,8 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
   const [likeAnimating, setLikeAnimating] = useState(false);
   const [saved, setSaved] = useState(post.is_saved ?? false);
   const [editOpen, setEditOpen] = useState(false);
+  const [tagOpen, setTagOpen] = useState(false);
+  const [tagRefreshKey, setTagRefreshKey] = useState(0);
 
   useEffect(() => {
     setSaved(post.is_saved ?? false);
