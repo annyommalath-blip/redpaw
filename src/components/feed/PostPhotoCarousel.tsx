@@ -5,16 +5,20 @@ import { cn } from "@/lib/utils";
 interface PostPhotoCarouselProps {
   photos: string[];
   className?: string;
+  onActiveIndexChange?: (index: number) => void;
+  overlay?: (activeIndex: number) => React.ReactNode;
 }
 
-export default function PostPhotoCarousel({ photos, className }: PostPhotoCarouselProps) {
+export default function PostPhotoCarousel({ photos, className, onActiveIndexChange, overlay }: PostPhotoCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [activeIndex, setActiveIndex] = useState(0);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
-    setActiveIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
+    const idx = emblaApi.selectedScrollSnap();
+    setActiveIndex(idx);
+    onActiveIndexChange?.(idx);
+  }, [emblaApi, onActiveIndexChange]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -27,7 +31,7 @@ export default function PostPhotoCarousel({ photos, className }: PostPhotoCarous
 
   if (photos.length === 1) {
     return (
-      <div className={cn("w-full bg-muted", className)}>
+      <div className={cn("relative w-full bg-muted", className)}>
         <img
           src={photos[0]}
           alt="Post"
@@ -35,6 +39,7 @@ export default function PostPhotoCarousel({ photos, className }: PostPhotoCarous
           style={{ aspectRatio: "4/5" }}
           loading="lazy"
         />
+        {overlay?.(0)}
       </div>
     );
   }
