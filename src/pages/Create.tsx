@@ -393,10 +393,13 @@ export default function CreatePage() {
               <div><h3 className="font-semibold text-foreground">Adoption Post</h3><p className="text-sm text-muted-foreground">Find a loving home for a pet</p></div>
             </CardContent>
           </Card>
-        </div>
-      </MobileLayout>
-    );
-  }
+
+          <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => setCreateType("spot")}>
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center"><PawPrint className="h-6 w-6 text-primary" /></div>
+              <div><h3 className="font-semibold text-foreground">Pet-Friendly Spot</h3><p className="text-sm text-muted-foreground">Register a café, shop, park or service that welcomes pets</p></div>
+            </CardContent>
+          </Card>
 
   const getTitle = () => {
     switch (createType) {
