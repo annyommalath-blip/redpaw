@@ -1076,6 +1076,39 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_otps: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          phone_e164: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone_e164: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone_e164?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           created_at: string
@@ -1373,42 +1406,149 @@ export type Database = {
       }
       seller_profiles: {
         Row: {
+          address_city: string | null
+          address_country: string | null
+          address_line1: string | null
+          address_line2: string | null
+          address_postal_code: string | null
+          address_state: string | null
+          business_name: string | null
+          business_type: Database["public"]["Enums"]["business_type"] | null
           contact_info: string | null
           created_at: string
+          date_of_birth: string | null
           id: string
+          id_number_last4: string | null
+          id_type: string | null
+          identity_status: Database["public"]["Enums"]["identity_status"]
           is_active: boolean
+          legal_first_name: string | null
+          legal_last_name: string | null
+          phone_e164: string | null
+          phone_verified_at: string | null
+          policy_accepted_at: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          seller_status: Database["public"]["Enums"]["seller_status"]
           status: string
           store_description: string | null
           store_logo_url: string | null
           store_name: string
+          submitted_at: string | null
+          suspension_reason: string | null
+          tax_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          business_name?: string | null
+          business_type?: Database["public"]["Enums"]["business_type"] | null
           contact_info?: string | null
           created_at?: string
+          date_of_birth?: string | null
           id?: string
+          id_number_last4?: string | null
+          id_type?: string | null
+          identity_status?: Database["public"]["Enums"]["identity_status"]
           is_active?: boolean
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          phone_e164?: string | null
+          phone_verified_at?: string | null
+          policy_accepted_at?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seller_status?: Database["public"]["Enums"]["seller_status"]
           status?: string
           store_description?: string | null
           store_logo_url?: string | null
           store_name: string
+          submitted_at?: string | null
+          suspension_reason?: string | null
+          tax_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          business_name?: string | null
+          business_type?: Database["public"]["Enums"]["business_type"] | null
           contact_info?: string | null
           created_at?: string
+          date_of_birth?: string | null
           id?: string
+          id_number_last4?: string | null
+          id_type?: string | null
+          identity_status?: Database["public"]["Enums"]["identity_status"]
           is_active?: boolean
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          phone_e164?: string | null
+          phone_verified_at?: string | null
+          policy_accepted_at?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seller_status?: Database["public"]["Enums"]["seller_status"]
           status?: string
           store_description?: string | null
           store_logo_url?: string | null
           store_name?: string
+          submitted_at?: string | null
+          suspension_reason?: string | null
+          tax_id?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      seller_verification_documents: {
+        Row: {
+          id: string
+          kind: Database["public"]["Enums"]["document_kind"]
+          seller_profile_id: string
+          storage_path: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          kind: Database["public"]["Enums"]["document_kind"]
+          seller_profile_id: string
+          storage_path: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          kind?: Database["public"]["Enums"]["document_kind"]
+          seller_profile_id?: string
+          storage_path?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_verification_documents_seller_profile_id_fkey"
+            columns: ["seller_profile_id"]
+            isOneToOne: false
+            referencedRelation: "seller_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sightings: {
         Row: {
@@ -1558,6 +1698,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       profiles_public: {
@@ -1572,6 +1733,14 @@ export type Database = {
       }
     }
     Functions: {
+      admin_update_seller_status: {
+        Args: {
+          p_new_status: Database["public"]["Enums"]["seller_status"]
+          p_reason?: string
+          p_seller_profile_id: string
+        }
+        Returns: undefined
+      }
       create_mention_notification: {
         Args: {
           p_comment_text: string
@@ -1638,6 +1807,13 @@ export type Database = {
         Args: { p_dog_id: string; p_user_id: string }
         Returns: boolean
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_dog_owner: {
         Args: { p_dog_id: string; p_user_id: string }
         Returns: boolean
@@ -1649,12 +1825,16 @@ export type Database = {
     }
     Enums: {
       alert_status: "active" | "resolved"
+      app_role: "admin" | "moderator" | "user"
       application_status: "pending" | "approved" | "declined" | "withdrawn"
+      business_type: "individual" | "business"
       care_type: "walk" | "watch" | "overnight" | "check-in"
+      document_kind: "id_front" | "id_back" | "selfie"
       dog_member_role: "owner" | "coparent"
       dog_member_status: "invited" | "active" | "removed"
       duration_unit: "days" | "months" | "years"
       found_dog_status: "active" | "reunited" | "closed"
+      identity_status: "not_started" | "pending" | "verified" | "rejected"
       log_type: "walk" | "food" | "meds" | "mood" | "symptom"
       med_record_type: "vaccine" | "medication"
       notification_type:
@@ -1676,8 +1856,15 @@ export type Database = {
         | "post_comment"
         | "post_like"
         | "post_repost"
+        | "seller_status_changed"
       post_visibility: "public" | "friends" | "private"
       request_status: "open" | "closed"
+      seller_status:
+        | "draft"
+        | "pending_verification"
+        | "approved"
+        | "rejected"
+        | "suspended"
       sitter_log_type: "walk" | "meal" | "potty" | "play" | "note"
       spot_category:
         | "food_drink"
@@ -1813,12 +2000,16 @@ export const Constants = {
   public: {
     Enums: {
       alert_status: ["active", "resolved"],
+      app_role: ["admin", "moderator", "user"],
       application_status: ["pending", "approved", "declined", "withdrawn"],
+      business_type: ["individual", "business"],
       care_type: ["walk", "watch", "overnight", "check-in"],
+      document_kind: ["id_front", "id_back", "selfie"],
       dog_member_role: ["owner", "coparent"],
       dog_member_status: ["invited", "active", "removed"],
       duration_unit: ["days", "months", "years"],
       found_dog_status: ["active", "reunited", "closed"],
+      identity_status: ["not_started", "pending", "verified", "rejected"],
       log_type: ["walk", "food", "meds", "mood", "symptom"],
       med_record_type: ["vaccine", "medication"],
       notification_type: [
@@ -1840,9 +2031,17 @@ export const Constants = {
         "post_comment",
         "post_like",
         "post_repost",
+        "seller_status_changed",
       ],
       post_visibility: ["public", "friends", "private"],
       request_status: ["open", "closed"],
+      seller_status: [
+        "draft",
+        "pending_verification",
+        "approved",
+        "rejected",
+        "suspended",
+      ],
       sitter_log_type: ["walk", "meal", "potty", "play", "note"],
       spot_category: [
         "food_drink",
