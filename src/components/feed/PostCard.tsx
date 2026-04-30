@@ -280,6 +280,17 @@ export default function PostCard({ post, onLikeToggle, onRepost, onDelete, onSha
           onSave={onEdit}
         />
       )}
+
+      {/* Tag products dialog (post owner only) */}
+      {isOwn && photos.length > 0 && (
+        <TagProductsDialog
+          open={tagOpen}
+          onOpenChange={setTagOpen}
+          postId={displayPost.id}
+          photos={photos}
+          onTagsChanged={() => setTagRefreshKey((k) => k + 1)}
+        />
+      )}
     </GlassCard>
   );
 }
