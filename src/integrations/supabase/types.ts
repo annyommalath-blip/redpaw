@@ -1030,6 +1030,39 @@ export type Database = {
           },
         ]
       }
+      post_product_tags: {
+        Row: {
+          created_at: string
+          id: string
+          photo_index: number
+          post_id: string
+          product_id: string
+          tagged_by: string
+          x_pct: number
+          y_pct: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_index?: number
+          post_id: string
+          product_id: string
+          tagged_by: string
+          x_pct?: number
+          y_pct?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_index?: number
+          post_id?: string
+          product_id?: string
+          tagged_by?: string
+          x_pct?: number
+          y_pct?: number
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           caption: string | null
@@ -1073,6 +1106,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      products: {
+        Row: {
+          category: string | null
+          contact_phone: string | null
+          contact_url: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          photo_urls: string[]
+          price: number
+          seller_id: string
+          status: string
+          stock: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          contact_phone?: string | null
+          contact_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          photo_urls?: string[]
+          price: number
+          seller_id: string
+          status?: string
+          stock?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          contact_phone?: string | null
+          contact_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          photo_urls?: string[]
+          price?: number
+          seller_id?: string
+          status?: string
+          stock?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

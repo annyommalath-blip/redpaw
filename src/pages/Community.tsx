@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, HandHeart, Dog, Heart, PawPrint, Search, List, Map } from "lucide-react";
+import { AlertTriangle, HandHeart, Dog, Heart, PawPrint, Search, List, Map, ShoppingBag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -196,7 +196,7 @@ export default function CommunityPage() {
 
         <button
           onClick={() => navigate("/spots")}
-          className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 shadow-sm text-foreground text-sm transition-all hover:shadow-md active:scale-[0.98]"
+          className="w-full flex items-center gap-3 px-4 py-3 mb-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 shadow-sm text-foreground text-sm transition-all hover:shadow-md active:scale-[0.98]"
         >
           <div className="h-8 w-8 rounded-xl bg-primary/20 flex items-center justify-center">
             <PawPrint className="h-4 w-4 text-primary" />
@@ -204,6 +204,19 @@ export default function CommunityPage() {
           <div className="flex-1 text-left">
             <div className="font-medium">Pet-Friendly Spots near you</div>
             <div className="text-xs text-muted-foreground">Cafés, shops, parks & services that welcome pets</div>
+          </div>
+        </button>
+
+        <button
+          onClick={() => navigate("/shop")}
+          className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 shadow-sm text-foreground text-sm transition-all hover:shadow-md active:scale-[0.98]"
+        >
+          <div className="h-8 w-8 rounded-xl bg-primary/20 flex items-center justify-center">
+            <ShoppingBag className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="font-medium">Shop pet products</div>
+            <div className="text-xs text-muted-foreground">Browse community listings or sell your own</div>
           </div>
         </button>
 
