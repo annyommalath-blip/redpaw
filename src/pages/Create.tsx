@@ -306,6 +306,33 @@ export default function CreatePage() {
     finally { setSubmitting(false); }
   };
 
+  const handleCreatePetSpot = async () => {
+    if (!spotName.trim() || !spotLocation.locationLabel) {
+      toast({ variant: "destructive", title: t("create.fillAllFields") }); return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("pet_spots").insert({
+        created_by: user!.id,
+        name: spotName.trim(),
+        category: spotCategory,
+        description: spotDescription.trim() || null,
+        location_label: spotLocation.locationLabel,
+        latitude: spotLocation.latitude,
+        longitude: spotLocation.longitude,
+        photo_urls: spotPhotoUrls,
+        contact_phone: spotPhone.trim() || null,
+        website: spotWebsite.trim() || null,
+        opening_hours: spotHours.trim() || null,
+        offers_bookings: spotOffersBookings,
+      });
+      if (error) throw error;
+      toast({ title: "Pet-friendly spot added! 🐾" });
+      navigate("/spots");
+    } catch (error: any) { toast({ variant: "destructive", title: t("common.error"), description: error.message }); }
+    finally { setSubmitting(false); }
+  };
+
   if (isGuest) {
     return (
       <MobileLayout>
