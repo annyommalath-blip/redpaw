@@ -94,7 +94,7 @@ export default function ShopPage() {
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
-            icon={ShoppingBag}
+            icon={<ShoppingBag className="h-8 w-8" />}
             title="No products yet"
             description="Be the first to list a product for the community."
             action={{ label: "List a product", onClick: () => navigate("/shop/new") }}
