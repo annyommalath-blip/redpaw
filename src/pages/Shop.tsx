@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ShoppingBag, Search } from "lucide-react";
+import { Plus, ShoppingBag, Search, ShoppingCart, Store } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/hooks/useCart";
+import { useSellerProfile } from "@/hooks/useSellerProfile";
 import { ProductCard, ProductRow } from "@/components/shop/ProductCard";
 
 const CATEGORIES = [
