@@ -800,6 +800,30 @@ export default function ProfilePage() {
                     <span className="text-foreground">Language Setting</span>
                   </button>
                   <Separator />
+                  <button
+                    className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left"
+                    onClick={() => navigate(sellerProfile ? "/seller" : "/seller/start")}
+                  >
+                    <Store className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-foreground">{sellerProfile ? "Seller Dashboard" : "Open Your Store"}</span>
+                  </button>
+                  <Separator />
+                  <button
+                    className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left"
+                    onClick={() => navigate("/orders")}
+                  >
+                    <Package className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-foreground">My Orders</span>
+                  </button>
+                  <Separator />
+                  <button
+                    className="w-full flex items-center gap-3 p-4 hover:bg-accent transition-colors text-left"
+                    onClick={() => navigate("/cart")}
+                  >
+                    <ShoppingBag className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-foreground">My Cart</span>
+                  </button>
+                  <Separator />
                   <button 
                     className="w-full flex items-center justify-between p-4 hover:bg-accent transition-colors text-left"
                     onClick={() => setShowArchive(!showArchive)}
