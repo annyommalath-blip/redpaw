@@ -190,6 +190,80 @@ export default function CreatePage() {
     });
   };
 
+  const handleMatchPhotoSelect = async (file: File) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ variant: "destructive", title: "Image too large", description: "Please use an image under 10MB." });
+      return;
+    }
+    let workingFile: File | Blob = file;
+    // HEIC conversion
+    if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+      try {
+        const heic2any = (await import("heic2any")).default;
+        const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+        workingFile = Array.isArray(converted) ? converted[0] : converted;
+      } catch (e) {
+        toast({ variant: "destructive", title: "Could not convert HEIC", description: "Please try a JPG/PNG image." });
+        return;
+      }
+    }
+    // Downscale to data URL (max 1024px)
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1024;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        setMatchImageDataUrl(canvas.toDataURL("image/jpeg", 0.85));
+        setMatchResults(null);
+        setMatchSearched(false);
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(workingFile as Blob);
+  };
+
+  const handleAIMatch = async () => {
+    if (!matchImageDataUrl) {
+      toast({ variant: "destructive", title: "Please upload a photo first" });
+      return;
+    }
+    setMatchSearching(true);
+    setMatchResults(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-photo-match", {
+        body: {
+          image_data_url: matchImageDataUrl,
+          latitude: matchLocation.latitude,
+          longitude: matchLocation.longitude,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setMatchAttrs(data.attributes);
+      setMatchResults(data.matches || []);
+      setMatchSearched(true);
+      if ((data.matches || []).length === 0) {
+        toast({ title: "No strong matches found", description: "Try a clearer photo or check back soon." });
+      }
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Match failed", description: err.message || "Please try again." });
+    } finally {
+      setMatchSearching(false);
+    }
+  };
+
   const handleCreateLog = async () => {
     if (!logType || !selectedDogId) { toast({ variant: "destructive", title: t("healthLog.selectLogTypeAndDog") }); return; }
     setSubmitting(true);
