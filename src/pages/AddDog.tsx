@@ -52,7 +52,7 @@ export default function AddDogPage() {
     e.preventDefault();
 
     if (!name.trim()) {
-      toast({ variant: "destructive", title: "Please enter your dog's name" });
+      toast({ variant: "destructive", title: "Please enter your pet's name" });
       return;
     }
 
@@ -67,6 +67,7 @@ export default function AddDogPage() {
       const { error } = await supabase.from("dogs").insert({
         owner_id: user.id,
         name: name.trim(),
+        pet_type: petType.trim() || "dog",
         breed: breed.trim() || null,
         date_of_birth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
         age: calculatedAge || null,
@@ -84,7 +85,7 @@ export default function AddDogPage() {
 
       if (error) throw error;
 
-      toast({ title: "Dog added! 🐕", description: `${name} has been added to your profile.` });
+      toast({ title: "Pet added! 🐾", description: `${name} has been added to your profile.` });
       navigate("/profile");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
