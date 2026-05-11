@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { CalendarIcon, Clock, Dog, Loader2 } from "lucide-react";
+import { CalendarIcon, Clock, PawPrint, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { LocationPicker } from "@/components/location/LocationPicker";
 import { FoundDogPhotoUploader } from "@/components/community/FoundDogPhotoUploader";
+import { PetTypeSelector } from "@/components/pet/PetTypeSelector";
 
 // Generate time options in 15-minute increments
 function generateTimeOptions(): { value: string; label: string }[] {
