@@ -89,6 +89,7 @@ export default function CreatePage() {
 
   // Found dog form state
   const [foundPhotoUrls, setFoundPhotoUrls] = useState<string[]>([]);
+  const [foundPetType, setFoundPetType] = useState<string>("dog");
   const [foundDescription, setFoundDescription] = useState("");
   const foundLocation = useGeolocation();
   const [foundDate, setFoundDate] = useState<Date | undefined>();
