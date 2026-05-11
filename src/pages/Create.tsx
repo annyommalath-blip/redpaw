@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { GuestAuthPrompt } from "@/components/auth/GuestAuthPrompt";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe, Dog, Clock, Heart, Home, PawPrint } from "lucide-react";
+import { PlusCircle, AlertTriangle, HandHeart, FileText, Loader2, Pill, CalendarIcon, Syringe, Dog, Clock, Heart, Home, PawPrint, Sparkles, Search, Upload, X, MapPin, MessageCircle, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
