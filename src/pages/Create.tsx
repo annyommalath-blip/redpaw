@@ -585,15 +585,51 @@ export default function CreatePage() {
 
               {/* Extracted attributes preview */}
               {matchAttrs && (
-                <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
-                  <p className="font-medium mb-1">AI detected:</p>
-                  <p>
-                    {matchAttrs.pet_type} · {matchAttrs.primary_color}
-                    {matchAttrs.breed_guess && matchAttrs.breed_guess !== "unknown" ? ` · ${matchAttrs.breed_guess}` : ""}
-                    {matchAttrs.size ? ` · ${matchAttrs.size}` : ""}
-                  </p>
-                  {matchAttrs.markings && matchAttrs.markings.length > 3 && (
-                    <p className="mt-1">Markings: {matchAttrs.markings}</p>
+                <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    <p className="text-xs font-semibold text-foreground">AI detected in your photo</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Type: </span>
+                      <span className="font-medium text-foreground capitalize">{matchAttrs.pet_type || "—"}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Size: </span>
+                      <span className="font-medium text-foreground capitalize">{matchAttrs.size || "—"}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground">Breed: </span>
+                      <span className="font-medium text-foreground">{matchAttrs.breed_guess || "unknown"}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Colors: </span>
+                    <div className="inline-flex flex-wrap gap-1 mt-0.5">
+                      {matchAttrs.primary_color && (
+                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary/15 text-primary capitalize">
+                          {matchAttrs.primary_color} (primary)
+                        </span>
+                      )}
+                      {(matchAttrs.secondary_colors || []).filter((c: string) => c).map((c: string, i: number) => (
+                        <span key={i} className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-foreground capitalize">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {matchAttrs.markings && matchAttrs.markings.length > 2 && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Markings: </span>
+                      <span className="text-foreground">{matchAttrs.markings}</span>
+                    </div>
+                  )}
+                  {matchAttrs.key_features && matchAttrs.key_features.length > 2 && (
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Other features: </span>
+                      <span className="text-foreground">{matchAttrs.key_features}</span>
+                    </div>
                   )}
                 </div>
               )}
@@ -610,53 +646,80 @@ export default function CreatePage() {
                   <h4 className="text-sm font-semibold text-foreground">
                     {matchResults.length} potential match{matchResults.length === 1 ? "" : "es"}
                   </h4>
-                  {matchResults.map((m: any, idx: number) => (
-                    <Card key={m.id} className="overflow-hidden">
-                      <div className="flex gap-3 p-3">
-                        {m.cover_photo_url ? (
-                          <img
-                            src={m.cover_photo_url}
-                            alt="Found pet"
-                            className="h-24 w-24 rounded-xl object-cover shrink-0 cursor-pointer"
-                            onClick={() => navigate(`/found-dog/${m.id}`)}
-                          />
-                        ) : (
-                          <div className="h-24 w-24 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                            <PawPrint className="h-8 w-8 text-muted-foreground" />
+                  {matchResults.map((m: any, idx: number) => {
+                    const strength = m.score >= 90 ? "Strong" : m.score >= 60 ? "Good" : "Fair";
+                    const strengthClass = m.score >= 90
+                      ? "bg-success/15 text-success"
+                      : m.score >= 60
+                      ? "bg-primary/15 text-primary"
+                      : "bg-muted text-muted-foreground";
+                    return (
+                      <Card key={m.id} className="overflow-hidden">
+                        <div className="p-3 space-y-2.5">
+                          <div className="flex gap-3">
+                            {m.cover_photo_url ? (
+                              <img
+                                src={m.cover_photo_url}
+                                alt="Found pet"
+                                className="h-24 w-24 rounded-xl object-cover shrink-0 cursor-pointer"
+                                onClick={() => navigate(`/found-dog/${m.id}`)}
+                              />
+                            ) : (
+                              <div className="h-24 w-24 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                                <PawPrint className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[10px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded">
+                                  #{idx + 1}
+                                </span>
+                                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${strengthClass}`}>
+                                  {strength} match · {m.score} pts
+                                </span>
+                              </div>
+                              {m.location_label && (
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <MapPin className="h-3 w-3 shrink-0" />
+                                  <span className="truncate">{m.location_label}</span>
+                                </div>
+                              )}
+                              {m.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2 italic">
+                                  "{m.description}"
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0 space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded">
-                              #{idx + 1}
-                            </span>
-                            <span className="text-xs font-semibold text-success">
-                              {m.score}% match
-                            </span>
-                          </div>
-                          {m.location_label && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <MapPin className="h-3 w-3 shrink-0" />
-                              <span className="truncate">{m.location_label}</span>
+
+                          {/* Why this matches — transparent reasons */}
+                          {m.reasons && m.reasons.length > 0 && (
+                            <div className="rounded-lg bg-muted/40 px-2.5 py-2">
+                              <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-1">
+                                Why this matches
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {m.reasons.map((r: string, i: number) => (
+                                  <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20">
+                                    ✓ {r}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                           )}
-                          {m.reasons && m.reasons.length > 0 && (
-                            <p className="text-xs text-foreground line-clamp-2">
-                              {m.reasons.slice(0, 3).join(" · ")}
-                            </p>
-                          )}
-                          <div className="flex gap-1.5 pt-1">
-                            <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => navigate(`/found-dog/${m.id}`)}>
-                              <ExternalLink className="h-3 w-3 mr-1" />View
+
+                          <div className="flex gap-1.5">
+                            <Button size="sm" variant="outline" className="h-8 text-xs flex-1" onClick={() => navigate(`/found-dog/${m.id}`)}>
+                              <ExternalLink className="h-3 w-3 mr-1" />View Post
                             </Button>
-                            <Button size="sm" className="h-7 text-xs px-2" onClick={() => navigate(`/messages/new/${m.reporter_id}`)}>
+                            <Button size="sm" className="h-8 text-xs flex-1" onClick={() => navigate(`/messages/new/${m.reporter_id}`)}>
                               <MessageCircle className="h-3 w-3 mr-1" />Message
                             </Button>
                           </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
