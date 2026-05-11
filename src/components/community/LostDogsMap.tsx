@@ -161,6 +161,7 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
           <a href="#" data-id="${found.id}" data-type="found" style="display:block;text-align:center;background:#22c55e;color:white;padding:6px 12px;border-radius:8px;font-size:12px;text-decoration:none;font-weight:600;">View Report →</a>
         </div>`;
 
+      const foundIcon = makeIcon("#22c55e", getPetEmoji(found.petType));
       const marker = L.marker([found.latitude, found.longitude], { icon: foundIcon }).addTo(map).bindPopup(popupHtml, { maxWidth: 210, className: "redpaw-popup" });
 
       marker.on("popupopen", () => {
