@@ -82,12 +82,22 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
       center: [centerLat, centerLng],
       zoom: initialZoom,
       zoomControl: true,
+      preferCanvas: true,
+      fadeAnimation: false,
+      zoomAnimation: true,
+      markerZoomAnimation: true,
+      wheelDebounceTime: 40,
+      wheelPxPerZoomLevel: 120,
+      inertia: true,
     });
 
     L.tileLayer(TILE_URL, {
       attribution: TILE_ATTRIBUTION,
       maxZoom: 20,
       subdomains: "abcd",
+      updateWhenIdle: true,
+      updateWhenZooming: false,
+      keepBuffer: 4,
     }).addTo(map);
 
     // Viewer location pulse marker
