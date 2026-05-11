@@ -138,6 +138,14 @@ export default function CreatePage() {
   const spotLocation = useGeolocation();
   const [spotPhotoUrls, setSpotPhotoUrls] = useState<string[]>([]);
 
+  // AI Match form state
+  const [matchImageDataUrl, setMatchImageDataUrl] = useState<string>("");
+  const [matchSearching, setMatchSearching] = useState(false);
+  const [matchResults, setMatchResults] = useState<any[] | null>(null);
+  const [matchAttrs, setMatchAttrs] = useState<any | null>(null);
+  const [matchSearched, setMatchSearched] = useState(false);
+  const matchLocation = useGeolocation();
+
   useEffect(() => {
     if (user) fetchDogs();
   }, [user]);
