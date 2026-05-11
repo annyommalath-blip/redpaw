@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.translate-message]
 verify_jwt = false
+
+[functions.ai-photo-match]
+verify_jwt = false
