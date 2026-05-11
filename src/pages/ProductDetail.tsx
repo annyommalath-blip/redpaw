@@ -56,7 +56,7 @@ export default function ProductDetailPage() {
         const sellerId = (prod as Product).seller_id;
         const [{ data: profile }, { data: store }] = await Promise.all([
           supabase.from("profiles").select("user_id,display_name,username,avatar_url").eq("user_id", sellerId).maybeSingle(),
-          supabase.from("seller_profiles").select("store_name").eq("user_id", sellerId).maybeSingle(),
+          supabase.rpc("get_public_seller_profile", { p_user_id: sellerId }).maybeSingle(),
         ]);
         if (profile) setSeller(profile as Seller);
         if (store) setStoreName((store as any).store_name);
