@@ -206,11 +206,11 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
       <div className="absolute bottom-4 left-3 bg-white/90 backdrop-blur-sm rounded-2xl px-3 py-2.5 shadow-md text-xs space-y-1.5 z-[1000] border border-border">
         <div className="flex items-center gap-1.5">
           <span className="text-base leading-none">🚨</span>
-          <span className="text-foreground font-medium">Lost dog</span>
+          <span className="text-foreground font-medium">Lost pet</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-base leading-none">🐶</span>
-          <span className="text-foreground font-medium">Found dog</span>
+          <span className="text-base leading-none">🐾</span>
+          <span className="text-foreground font-medium">Found pet</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full bg-blue-500 ring-2 ring-blue-300" />
