@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog, Loader2, Calendar, Shield } from "lucide-react";
+import { PawPrint, Loader2, Calendar, Shield } from "lucide-react";
 import { format } from "date-fns";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BreedSelector } from "@/components/dog/BreedSelector";
 import { DogPhotoUploader } from "@/components/dog/DogPhotoUploader";
 import { ProfilePhotoUploader } from "@/components/dog/ProfilePhotoUploader";
+import { PetTypeSelector } from "@/components/pet/PetTypeSelector";
 import { calculateAge } from "@/lib/ageCalculator";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +28,7 @@ export default function AddDogPage() {
   const { user } = useAuth();
 
   const [name, setName] = useState("");
+  const [petType, setPetType] = useState<string>("dog");
   const [breed, setBreed] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [weight, setWeight] = useState("");
@@ -50,7 +52,7 @@ export default function AddDogPage() {
     e.preventDefault();
 
     if (!name.trim()) {
-      toast({ variant: "destructive", title: "Please enter your dog's name" });
+      toast({ variant: "destructive", title: "Please enter your pet's name" });
       return;
     }
 
@@ -65,6 +67,7 @@ export default function AddDogPage() {
       const { error } = await supabase.from("dogs").insert({
         owner_id: user.id,
         name: name.trim(),
+        pet_type: petType.trim() || "dog",
         breed: breed.trim() || null,
         date_of_birth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
         age: calculatedAge || null,
@@ -82,7 +85,7 @@ export default function AddDogPage() {
 
       if (error) throw error;
 
-      toast({ title: "Dog added! 🐕", description: `${name} has been added to your profile.` });
+      toast({ title: "Pet added! 🐾", description: `${name} has been added to your profile.` });
       navigate("/profile");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -93,16 +96,16 @@ export default function AddDogPage() {
 
   return (
     <MobileLayout>
-      <PageHeader title="Add Dog" showBack />
+      <PageHeader title="Add Pet" showBack />
 
       <div className="p-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Dog className="h-5 w-5 text-primary" />
-              New Dog Profile
+              <PawPrint className="h-5 w-5 text-primary" />
+              New Pet Profile
             </CardTitle>
-            <CardDescription>Add your furry friend to RedPaw</CardDescription>
+            <CardDescription>Add your furry (or feathered, scaly, fluffy) friend to RedPaw</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -118,12 +121,15 @@ export default function AddDogPage() {
                 )}
               </div>
 
+              {/* Pet type */}
+              <PetTypeSelector value={petType} onChange={setPetType} required />
+
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
                 <Input
                   id="name"
-                  placeholder="What's your dog's name?"
+                  placeholder="What's your pet's name?"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -307,8 +313,8 @@ export default function AddDogPage() {
                   </>
                 ) : (
                   <>
-                    <Dog className="h-4 w-4 mr-2" />
-                    Add Dog
+                    <PawPrint className="h-4 w-4 mr-2" />
+                    Add Pet
                   </>
                 )}
               </Button>

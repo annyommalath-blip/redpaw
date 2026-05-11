@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { CalendarIcon, Clock, Dog, Loader2 } from "lucide-react";
+import { CalendarIcon, Clock, PawPrint, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { LocationPicker } from "@/components/location/LocationPicker";
 import { FoundDogPhotoUploader } from "@/components/community/FoundDogPhotoUploader";
+import { PetTypeSelector } from "@/components/pet/PetTypeSelector";
 
 // Generate time options in 15-minute increments
 function generateTimeOptions(): { value: string; label: string }[] {
@@ -42,6 +43,8 @@ export interface FinderObservations {
 }
 
 interface FoundDogFormProps {
+  petType: string;
+  onPetTypeChange: (value: string) => void;
   photoUrls: string[];
   onPhotosChange: (urls: string[]) => void;
   description: string;
@@ -70,6 +73,8 @@ interface FoundDogFormProps {
 }
 
 export function FoundDogForm({
+  petType,
+  onPetTypeChange,
   photoUrls,
   onPhotosChange,
   description,
@@ -91,14 +96,17 @@ export function FoundDogForm({
     <Card className="border-success">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-success">
-          <Dog className="h-5 w-5" />
-          {t("found.reportFound")}
+          <PawPrint className="h-5 w-5" />
+          Report Found Pet
         </CardTitle>
         <CardDescription>
-          {t("found.helpLostDogFindOwner")}
+          Help reunite this pet with their owner
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Pet type */}
+        <PetTypeSelector value={petType} onChange={onPetTypeChange} required />
+
         {/* Photo Upload - Required */}
         <div className="space-y-2">
           <Label>{t("found.photos")} *</Label>
@@ -302,7 +310,7 @@ export function FoundDogForm({
           {submitting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
-            <Dog className="h-4 w-4 mr-2" />
+            <PawPrint className="h-4 w-4 mr-2" />
           )}
           {t("found.reportFound")}
         </Button>

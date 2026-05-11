@@ -84,7 +84,7 @@ export default function CommunityPage() {
     setLoading(true);
     try {
       const [alertsRes, foundRes, requestsRes, campaignsRes, adoptionRes] = await Promise.all([
-        supabase.from("lost_alerts").select(`*, dogs (name, breed, photo_url, age, weight, weight_unit, date_of_birth)`).eq("status", "active").order("created_at", { ascending: false }),
+        supabase.from("lost_alerts").select(`*, dogs (name, breed, photo_url, age, weight, weight_unit, date_of_birth, pet_type)`).eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("found_dogs").select("*").eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("care_requests").select(`*, dogs (name, breed, photo_url)`).eq("status", "open").order("created_at", { ascending: false }),
         supabase.from("donation_campaigns").select("*").eq("status", "active").order("created_at", { ascending: false }),
@@ -412,6 +412,7 @@ export default function CommunityPage() {
                     dogName: a.dogs?.name || "Unknown",
                     breed: a.dogs?.breed || null,
                     photoUrl: a.photo_url || (a.dogs as any)?.photo_url || null,
+                    petType: (a.dogs as any)?.pet_type || "dog",
                     latitude: a.latitude!,
                     longitude: a.longitude!,
                     locationLabel: a.location_label,
@@ -426,6 +427,7 @@ export default function CommunityPage() {
                     latitude: f.latitude!,
                     longitude: f.longitude!,
                     foundAt: new Date(f.found_at),
+                    petType: (f as any).pet_type || "dog",
                   }))}
                 viewerLatitude={viewerLocation.latitude}
                 viewerLongitude={viewerLocation.longitude}

@@ -89,6 +89,7 @@ export default function CreatePage() {
 
   // Found dog form state
   const [foundPhotoUrls, setFoundPhotoUrls] = useState<string[]>([]);
+  const [foundPetType, setFoundPetType] = useState<string>("dog");
   const [foundDescription, setFoundDescription] = useState("");
   const foundLocation = useGeolocation();
   const [foundDate, setFoundDate] = useState<Date | undefined>();
@@ -252,7 +253,7 @@ export default function CreatePage() {
       const observations = Object.fromEntries(
         Object.entries(finderObservations).filter(([_, v]) => v !== "")
       );
-      const { error } = await supabase.from("found_dogs").insert({ reporter_id: user!.id, photo_urls: foundPhotoUrls, description: foundDescription.trim() || null, location_label: foundLocation.locationLabel, latitude: foundLocation.latitude, longitude: foundLocation.longitude, location_source: foundLocation.locationSource, found_at: foundAt.toISOString(), status: "active", finder_observations: Object.keys(observations).length > 0 ? observations : {} });
+      const { error } = await supabase.from("found_dogs").insert({ reporter_id: user!.id, pet_type: foundPetType.trim() || "dog", photo_urls: foundPhotoUrls, description: foundDescription.trim() || null, location_label: foundLocation.locationLabel, latitude: foundLocation.latitude, longitude: foundLocation.longitude, location_source: foundLocation.locationSource, found_at: foundAt.toISOString(), status: "active", finder_observations: Object.keys(observations).length > 0 ? observations : {} });
       if (error) throw error;
       toast({ title: t("found.foundDogReported"), description: t("found.thankYouHelping") });
       navigate("/community?tab=lost");
@@ -425,7 +426,7 @@ export default function CreatePage() {
       <div className="p-4">
         {/* Found Dog form */}
         {createType === "found" ? (
-          <FoundDogForm photoUrls={foundPhotoUrls} onPhotosChange={setFoundPhotoUrls} description={foundDescription} onDescriptionChange={setFoundDescription} location={foundLocation} date={foundDate} onDateChange={setFoundDate} time={foundTime} onTimeChange={setFoundTime} finderObservations={finderObservations} onFinderObservationsChange={setFinderObservations} submitting={submitting} onSubmit={handleCreateFoundDog} />
+          <FoundDogForm petType={foundPetType} onPetTypeChange={setFoundPetType} photoUrls={foundPhotoUrls} onPhotosChange={setFoundPhotoUrls} description={foundDescription} onDescriptionChange={setFoundDescription} location={foundLocation} date={foundDate} onDateChange={setFoundDate} time={foundTime} onTimeChange={setFoundTime} finderObservations={finderObservations} onFinderObservationsChange={setFinderObservations} submitting={submitting} onSubmit={handleCreateFoundDog} />
         ) : createType === "donation" ? (
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5 text-primary" />Donation Campaign</CardTitle><CardDescription>Create a fundraiser for a pet in need</CardDescription></CardHeader>

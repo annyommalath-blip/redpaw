@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Dog, Loader2, Trash2, Calendar, Shield } from "lucide-react";
+import { PawPrint, Loader2, Trash2, Calendar, Shield } from "lucide-react";
 import { format } from "date-fns";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BreedSelector } from "@/components/dog/BreedSelector";
 import { ProfilePhotoUploader } from "@/components/dog/ProfilePhotoUploader";
 import { DogPhotoUploader } from "@/components/dog/DogPhotoUploader";
+import { PetTypeSelector } from "@/components/pet/PetTypeSelector";
 import { calculateAge } from "@/lib/ageCalculator";
 import { cn } from "@/lib/utils";
 import {
@@ -54,6 +55,7 @@ export default function EditDogPage() {
 
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
+  const [petType, setPetType] = useState<string>("dog");
   const [breed, setBreed] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [weight, setWeight] = useState("");
@@ -100,6 +102,7 @@ export default function EditDogPage() {
       }
 
       setName(data.name);
+      setPetType((data as any).pet_type || "dog");
       setBreed(data.breed || "");
       setDateOfBirth(data.date_of_birth ? new Date(data.date_of_birth) : undefined);
       setWeight(data.weight || "");
@@ -134,6 +137,7 @@ export default function EditDogPage() {
         .from("dogs")
         .update({
           name: name.trim(),
+          pet_type: petType.trim() || "dog",
           breed: breed.trim() || null,
           date_of_birth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
           age: calculatedAge || null,
@@ -190,16 +194,16 @@ export default function EditDogPage() {
 
   return (
     <MobileLayout>
-      <PageHeader title="Edit Dog" showBack />
+      <PageHeader title="Edit Pet" showBack />
 
       <div className="p-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Dog className="h-5 w-5 text-primary" />
-              Edit Dog Profile
+              <PawPrint className="h-5 w-5 text-primary" />
+              Edit Pet Profile
             </CardTitle>
-            <CardDescription>Update your dog's information</CardDescription>
+            <CardDescription>Update your pet's information</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -214,6 +218,9 @@ export default function EditDogPage() {
                   />
                 )}
               </div>
+
+              {/* Pet type */}
+              <PetTypeSelector value={petType} onChange={setPetType} required />
 
               {/* Name */}
               <div className="space-y-2">

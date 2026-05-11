@@ -1,14 +1,16 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog } from "lucide-react";
+import { PawPrint } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { getPetEmoji, getPetTypeLabel } from "@/lib/petTypes";
 
 interface LostDogMarker {
   id: string;
   dogName: string;
   breed: string | null;
   photoUrl: string | null;
+  petType?: string | null;
   latitude: number;
   longitude: number;
   locationLabel: string | null;
@@ -22,6 +24,7 @@ interface FoundDogMarker {
   latitude: number;
   longitude: number;
   foundAt: Date;
+  petType?: string | null;
 }
 
 interface LostDogsMapProps {
@@ -37,17 +40,24 @@ interface LostDogsMapProps {
 const pinWrap = (svgInner: string) =>
   `<div style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.28));width:32px;height:44px;line-height:0;">${svgInner}</div>`;
 
-const lostPinSvg = pinWrap(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
-  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="#ef4444"/>
-  <circle cx="16" cy="15" r="7.5" fill="white"/>
-  <text x="16" y="19" text-anchor="middle" font-size="11" fill="#ef4444" font-family="system-ui,Apple Color Emoji,Segoe UI Emoji">🐾</text>
-</svg>`);
+/** Build a teardrop pin with a per-pet emoji glyph in the white center. */
+function buildPinSvg(color: string, emoji: string): string {
+  return pinWrap(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
+    <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="${color}"/>
+    <circle cx="16" cy="15" r="7.5" fill="white"/>
+    <text x="16" y="19" text-anchor="middle" font-size="11" fill="${color}" font-family="system-ui,Apple Color Emoji,Segoe UI Emoji">${emoji}</text>
+  </svg>`);
+}
 
-const foundPinSvg = pinWrap(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
-  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="#22c55e"/>
-  <circle cx="16" cy="15" r="7.5" fill="white"/>
-  <text x="16" y="19" text-anchor="middle" font-size="11" fill="#22c55e" font-family="system-ui,Apple Color Emoji,Segoe UI Emoji">🐶</text>
-</svg>`);
+function makeIcon(color: string, emoji: string): L.DivIcon {
+  return L.divIcon({
+    html: buildPinSvg(color, emoji),
+    className: "",
+    iconSize: [32, 44],
+    iconAnchor: [16, 44],
+    popupAnchor: [0, -46],
+  });
+}
 
 const viewerDotSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
   <circle cx="11" cy="11" r="10" fill="#3b82f6" fill-opacity="0.18"/>
@@ -56,8 +66,6 @@ const viewerDotSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height=
   <circle cx="9.5" cy="9.5" r="1.2" fill="white" fill-opacity="0.7"/>
 </svg>`;
 
-const lostIcon = L.divIcon({ html: lostPinSvg, className: "", iconSize: [32, 44], iconAnchor: [16, 44], popupAnchor: [0, -46] });
-const foundIcon = L.divIcon({ html: foundPinSvg, className: "", iconSize: [32, 44], iconAnchor: [16, 44], popupAnchor: [0, -46] });
 const viewerIcon = L.divIcon({ html: viewerDotSvg, className: "", iconSize: [22, 22], iconAnchor: [11, 11] });
 
 /** CartoDB Positron — clean light-gray tiles matching the desired style */
@@ -124,6 +132,7 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
           <a href="#" data-id="${alert.id}" data-type="lost" style="display:block;text-align:center;background:#ef4444;color:white;padding:6px 12px;border-radius:8px;font-size:12px;text-decoration:none;font-weight:600;">View Alert →</a>
         </div>`;
 
+      const lostIcon = makeIcon("#ef4444", getPetEmoji(alert.petType));
       const marker = L.marker([alert.latitude, alert.longitude], { icon: lostIcon }).addTo(map).bindPopup(popupHtml, { maxWidth: 210, className: "redpaw-popup" });
 
       marker.on("popupopen", () => {
@@ -145,13 +154,14 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
       const popupHtml = `
         <div style="min-width:170px;font-family:system-ui,sans-serif;padding:2px;">
           ${imgHtml}
-          <div style="font-weight:700;font-size:14px;color:#111;">Found Dog</div>
-          <span style="display:inline-block;background:#dcfce7;color:#22c55e;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-bottom:5px;">🐶 FOUND</span>
+          <div style="font-weight:700;font-size:14px;color:#111;">Found ${getPetTypeLabel(found.petType)}</div>
+          <span style="display:inline-block;background:#dcfce7;color:#22c55e;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-bottom:5px;">${getPetEmoji(found.petType)} FOUND</span>
           ${found.locationLabel ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:1px;">📍 ${found.locationLabel}</div>` : ""}
           <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">🕐 ${timeAgo}</div>
           <a href="#" data-id="${found.id}" data-type="found" style="display:block;text-align:center;background:#22c55e;color:white;padding:6px 12px;border-radius:8px;font-size:12px;text-decoration:none;font-weight:600;">View Report →</a>
         </div>`;
 
+      const foundIcon = makeIcon("#22c55e", getPetEmoji(found.petType));
       const marker = L.marker([found.latitude, found.longitude], { icon: foundIcon }).addTo(map).bindPopup(popupHtml, { maxWidth: 210, className: "redpaw-popup" });
 
       marker.on("popupopen", () => {
@@ -196,11 +206,11 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
       <div className="absolute bottom-4 left-3 bg-white/90 backdrop-blur-sm rounded-2xl px-3 py-2.5 shadow-md text-xs space-y-1.5 z-[1000] border border-border">
         <div className="flex items-center gap-1.5">
           <span className="text-base leading-none">🚨</span>
-          <span className="text-foreground font-medium">Lost dog</span>
+          <span className="text-foreground font-medium">Lost pet</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-base leading-none">🐶</span>
-          <span className="text-foreground font-medium">Found dog</span>
+          <span className="text-base leading-none">🐾</span>
+          <span className="text-foreground font-medium">Found pet</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full bg-blue-500 ring-2 ring-blue-300" />
@@ -220,8 +230,8 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
       {/* No data overlay */}
       {!hasData && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 z-[999]">
-          <Dog className="h-10 w-10 text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground font-medium">No lost or found dogs nearby</p>
+          <PawPrint className="h-10 w-10 text-muted-foreground mb-2" />
+          <p className="text-sm text-muted-foreground font-medium">No lost or found pets nearby</p>
         </div>
       )}
     </div>

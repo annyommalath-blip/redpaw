@@ -44,7 +44,7 @@
     "deleting": "Deleting...",
     "sending": "Sending...",
     "away": "away",
-    "dogsNeedCare": "dogs need care together",
+    "dogsNeedCare": "pets need care together",
     "unknownBreed": "Unknown breed",
     "contact": "Contact",
     "reportSighting": "Report Sighting",
@@ -89,7 +89,7 @@
     "title": "Feed",
     "subtitle": "What's happening",
     "myDog": "My Dog",
-    "myDogs": "My Dogs",
+    "myDogs": "My Pets",
     "quickActions": "Quick Actions",
     "medicationRecords": "Medication Records",
     "recentLogs": "Recent Logs",
@@ -136,8 +136,8 @@
     "subtitle": "You & your dogs",
     "ownerProfile": "Owner Profile",
     "viewOwnerProfile": "Tap to view your profile",
-    "myDogs": "My Dogs",
-    "addDog": "Add Dog",
+    "myDogs": "My Pets",
+    "addDog": "Add Pet",
     "noDogs": "No dogs added yet",
     "addFirstDog": "Add your furry friend to get started!",
     "myCareRequests": "My Care Requests",
@@ -192,9 +192,9 @@
   },
   "dogs": {
     "title": "Dogs",
-    "addDog": "Add Dog",
+    "addDog": "Add Pet",
     "editDog": "Edit Dog",
-    "dogName": "Dog Name",
+    "dogName": "Pet Name",
     "breed": "Breed",
     "age": "Age",
     "weight": "Weight",
@@ -215,7 +215,7 @@
     "noDogsDesc": "Add your furry friend to get started!",
     "lost": "Lost"
   },
-"care": {
+  "care": {
     "title": "Care Requests",
     "createRequest": "Create Care Request",
     "careType": "Care Type",
@@ -277,18 +277,18 @@
     "careRequests": "Care Requests",
     "lostAndFound": "Lost & Found",
     "lostDogs": "Lost Dogs",
-    "foundDogs": "Found Dogs",
+    "foundDogs": "Found Pets",
     "noPostsYet": "No posts yet",
     "beFirstToPost": "Be the first to post!",
     "lost": "🚨 Lost",
     "found": "🐕 Found",
     "lostDog": "LOST DOG",
-    "foundDog": "Found Dog",
+    "foundDog": "Found Pet",
     "reunited": "REUNITED",
-    "dogReunited": "This dog has been reunited with their owner!"
+    "dogReunited": "This pet has been reunited with their family!"
   },
-"lost": {
-    "title": "Lost Dog Alert",
+  "lost": {
+    "title": "Lost Pet Alert",
     "reportLost": "Report Lost Dog",
     "postLostAlert": "Post Lost Alert",
     "lastSeenLocation": "Last Seen Location",
@@ -317,8 +317,8 @@
     "alertPostedDesc": "Your lost dog alert is now visible to the community."
   },
   "found": {
-    "title": "Found Dog",
-    "reportFound": "Report Found Dog",
+    "title": "Found Pet",
+    "reportFound": "Report Found Pet",
     "foundAt": "Found At",
     "description": "Description",
     "replies": "Replies",
@@ -326,7 +326,7 @@
     "noReplies": "No replies yet",
     "reunited": "Reunited",
     "active": "Active",
-    "foundDogReported": "Found dog reported! 🐕",
+    "foundDogReported": "Found pet reported! 🐕",
     "thankYouHelping": "Thank you for helping! The owner may contact you via messages.",
     "helpLostDogFindOwner": "Help a lost dog find their owner. Upload a photo and provide details about where and when you found them.",
     "uploadAtLeastOnePhoto": "Please upload at least one photo",
@@ -336,7 +336,7 @@
     "foundYesterday": "Found yesterday",
     "foundOn": "Found",
     "photos": "Photo(s)",
-    "photosHint": "Upload at least one photo of the found dog. The first photo will be the cover image.",
+    "photosHint": "Upload at least one photo of the found pet. The first photo will be the cover image.",
     "whereFoundHint": "This helps owners locate their pet.",
     "whereFoundPlaceholder": "Where did you find the dog?",
     "whenFound": "When did you find the dog?",
@@ -346,7 +346,7 @@
     "descriptionPlaceholder": "Breed guess, size, collar color, behavior, any identifying features...",
     "contactNote": "📱 Contact will be through in-app messages only. Your phone number and personal info won't be shown publicly."
   },
-"messages": {
+  "messages": {
     "title": "Messages",
     "subtitle": "Your conversations",
     "noConversations": "No other messages yet",
@@ -394,7 +394,7 @@
       "assigned_job_sitter_single": "You were assigned to {{careType}} {{dogName}}.",
       "assigned_job_sitter_multi": "You were assigned to {{careType}} {{ownerName}}'s dogs ({{dogCount}} dogs).",
       "sighting_reported": "Someone reported a sighting of {{dogName}}!",
-      "found_dog_reply": "{{replierName}} replied to your found dog post",
+      "found_dog_reply": "{{replierName}} replied to your found pet post",
       "medication_expired": "{{medName}} for {{dogName}} has expired.",
       "medication_expiring_days": "{{medName}} for {{dogName}} expires in {{days}} day(s).",
       "dog_invite": "{{inviterName}} invited you to co-parent {{dogName}}",
@@ -462,14 +462,14 @@
   "create": {
     "title": "Create",
     "subtitle": "What would you like to do?",
-    "addDog": "Add Dog",
+    "addDog": "Add Pet",
     "addDogDesc": "Add a new furry friend",
     "careRequest": "Care Request",
     "careRequestDesc": "Request dog sitting or walking",
-    "lostAlert": "Lost Dog Alert",
-    "lostAlertDesc": "Report a missing dog",
-    "foundDog": "Found Dog",
-    "foundDogDesc": "Report a found dog",
+    "lostAlert": "Lost Pet Alert",
+    "lostAlertDesc": "Report a missing pet",
+    "foundDog": "Found Pet",
+    "foundDogDesc": "Report a found pet",
     "healthLog": "Add Health Log",
     "healthLogDesc": "Track walks, food, mood & more",
     "medRecord": "Medication Records",
@@ -511,7 +511,7 @@
     "alreadyApplied": "You've already applied to this request"
   },
   "dogDetail": {
-    "dogNotFound": "Dog not found",
+    "dogNotFound": "Pet not found",
     "goHome": "Go Home",
     "noDetails": "No additional details recorded yet.",
     "editProfile": "Edit Profile"
