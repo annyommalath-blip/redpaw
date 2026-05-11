@@ -527,7 +527,141 @@ export default function CreatePage() {
       <PageHeader title={getTitle()} showBack onBack={() => setCreateType(null)} />
       <div className="p-4">
         {/* Found Dog form */}
-        {createType === "found" ? (
+        {createType === "match" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Find your pet with AI
+              </CardTitle>
+              <CardDescription>
+                Upload a clear photo of your pet. AI will compare it against all active Found Pet posts and rank the best matches.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Photo uploader */}
+              <div>
+                <Label>Pet photo</Label>
+                {matchImageDataUrl ? (
+                  <div className="relative mt-2 rounded-2xl overflow-hidden bg-muted aspect-[4/5] max-w-xs mx-auto">
+                    <img src={matchImageDataUrl} alt="Pet to match" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => { setMatchImageDataUrl(""); setMatchResults(null); setMatchSearched(false); }}
+                      className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow-md hover:bg-background"
+                      aria-label="Remove photo"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="mt-2 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-2xl p-8 cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                    <span className="text-sm font-medium">Tap to upload photo</span>
+                    <span className="text-xs text-muted-foreground">JPG, PNG, HEIC · max 10MB</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handleMatchPhotoSelect(e.target.files[0])}
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Find button */}
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handleAIMatch}
+                disabled={!matchImageDataUrl || matchSearching}
+              >
+                {matchSearching ? (
+                  <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Scanning Found posts...</>
+                ) : (
+                  <><Search className="h-5 w-5 mr-2" />Find Match</>
+                )}
+              </Button>
+
+              {/* Extracted attributes preview */}
+              {matchAttrs && (
+                <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+                  <p className="font-medium mb-1">AI detected:</p>
+                  <p>
+                    {matchAttrs.pet_type} · {matchAttrs.primary_color}
+                    {matchAttrs.breed_guess && matchAttrs.breed_guess !== "unknown" ? ` · ${matchAttrs.breed_guess}` : ""}
+                    {matchAttrs.size ? ` · ${matchAttrs.size}` : ""}
+                  </p>
+                  {matchAttrs.markings && matchAttrs.markings.length > 3 && (
+                    <p className="mt-1">Markings: {matchAttrs.markings}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Results */}
+              {matchSearched && matchResults && matchResults.length === 0 && (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  No strong matches in active Found posts. Consider posting a Lost Alert so the community can help.
+                </div>
+              )}
+
+              {matchResults && matchResults.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {matchResults.length} potential match{matchResults.length === 1 ? "" : "es"}
+                  </h4>
+                  {matchResults.map((m: any, idx: number) => (
+                    <Card key={m.id} className="overflow-hidden">
+                      <div className="flex gap-3 p-3">
+                        {m.cover_photo_url ? (
+                          <img
+                            src={m.cover_photo_url}
+                            alt="Found pet"
+                            className="h-24 w-24 rounded-xl object-cover shrink-0 cursor-pointer"
+                            onClick={() => navigate(`/found-dog/${m.id}`)}
+                          />
+                        ) : (
+                          <div className="h-24 w-24 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                            <PawPrint className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded">
+                              #{idx + 1}
+                            </span>
+                            <span className="text-xs font-semibold text-success">
+                              {m.score}% match
+                            </span>
+                          </div>
+                          {m.location_label && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{m.location_label}</span>
+                            </div>
+                          )}
+                          {m.reasons && m.reasons.length > 0 && (
+                            <p className="text-xs text-foreground line-clamp-2">
+                              {m.reasons.slice(0, 3).join(" · ")}
+                            </p>
+                          )}
+                          <div className="flex gap-1.5 pt-1">
+                            <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => navigate(`/found-dog/${m.id}`)}>
+                              <ExternalLink className="h-3 w-3 mr-1" />View
+                            </Button>
+                            <Button size="sm" className="h-7 text-xs px-2" onClick={() => navigate(`/messages/new/${m.reporter_id}`)}>
+                              <MessageCircle className="h-3 w-3 mr-1" />Message
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : createType === "found" ? (
           <FoundDogForm petType={foundPetType} onPetTypeChange={setFoundPetType} photoUrls={foundPhotoUrls} onPhotosChange={setFoundPhotoUrls} description={foundDescription} onDescriptionChange={setFoundDescription} location={foundLocation} date={foundDate} onDateChange={setFoundDate} time={foundTime} onTimeChange={setFoundTime} finderObservations={finderObservations} onFinderObservationsChange={setFinderObservations} submitting={submitting} onSubmit={handleCreateFoundDog} />
         ) : createType === "donation" ? (
           <Card>
