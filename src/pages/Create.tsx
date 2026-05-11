@@ -426,7 +426,7 @@ export default function CreatePage() {
       <div className="p-4">
         {/* Found Dog form */}
         {createType === "found" ? (
-          <FoundDogForm photoUrls={foundPhotoUrls} onPhotosChange={setFoundPhotoUrls} description={foundDescription} onDescriptionChange={setFoundDescription} location={foundLocation} date={foundDate} onDateChange={setFoundDate} time={foundTime} onTimeChange={setFoundTime} finderObservations={finderObservations} onFinderObservationsChange={setFinderObservations} submitting={submitting} onSubmit={handleCreateFoundDog} />
+          <FoundDogForm petType={foundPetType} onPetTypeChange={setFoundPetType} photoUrls={foundPhotoUrls} onPhotosChange={setFoundPhotoUrls} description={foundDescription} onDescriptionChange={setFoundDescription} location={foundLocation} date={foundDate} onDateChange={setFoundDate} time={foundTime} onTimeChange={setFoundTime} finderObservations={finderObservations} onFinderObservationsChange={setFinderObservations} submitting={submitting} onSubmit={handleCreateFoundDog} />
         ) : createType === "donation" ? (
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5 text-primary" />Donation Campaign</CardTitle><CardDescription>Create a fundraiser for a pet in need</CardDescription></CardHeader>
