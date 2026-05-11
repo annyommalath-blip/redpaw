@@ -1,14 +1,15 @@
-import { Dog } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { getPetEmoji } from "@/lib/petTypes";
 
 interface DogCardProps {
   name: string;
   breed: string;
   photoUrl?: string;
   isLost: boolean;
+  petType?: string;
   onLostToggle: (isLost: boolean) => void;
   onClick?: () => void;
 }
