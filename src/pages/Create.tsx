@@ -29,7 +29,7 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { FoundDogPhotoUploader } from "@/components/community/FoundDogPhotoUploader";
 import { FoundDogForm, FinderObservations } from "@/components/community/FoundDogForm";
 
-type CreateType = "log" | "lost" | "care" | "meds" | "found" | "donation" | "adoption" | "spot" | null;
+type CreateType = "log" | "lost" | "care" | "meds" | "found" | "donation" | "adoption" | "spot" | "match" | null;
 
 interface DogData {
   id: string;
