@@ -88,7 +88,7 @@ export default function DogDetailPage() {
     try {
       const { data, error } = await supabase
         .from("dogs")
-        .select("*")
+        .select("id,owner_id,name,breed,age,weight,photo_url,notes,is_lost,created_at,updated_at,date_of_birth,photo_urls,weight_unit,coat_shade,markings,collar_description,visible_conditions,behavior_description,unique_traits,pet_type")
         .eq("id", dogId)
         .maybeSingle();
 
@@ -99,15 +99,19 @@ export default function DogDetailPage() {
         return;
       }
 
-      // Clear verification_secret from general query data (it may leak via RLS)
-      const { verification_secret: _removed, ...safeDogData } = data;
-      setDog({ ...safeDogData, verification_secret: null } as DogData);
-
-      // Fetch verification_secret securely via RPC (owner-only)
+      // Owner-only protected fields fetched via SECURITY DEFINER RPCs
+      let microchip: string | null = null;
+      let secret: string | null = null;
       if (data.owner_id === user.id) {
-        const { data: secret } = await supabase.rpc("get_dog_verification_secret", { p_dog_id: dogId });
-        setVerificationSecret(secret || null);
+        const [{ data: m }, { data: s }] = await Promise.all([
+          supabase.rpc("get_dog_microchip", { p_dog_id: dogId }),
+          supabase.rpc("get_dog_verification_secret", { p_dog_id: dogId }),
+        ]);
+        microchip = (m as any) || null;
+        secret = (s as any) || null;
+        setVerificationSecret(secret);
       }
+      setDog({ ...data, microchip_no: microchip, verification_secret: secret } as DogData);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
       navigate("/");

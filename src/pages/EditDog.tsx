@@ -89,7 +89,7 @@ export default function EditDogPage() {
     try {
       const { data, error } = await supabase
         .from("dogs")
-        .select("*")
+        .select("id,owner_id,name,breed,age,weight,photo_url,notes,is_lost,created_at,updated_at,date_of_birth,photo_urls,weight_unit,coat_shade,markings,collar_description,visible_conditions,behavior_description,unique_traits,pet_type")
         .eq("id", dogId)
         .eq("owner_id", user?.id)
         .maybeSingle();
@@ -107,14 +107,20 @@ export default function EditDogPage() {
       setDateOfBirth(data.date_of_birth ? new Date(data.date_of_birth) : undefined);
       setWeight(data.weight || "");
       setWeightUnit(data.weight_unit || "lbs");
-      setMicrochipNo(data.microchip_no || "");
       setNotes(data.notes || "");
       setProfilePhoto(data.photo_url);
       setAdditionalPhotos(data.photo_urls || []);
       setCoatShade(data.coat_shade || "");
       setCollarDescription(data.collar_description || "");
       setMarkings(data.markings ? data.markings.join(", ") : "");
-      setVerificationSecret(data.verification_secret || "");
+
+      // Owner-only protected fields via SECURITY DEFINER RPCs
+      const [{ data: micro }, { data: secret }] = await Promise.all([
+        supabase.rpc("get_dog_microchip", { p_dog_id: dogId }),
+        supabase.rpc("get_dog_verification_secret", { p_dog_id: dogId }),
+      ]);
+      setMicrochipNo((micro as any) || "");
+      setVerificationSecret((secret as any) || "");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
       navigate("/profile");
