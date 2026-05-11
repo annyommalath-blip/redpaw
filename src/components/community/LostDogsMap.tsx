@@ -31,27 +31,23 @@ interface LostDogsMapProps {
   viewerLongitude: number | null;
 }
 
-const lostPinSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
-  <defs>
-    <filter id="shadow-l" x="-25%" y="-10%" width="150%" height="150%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#00000040"/>
-    </filter>
-  </defs>
-  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="#ef4444" filter="url(#shadow-l)"/>
-  <circle cx="16" cy="15" r="7.5" fill="white"/>
-  <text x="16" y="19.5" text-anchor="middle" font-size="10" fill="#ef4444">🐾</text>
-</svg>`;
+// Use CSS drop-shadow (via wrapper div) instead of SVG <filter> — duplicate
+// filter IDs across many markers caused the teardrop tip to disappear on zoom
+// in some browsers.
+const pinWrap = (svgInner: string) =>
+  `<div style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.28));width:32px;height:44px;line-height:0;">${svgInner}</div>`;
 
-const foundPinSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
-  <defs>
-    <filter id="shadow-f" x="-25%" y="-10%" width="150%" height="150%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#00000040"/>
-    </filter>
-  </defs>
-  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="#22c55e" filter="url(#shadow-f)"/>
+const lostPinSvg = pinWrap(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
+  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="#ef4444"/>
   <circle cx="16" cy="15" r="7.5" fill="white"/>
-  <text x="16" y="19.5" text-anchor="middle" font-size="10" fill="#22c55e">🐶</text>
-</svg>`;
+  <text x="16" y="19" text-anchor="middle" font-size="11" fill="#ef4444" font-family="system-ui,Apple Color Emoji,Segoe UI Emoji">🐾</text>
+</svg>`);
+
+const foundPinSvg = pinWrap(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
+  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="#22c55e"/>
+  <circle cx="16" cy="15" r="7.5" fill="white"/>
+  <text x="16" y="19" text-anchor="middle" font-size="11" fill="#22c55e" font-family="system-ui,Apple Color Emoji,Segoe UI Emoji">🐶</text>
+</svg>`);
 
 const viewerDotSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
   <circle cx="11" cy="11" r="10" fill="#3b82f6" fill-opacity="0.18"/>
@@ -86,12 +82,22 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
       center: [centerLat, centerLng],
       zoom: initialZoom,
       zoomControl: true,
+      preferCanvas: true,
+      fadeAnimation: false,
+      zoomAnimation: true,
+      markerZoomAnimation: true,
+      wheelDebounceTime: 40,
+      wheelPxPerZoomLevel: 120,
+      inertia: true,
     });
 
     L.tileLayer(TILE_URL, {
       attribution: TILE_ATTRIBUTION,
       maxZoom: 20,
       subdomains: "abcd",
+      updateWhenIdle: true,
+      updateWhenZooming: false,
+      keepBuffer: 4,
     }).addTo(map);
 
     // Viewer location pulse marker
