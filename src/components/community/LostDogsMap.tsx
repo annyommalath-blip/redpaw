@@ -1,14 +1,16 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog } from "lucide-react";
+import { PawPrint } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { getPetEmoji, getPetTypeLabel } from "@/lib/petTypes";
 
 interface LostDogMarker {
   id: string;
   dogName: string;
   breed: string | null;
   photoUrl: string | null;
+  petType?: string | null;
   latitude: number;
   longitude: number;
   locationLabel: string | null;
