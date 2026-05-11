@@ -753,7 +753,7 @@ export default function ProfilePage() {
           <EmptyState
             icon={<User className="h-8 w-8" />}
             title="Sign in to view profile"
-            description="Create an account to manage your dogs and profile"
+            description="Create an account to manage your pets and profile"
           />
         </div>
         <GuestAuthPrompt open={true} onOpenChange={(open) => {

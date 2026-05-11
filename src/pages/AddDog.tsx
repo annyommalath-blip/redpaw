@@ -267,7 +267,7 @@ export default function AddDogPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="collar" className="text-xs text-muted-foreground">
-                    What does {name || "your dog"} usually wear? (collar, harness, tags)
+                    What does {name || "your pet"} usually wear? (collar, harness, tags)
                   </Label>
                   <Input
                     id="collar"

@@ -269,7 +269,7 @@ export function ReportSightingDialog({
             </Label>
             <Textarea
               id="sighting-message"
-              placeholder="e.g., Saw a dog matching the description running towards the park around 2pm..."
+              placeholder="e.g., Saw a pet matching the description running towards the park around 2pm..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               disabled={isSubmitting}

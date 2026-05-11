@@ -172,7 +172,7 @@ export default function AddProductPage() {
 
         <div>
           <Label>Title *</Label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Handmade dog collar" />
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Handmade pet collar" />
         </div>
 
         <div>

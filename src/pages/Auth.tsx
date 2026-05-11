@@ -154,7 +154,7 @@ export default function AuthPage() {
             <form onSubmit={handleSignIn}>
               <GlassCardHeader className="pb-2">
                 <GlassCardTitle className="text-xl">Welcome back</GlassCardTitle>
-                <GlassCardDescription>Sign in to access your dog's profile</GlassCardDescription>
+                <GlassCardDescription>Sign in to access your pet's profile</GlassCardDescription>
               </GlassCardHeader>
               <GlassCardContent className="space-y-4">
                 <div className="space-y-2">
@@ -209,7 +209,7 @@ export default function AuthPage() {
             <form onSubmit={handleSignUp}>
               <GlassCardHeader className="pb-2">
                 <GlassCardTitle className="text-xl">Create account</GlassCardTitle>
-                <GlassCardDescription>Join RedPaw to manage your dog's health & safety</GlassCardDescription>
+                <GlassCardDescription>Join RedPaw to manage your pet's health & safety</GlassCardDescription>
               </GlassCardHeader>
               <GlassCardContent className="space-y-4">
                 <div className="space-y-2">

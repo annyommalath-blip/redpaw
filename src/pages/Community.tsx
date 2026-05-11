@@ -480,8 +480,8 @@ export default function CommunityPage() {
             ) : (
               <EmptyState
                 icon={<Dog className="h-10 w-10 text-muted-foreground" />}
-                title="No lost or found dogs"
-                description="Great news! There are no lost dogs in your area right now."
+                title="No lost or found pets"
+                description="Great news! There are no lost pets in your area right now."
               />
             )}
           </TabsContent>

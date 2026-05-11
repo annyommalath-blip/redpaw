@@ -96,7 +96,7 @@ export default function EditDogPage() {
 
       if (error) throw error;
       if (!data) {
-        toast({ variant: "destructive", title: "Dog not found" });
+        toast({ variant: "destructive", title: "Pet not found" });
         navigate("/profile");
         return;
       }
@@ -127,7 +127,7 @@ export default function EditDogPage() {
     e.preventDefault();
 
     if (!name.trim()) {
-      toast({ variant: "destructive", title: "Please enter your dog's name" });
+      toast({ variant: "destructive", title: "Please enter your pet's name" });
       return;
     }
 
@@ -156,7 +156,7 @@ export default function EditDogPage() {
 
       if (error) throw error;
 
-      toast({ title: "Dog updated! 🐕" });
+      toast({ title: "Pet updated! 🐾" });
       navigate("/profile");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -174,7 +174,7 @@ export default function EditDogPage() {
 
       if (error) throw error;
 
-      toast({ title: "Dog removed", description: "Profile deleted successfully" });
+      toast({ title: "Pet removed", description: "Profile deleted successfully" });
       navigate("/profile");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -184,7 +184,7 @@ export default function EditDogPage() {
   if (loading) {
     return (
       <MobileLayout>
-        <PageHeader title="Edit Dog" showBack />
+        <PageHeader title="Edit Pet" showBack />
         <div className="p-4 flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -227,7 +227,7 @@ export default function EditDogPage() {
                 <Label htmlFor="name">Name *</Label>
                 <Input
                   id="name"
-                  placeholder="What's your dog's name?"
+                  placeholder="What's your pet's name?"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -365,7 +365,7 @@ export default function EditDogPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="collar" className="text-xs text-muted-foreground">
-                    What does {name || "your dog"} usually wear? (collar, harness, tags)
+                    What does {name || "your pet"} usually wear? (collar, harness, tags)
                   </Label>
                   <Input
                     id="collar"

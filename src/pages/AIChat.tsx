@@ -137,7 +137,7 @@ export default function AIChatPage() {
   const welcomeMessage: Message = {
     id: "welcome",
     role: "assistant",
-    content: "Hi there! 🐕 I'm RedPaw AI. I can help you with:\n\n• **Your dogs & health records** - vaccines, medications, expiration alerts\n• **Care requests** - sitter jobs, scheduling\n• **Lost & Found** - alerts, sightings\n• **📸 Photo Match** - Upload a photo of your dog and I'll search Found Dog posts for matches!\n• **General pet advice**\n\nTry asking me: \"When is my dog's rabies vaccine due?\" or upload a photo and say \"Help me find my dog\"",
+    content: "Hi there! 🐾 I'm RedPaw AI. I can help you with:\n\n• **Your pets & health records** - vaccines, medications, expiration alerts\n• **Care requests** - sitter jobs, scheduling\n• **Lost & Found** - alerts, sightings\n• **📸 Photo Match** - Upload a photo of your pet and I'll search Found Pet posts for matches!\n• **General pet advice**\n\nTry asking me: \"When is my pet's rabies vaccine due?\" or upload a photo and say \"Help me find my pet\"",
     timestamp: new Date(),
   };
 
@@ -407,7 +407,7 @@ export default function AIChatPage() {
       if (newMessage.trim()) {
         parts.push({ type: "text", text: newMessage.trim() });
       } else {
-        parts.push({ type: "text", text: "Help me find this dog. Search found dog posts for matches." });
+        parts.push({ type: "text", text: "Help me find this pet. Search found pet posts for matches." });
       }
       for (const imgUrl of attachedImages) {
         parts.push({ type: "image_url", image_url: { url: imgUrl } });
