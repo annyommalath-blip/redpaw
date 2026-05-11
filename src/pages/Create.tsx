@@ -432,6 +432,25 @@ export default function CreatePage() {
       <MobileLayout>
         <PageHeader title={t("create.title")} subtitle={t("create.subtitle")} />
         <div className="p-4 space-y-4">
+          {/* AI Match - featured at top */}
+          <Card
+            className="cursor-pointer transition-all border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent hover:border-primary hover:shadow-lg"
+            onClick={() => setCreateType("match")}
+          >
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="h-12 w-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                <Sparkles className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-foreground">AI Match</h3>
+                  <span className="text-[10px] font-bold uppercase tracking-wide bg-primary text-primary-foreground px-1.5 py-0.5 rounded">New</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Upload your pet's photo — AI will scan all Found posts to find a match</p>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => setCreateType("log")}>
             <CardContent className="flex items-center gap-4 p-4">
               <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center"><PlusCircle className="h-6 w-6 text-success" /></div>
