@@ -102,6 +102,7 @@ export default function EditDogPage() {
       }
 
       setName(data.name);
+      setPetType((data as any).pet_type || "dog");
       setBreed(data.breed || "");
       setDateOfBirth(data.date_of_birth ? new Date(data.date_of_birth) : undefined);
       setWeight(data.weight || "");
