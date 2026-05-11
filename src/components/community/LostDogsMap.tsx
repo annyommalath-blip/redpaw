@@ -39,17 +39,24 @@ interface LostDogsMapProps {
 const pinWrap = (svgInner: string) =>
   `<div style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.28));width:32px;height:44px;line-height:0;">${svgInner}</div>`;
 
-const lostPinSvg = pinWrap(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
-  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="#ef4444"/>
-  <circle cx="16" cy="15" r="7.5" fill="white"/>
-  <text x="16" y="19" text-anchor="middle" font-size="11" fill="#ef4444" font-family="system-ui,Apple Color Emoji,Segoe UI Emoji">🐾</text>
-</svg>`);
+/** Build a teardrop pin with a per-pet emoji glyph in the white center. */
+function buildPinSvg(color: string, emoji: string): string {
+  return pinWrap(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
+    <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="${color}"/>
+    <circle cx="16" cy="15" r="7.5" fill="white"/>
+    <text x="16" y="19" text-anchor="middle" font-size="11" fill="${color}" font-family="system-ui,Apple Color Emoji,Segoe UI Emoji">${emoji}</text>
+  </svg>`);
+}
 
-const foundPinSvg = pinWrap(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
-  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="#22c55e"/>
-  <circle cx="16" cy="15" r="7.5" fill="white"/>
-  <text x="16" y="19" text-anchor="middle" font-size="11" fill="#22c55e" font-family="system-ui,Apple Color Emoji,Segoe UI Emoji">🐶</text>
-</svg>`);
+function makeIcon(color: string, emoji: string): L.DivIcon {
+  return L.divIcon({
+    html: buildPinSvg(color, emoji),
+    className: "",
+    iconSize: [32, 44],
+    iconAnchor: [16, 44],
+    popupAnchor: [0, -46],
+  });
+}
 
 const viewerDotSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
   <circle cx="11" cy="11" r="10" fill="#3b82f6" fill-opacity="0.18"/>
@@ -58,8 +65,6 @@ const viewerDotSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height=
   <circle cx="9.5" cy="9.5" r="1.2" fill="white" fill-opacity="0.7"/>
 </svg>`;
 
-const lostIcon = L.divIcon({ html: lostPinSvg, className: "", iconSize: [32, 44], iconAnchor: [16, 44], popupAnchor: [0, -46] });
-const foundIcon = L.divIcon({ html: foundPinSvg, className: "", iconSize: [32, 44], iconAnchor: [16, 44], popupAnchor: [0, -46] });
 const viewerIcon = L.divIcon({ html: viewerDotSvg, className: "", iconSize: [22, 22], iconAnchor: [11, 11] });
 
 /** CartoDB Positron — clean light-gray tiles matching the desired style */
