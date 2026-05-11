@@ -51,7 +51,7 @@ export function DogCard({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Dog className="h-10 w-10 text-muted-foreground" />
+              <span className="text-3xl" role="img" aria-label={petType || "pet"}>{getPetEmoji(petType)}</span>
             )}
             {isLost && (
               <div className="absolute inset-0 bg-lost/20 flex items-center justify-center backdrop-blur-[1px]">
