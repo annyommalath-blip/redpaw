@@ -24,6 +24,7 @@ interface FoundDogMarker {
   latitude: number;
   longitude: number;
   foundAt: Date;
+  petType?: string | null;
 }
 
 interface LostDogsMapProps {
