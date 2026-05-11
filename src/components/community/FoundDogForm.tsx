@@ -73,6 +73,8 @@ interface FoundDogFormProps {
 }
 
 export function FoundDogForm({
+  petType,
+  onPetTypeChange,
   photoUrls,
   onPhotosChange,
   description,
@@ -94,14 +96,17 @@ export function FoundDogForm({
     <Card className="border-success">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-success">
-          <Dog className="h-5 w-5" />
-          {t("found.reportFound")}
+          <PawPrint className="h-5 w-5" />
+          Report Found Pet
         </CardTitle>
         <CardDescription>
-          {t("found.helpLostDogFindOwner")}
+          Help reunite this pet with their owner
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Pet type */}
+        <PetTypeSelector value={petType} onChange={onPetTypeChange} required />
+
         {/* Photo Upload - Required */}
         <div className="space-y-2">
           <Label>{t("found.photos")} *</Label>
