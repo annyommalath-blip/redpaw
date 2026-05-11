@@ -43,6 +43,8 @@ export interface FinderObservations {
 }
 
 interface FoundDogFormProps {
+  petType: string;
+  onPetTypeChange: (value: string) => void;
   photoUrls: string[];
   onPhotosChange: (urls: string[]) => void;
   description: string;
