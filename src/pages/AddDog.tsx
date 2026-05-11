@@ -28,6 +28,7 @@ export default function AddDogPage() {
   const { user } = useAuth();
 
   const [name, setName] = useState("");
+  const [petType, setPetType] = useState<string>("dog");
   const [breed, setBreed] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [weight, setWeight] = useState("");
