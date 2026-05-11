@@ -219,6 +219,9 @@ export default function EditDogPage() {
                 )}
               </div>
 
+              {/* Pet type */}
+              <PetTypeSelector value={petType} onChange={setPetType} required />
+
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
