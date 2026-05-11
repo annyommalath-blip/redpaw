@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dog, Loader2, Calendar, Shield } from "lucide-react";
+import { PawPrint, Loader2, Calendar, Shield } from "lucide-react";
 import { format } from "date-fns";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
