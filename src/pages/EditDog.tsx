@@ -55,6 +55,7 @@ export default function EditDogPage() {
 
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
+  const [petType, setPetType] = useState<string>("dog");
   const [breed, setBreed] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [weight, setWeight] = useState("");
