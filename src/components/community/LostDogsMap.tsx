@@ -153,8 +153,8 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
       const popupHtml = `
         <div style="min-width:170px;font-family:system-ui,sans-serif;padding:2px;">
           ${imgHtml}
-          <div style="font-weight:700;font-size:14px;color:#111;">Found Dog</div>
-          <span style="display:inline-block;background:#dcfce7;color:#22c55e;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-bottom:5px;">🐶 FOUND</span>
+          <div style="font-weight:700;font-size:14px;color:#111;">Found ${getPetTypeLabel(found.petType)}</div>
+          <span style="display:inline-block;background:#dcfce7;color:#22c55e;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-bottom:5px;">${getPetEmoji(found.petType)} FOUND</span>
           ${found.locationLabel ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:1px;">📍 ${found.locationLabel}</div>` : ""}
           <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">🕐 ${timeAgo}</div>
           <a href="#" data-id="${found.id}" data-type="found" style="display:block;text-align:center;background:#22c55e;color:white;padding:6px 12px;border-radius:8px;font-size:12px;text-decoration:none;font-weight:600;">View Report →</a>
