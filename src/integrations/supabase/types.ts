@@ -1756,8 +1756,17 @@ export type Database = {
         Returns: undefined
       }
       generate_participant_key: { Args: { p_ids: string[] }; Returns: string }
+      get_adoption_contact_phone: {
+        Args: { p_post_id: string }
+        Returns: string
+      }
+      get_dog_microchip: { Args: { p_dog_id: string }; Returns: string }
       get_dog_verification_secret: {
         Args: { p_dog_id: string }
+        Returns: string
+      }
+      get_donation_contact_phone: {
+        Args: { p_campaign_id: string }
         Returns: string
       }
       get_mention_suggestions: {
@@ -1795,6 +1804,20 @@ export type Database = {
           display_name: string
           user_id: string
           username: string
+        }[]
+      }
+      get_public_seller_profile: {
+        Args: { p_user_id: string }
+        Returns: {
+          contact_info: string
+          created_at: string
+          id: string
+          is_active: boolean
+          seller_status: Database["public"]["Enums"]["seller_status"]
+          store_description: string
+          store_logo_url: string
+          store_name: string
+          user_id: string
         }[]
       }
       get_share_suggestions: {
