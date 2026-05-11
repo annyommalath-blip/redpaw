@@ -313,8 +313,8 @@ export default function AddDogPage() {
                   </>
                 ) : (
                   <>
-                    <Dog className="h-4 w-4 mr-2" />
-                    Add Dog
+                    <PawPrint className="h-4 w-4 mr-2" />
+                    Add Pet
                   </>
                 )}
               </Button>
