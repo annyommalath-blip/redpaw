@@ -144,7 +144,7 @@ export default function MessagesPage() {
         <EmptyState
           icon={<MessageCircle className="h-8 w-8" />}
           title="Sign in to message"
-          description="Create an account to chat with other dog parents"
+          description="Create an account to chat with other pet parents"
         />
       </MobileLayout>
     );

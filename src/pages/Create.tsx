@@ -475,7 +475,7 @@ export default function CreatePage() {
                 <Label>Pet Type</Label>
                 <Select value={adoptPetType} onValueChange={setAdoptPetType}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="dog">🐕 Dog</SelectItem><SelectItem value="cat">🐈 Cat</SelectItem><SelectItem value="other">🐾 Other</SelectItem></SelectContent>
+                  <SelectContent><SelectItem value="dog">🐶 Dog</SelectItem><SelectItem value="cat">🐱 Cat</SelectItem><SelectItem value="bird">🦜 Bird</SelectItem><SelectItem value="rabbit">🐰 Rabbit</SelectItem><SelectItem value="reptile">🦎 Reptile</SelectItem><SelectItem value="fish">🐠 Fish</SelectItem><SelectItem value="other">🐾 Other</SelectItem></SelectContent>
                 </Select>
               </div>
               <div className="space-y-2"><Label>Breed {t("common.optional")}</Label><Input placeholder="e.g., Golden Retriever" value={adoptBreed} onChange={(e) => setAdoptBreed(e.target.value)} /></div>

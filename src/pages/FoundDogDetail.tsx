@@ -231,7 +231,7 @@ export default function FoundDogDetailPage() {
 
       toast({
         title: "✅ Marked as Reunited!",
-        description: "Great news! Glad the dog found their owner.",
+        description: "Great news! Glad the pet found their owner.",
       });
 
       navigate("/community?tab=lost");
@@ -473,7 +473,7 @@ export default function FoundDogDetailPage() {
             {isReunited && (
               <div className="mt-4 flex items-center justify-center gap-2 text-sm text-success bg-success/10 rounded-lg py-3">
                 <CheckCircle className="h-4 w-4" />
-                <span>This dog has been reunited with their owner!</span>
+                <span>This pet has been reunited with their owner!</span>
               </div>
             )}
           </CardContent>
@@ -491,7 +491,7 @@ export default function FoundDogDetailPage() {
       <Dialog open={claimDialogOpen} onOpenChange={setClaimDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Is this your dog?</DialogTitle>
+            <DialogTitle>Is this your pet?</DialogTitle>
             <DialogDescription>
               Select your dog to send a message to the reporter with your dog's information.
             </DialogDescription>
@@ -511,7 +511,7 @@ export default function FoundDogDetailPage() {
             <div className="space-y-4">
               <Select value={selectedDogId} onValueChange={setSelectedDogId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select your dog" />
+                  <SelectValue placeholder="Select your pet" />
                 </SelectTrigger>
                 <SelectContent>
                   {userDogs.map((dog) => (

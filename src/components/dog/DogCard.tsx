@@ -1,14 +1,15 @@
-import { Dog } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { getPetEmoji } from "@/lib/petTypes";
 
 interface DogCardProps {
   name: string;
   breed: string;
   photoUrl?: string;
   isLost: boolean;
+  petType?: string;
   onLostToggle: (isLost: boolean) => void;
   onClick?: () => void;
 }
@@ -18,6 +19,7 @@ export function DogCard({
   breed,
   photoUrl,
   isLost,
+  petType,
   onLostToggle,
   onClick,
 }: DogCardProps) {
@@ -49,7 +51,7 @@ export function DogCard({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Dog className="h-10 w-10 text-muted-foreground" />
+              <span className="text-3xl" role="img" aria-label={petType || "pet"}>{getPetEmoji(petType)}</span>
             )}
             {isLost && (
               <div className="absolute inset-0 bg-lost/20 flex items-center justify-center backdrop-blur-[1px]">

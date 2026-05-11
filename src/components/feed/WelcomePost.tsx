@@ -39,7 +39,7 @@ export default function WelcomePost() {
       {/* Footer */}
       <div className="px-3 py-2.5">
         <p className="text-xs text-muted-foreground text-center">
-          📸 Add your dog · 🏠 Find a sitter · 🐕 Join the pack
+          📸 Add your pet · 🏠 Find a sitter · 🐾 Join the pack
         </p>
       </div>
     </GlassCard>
