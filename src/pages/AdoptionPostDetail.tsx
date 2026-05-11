@@ -34,8 +34,17 @@ export default function AdoptionPostDetail() {
   const fetchPost = async () => {
     if (!id) return;
     setLoading(true);
-    const { data } = await supabase.from("adoption_posts").select("*").eq("id", id).single();
-    setPost(data);
+    const { data } = await supabase
+      .from("adoption_posts")
+      .select("id,owner_id,pet_name,pet_type,breed,age,size,is_spayed_neutered,is_vaccinated,temperament,reason,adoption_fee,adoption_fee_currency,location_label,latitude,longitude,photo_urls,status,created_at,updated_at")
+      .eq("id", id)
+      .single();
+    let postWithPhone: any = data;
+    if (data && user && data.owner_id === user.id) {
+      const { data: phone } = await supabase.rpc("get_adoption_contact_phone", { p_post_id: id });
+      postWithPhone = { ...data, contact_phone: phone || null };
+    }
+    setPost(postWithPhone);
     setLoading(false);
   };
 

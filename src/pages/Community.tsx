@@ -87,8 +87,8 @@ export default function CommunityPage() {
         supabase.from("lost_alerts").select(`*, dogs (name, breed, photo_url, age, weight, weight_unit, date_of_birth, pet_type)`).eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("found_dogs").select("*").eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("care_requests").select(`*, dogs (name, breed, photo_url)`).eq("status", "open").order("created_at", { ascending: false }),
-        supabase.from("donation_campaigns").select("*").eq("status", "active").order("created_at", { ascending: false }),
-        supabase.from("adoption_posts").select("*").in("status", ["available", "pending"]).order("created_at", { ascending: false }),
+        supabase.from("donation_campaigns").select("id,owner_id,title,caption,about,goal_amount,raised_amount,category,location_label,latitude,longitude,photo_urls,status,created_at,updated_at").eq("status", "active").order("created_at", { ascending: false }),
+        supabase.from("adoption_posts").select("id,owner_id,pet_name,pet_type,breed,age,size,is_spayed_neutered,is_vaccinated,temperament,reason,adoption_fee,adoption_fee_currency,location_label,latitude,longitude,photo_urls,status,created_at,updated_at").in("status", ["available", "pending"]).order("created_at", { ascending: false }),
       ]);
 
       setLostAlerts((alertsRes.data as any) || []);
