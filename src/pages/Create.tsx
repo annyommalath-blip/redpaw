@@ -326,16 +326,24 @@ export default function CreatePage() {
     if (foundPhotoUrls.length === 0) { toast({ variant: "destructive", title: t("found.uploadAtLeastOnePhoto") }); return; }
     if (!foundLocation.locationLabel) { toast({ variant: "destructive", title: t("found.setFoundLocation") }); return; }
     if (!foundDate || !foundTime) { toast({ variant: "destructive", title: t("found.setWhenFound") }); return; }
+    if (isGuest) { setShowAuthPrompt(true); return; }
     const [hours, minutes] = foundTime.split(":").map(Number);
     const foundAt = new Date(foundDate);
     foundAt.setHours(hours, minutes, 0, 0);
     setSubmitting(true);
     try {
-      // Filter out empty observation values
+      // Read live auth user at submit time so a stale React state never causes RLS failures.
+      const { data: authData, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !authData.user) {
+        setShowAuthPrompt(true);
+        return;
+      }
+      const reporterId = authData.user.id;
+
       const observations = Object.fromEntries(
         Object.entries(finderObservations).filter(([_, v]) => v !== "")
       );
-      const { error } = await supabase.from("found_dogs").insert({ reporter_id: user!.id, pet_type: foundPetType.trim() || "dog", photo_urls: foundPhotoUrls, description: foundDescription.trim() || null, location_label: foundLocation.locationLabel, latitude: foundLocation.latitude, longitude: foundLocation.longitude, location_source: foundLocation.locationSource, found_at: foundAt.toISOString(), status: "active", finder_observations: Object.keys(observations).length > 0 ? observations : {} });
+      const { error } = await supabase.from("found_dogs").insert({ reporter_id: reporterId, pet_type: foundPetType.trim() || "dog", photo_urls: foundPhotoUrls, description: foundDescription.trim() || null, location_label: foundLocation.locationLabel, latitude: foundLocation.latitude, longitude: foundLocation.longitude, location_source: foundLocation.locationSource, found_at: foundAt.toISOString(), status: "active", finder_observations: Object.keys(observations).length > 0 ? observations : {} });
       if (error) throw error;
       toast({ title: t("found.foundDogReported"), description: t("found.thankYouHelping") });
       navigate("/community?tab=lost");
