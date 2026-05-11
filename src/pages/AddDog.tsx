@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BreedSelector } from "@/components/dog/BreedSelector";
 import { DogPhotoUploader } from "@/components/dog/DogPhotoUploader";
 import { ProfilePhotoUploader } from "@/components/dog/ProfilePhotoUploader";
+import { PetTypeSelector } from "@/components/pet/PetTypeSelector";
 import { calculateAge } from "@/lib/ageCalculator";
 import { cn } from "@/lib/utils";
 
