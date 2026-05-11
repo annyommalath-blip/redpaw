@@ -19,6 +19,7 @@ export function DogCard({
   breed,
   photoUrl,
   isLost,
+  petType,
   onLostToggle,
   onClick,
 }: DogCardProps) {
