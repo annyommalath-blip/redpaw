@@ -60,7 +60,7 @@ interface UserDog {
   coat_shade: string | null;
   collar_description: string | null;
   markings: string[] | null;
-  verification_secret: string | null;
+  verification_secret?: string | null;
   notes: string | null;
 }
 
