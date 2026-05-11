@@ -412,6 +412,7 @@ export default function CommunityPage() {
                     dogName: a.dogs?.name || "Unknown",
                     breed: a.dogs?.breed || null,
                     photoUrl: a.photo_url || (a.dogs as any)?.photo_url || null,
+                    petType: (a.dogs as any)?.pet_type || "dog",
                     latitude: a.latitude!,
                     longitude: a.longitude!,
                     locationLabel: a.location_label,
@@ -426,6 +427,7 @@ export default function CommunityPage() {
                     latitude: f.latitude!,
                     longitude: f.longitude!,
                     foundAt: new Date(f.found_at),
+                    petType: (f as any).pet_type || "dog",
                   }))}
                 viewerLatitude={viewerLocation.latitude}
                 viewerLongitude={viewerLocation.longitude}
