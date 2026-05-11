@@ -230,8 +230,8 @@ export function LostDogsMap({ lostAlerts, foundDogs, viewerLatitude, viewerLongi
       {/* No data overlay */}
       {!hasData && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 z-[999]">
-          <Dog className="h-10 w-10 text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground font-medium">No lost or found dogs nearby</p>
+          <PawPrint className="h-10 w-10 text-muted-foreground mb-2" />
+          <p className="text-sm text-muted-foreground font-medium">No lost or found pets nearby</p>
         </div>
       )}
     </div>
