@@ -192,16 +192,16 @@ export default function EditDogPage() {
 
   return (
     <MobileLayout>
-      <PageHeader title="Edit Dog" showBack />
+      <PageHeader title="Edit Pet" showBack />
 
       <div className="p-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Dog className="h-5 w-5 text-primary" />
-              Edit Dog Profile
+              <PawPrint className="h-5 w-5 text-primary" />
+              Edit Pet Profile
             </CardTitle>
-            <CardDescription>Update your dog's information</CardDescription>
+            <CardDescription>Update your pet's information</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
