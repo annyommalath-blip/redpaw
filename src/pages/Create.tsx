@@ -253,7 +253,7 @@ export default function CreatePage() {
       const observations = Object.fromEntries(
         Object.entries(finderObservations).filter(([_, v]) => v !== "")
       );
-      const { error } = await supabase.from("found_dogs").insert({ reporter_id: user!.id, photo_urls: foundPhotoUrls, description: foundDescription.trim() || null, location_label: foundLocation.locationLabel, latitude: foundLocation.latitude, longitude: foundLocation.longitude, location_source: foundLocation.locationSource, found_at: foundAt.toISOString(), status: "active", finder_observations: Object.keys(observations).length > 0 ? observations : {} });
+      const { error } = await supabase.from("found_dogs").insert({ reporter_id: user!.id, pet_type: foundPetType.trim() || "dog", photo_urls: foundPhotoUrls, description: foundDescription.trim() || null, location_label: foundLocation.locationLabel, latitude: foundLocation.latitude, longitude: foundLocation.longitude, location_source: foundLocation.locationSource, found_at: foundAt.toISOString(), status: "active", finder_observations: Object.keys(observations).length > 0 ? observations : {} });
       if (error) throw error;
       toast({ title: t("found.foundDogReported"), description: t("found.thankYouHelping") });
       navigate("/community?tab=lost");
