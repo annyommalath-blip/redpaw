@@ -137,6 +137,7 @@ export default function EditDogPage() {
         .from("dogs")
         .update({
           name: name.trim(),
+          pet_type: petType.trim() || "dog",
           breed: breed.trim() || null,
           date_of_birth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
           age: calculatedAge || null,
