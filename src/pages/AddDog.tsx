@@ -96,16 +96,16 @@ export default function AddDogPage() {
 
   return (
     <MobileLayout>
-      <PageHeader title="Add Dog" showBack />
+      <PageHeader title="Add Pet" showBack />
 
       <div className="p-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Dog className="h-5 w-5 text-primary" />
-              New Dog Profile
+              <PawPrint className="h-5 w-5 text-primary" />
+              New Pet Profile
             </CardTitle>
-            <CardDescription>Add your furry friend to RedPaw</CardDescription>
+            <CardDescription>Add your furry (or feathered, scaly, fluffy) friend to RedPaw</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -121,12 +121,15 @@ export default function AddDogPage() {
                 )}
               </div>
 
+              {/* Pet type */}
+              <PetTypeSelector value={petType} onChange={setPetType} required />
+
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
                 <Input
                   id="name"
-                  placeholder="What's your dog's name?"
+                  placeholder="What's your pet's name?"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
