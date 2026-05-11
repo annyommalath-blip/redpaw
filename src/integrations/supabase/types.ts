@@ -449,6 +449,7 @@ export type Database = {
           name: string
           notes: string | null
           owner_id: string
+          pet_type: string
           photo_url: string | null
           photo_urls: string[] | null
           unique_traits: string[] | null
@@ -473,6 +474,7 @@ export type Database = {
           name: string
           notes?: string | null
           owner_id: string
+          pet_type?: string
           photo_url?: string | null
           photo_urls?: string[] | null
           unique_traits?: string[] | null
@@ -497,6 +499,7 @@ export type Database = {
           name?: string
           notes?: string | null
           owner_id?: string
+          pet_type?: string
           photo_url?: string | null
           photo_urls?: string[] | null
           unique_traits?: string[] | null
@@ -653,6 +656,7 @@ export type Database = {
           location_source: string | null
           longitude: number | null
           matched_alert_id: string | null
+          pet_type: string
           photo_urls: string[]
           reporter_id: string
           status: Database["public"]["Enums"]["found_dog_status"]
@@ -672,6 +676,7 @@ export type Database = {
           location_source?: string | null
           longitude?: number | null
           matched_alert_id?: string | null
+          pet_type?: string
           photo_urls?: string[]
           reporter_id: string
           status?: Database["public"]["Enums"]["found_dog_status"]
@@ -691,6 +696,7 @@ export type Database = {
           location_source?: string | null
           longitude?: number | null
           matched_alert_id?: string | null
+          pet_type?: string
           photo_urls?: string[]
           reporter_id?: string
           status?: Database["public"]["Enums"]["found_dog_status"]
