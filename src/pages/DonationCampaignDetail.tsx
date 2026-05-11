@@ -35,10 +35,19 @@ export default function DonationCampaignDetail() {
     if (!id) return;
     setLoading(true);
     const [{ data: camp }, { data: donos }] = await Promise.all([
-      supabase.from("donation_campaigns").select("*").eq("id", id).single(),
+      supabase
+        .from("donation_campaigns")
+        .select("id,owner_id,title,caption,about,goal_amount,raised_amount,category,location_label,latitude,longitude,photo_urls,status,created_at,updated_at")
+        .eq("id", id)
+        .single(),
       supabase.from("donation_records").select("*").eq("campaign_id", id).eq("is_deleted", false).order("created_at", { ascending: false }),
     ]);
-    setCampaign(camp);
+    let campWithPhone: any = camp;
+    if (camp && user && camp.owner_id === user.id) {
+      const { data: phone } = await supabase.rpc("get_donation_contact_phone", { p_campaign_id: id });
+      campWithPhone = { ...camp, contact_phone: phone || null };
+    }
+    setCampaign(campWithPhone);
     setDonations(donos || []);
     setLoading(false);
   };

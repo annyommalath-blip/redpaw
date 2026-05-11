@@ -26,15 +26,19 @@ export default function StorefrontPage() {
     if (!userId) return;
     (async () => {
       setLoading(true);
+      const isOwn = user?.id === userId;
+      const sellerQuery = isOwn
+        ? supabase.from("seller_profiles").select("*").eq("user_id", userId).maybeSingle()
+        : supabase.rpc("get_public_seller_profile", { p_user_id: userId }).maybeSingle();
       const [sRes, pRes] = await Promise.all([
-        supabase.from("seller_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        sellerQuery,
         supabase.from("products").select("id,title,price,currency,photo_urls,category,stock").eq("seller_id", userId).eq("status", "active").order("created_at", { ascending: false }),
       ]);
       setSeller(sRes.data);
       setProducts((pRes.data as ProductRow[]) || []);
       setLoading(false);
     })();
-  }, [userId]);
+  }, [userId, user?.id]);
 
   if (loading) {
     return (

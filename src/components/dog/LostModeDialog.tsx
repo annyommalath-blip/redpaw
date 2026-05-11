@@ -63,8 +63,13 @@ export function LostModeDialog({
     setCoatShade(dog.coat_shade || "");
     setCollarDescription(dog.collar_description || "");
     setMarkings((dog.markings || []).join(", "));
-    setVerificationSecret(dog.verification_secret || "");
     setExtraNotes(dog.notes || "");
+
+    // Fetch verification_secret via owner-only RPC (column is no longer broadly readable)
+    (async () => {
+      const { data: secret } = await supabase.rpc("get_dog_verification_secret", { p_dog_id: dog.id });
+      setVerificationSecret((secret as any) || dog.verification_secret || "");
+    })();
   }, [open, dog]);
 
   const handlePost = async () => {
