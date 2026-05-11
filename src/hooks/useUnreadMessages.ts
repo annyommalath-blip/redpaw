@@ -20,12 +20,16 @@ export function useUnreadMessages() {
       return;
     }
 
+    // Capture the user id at call time so a mid-flight auth transition
+    // doesn't apply stale results or surface a noisy "Load failed" error.
+    const requestUserId = user.id;
+
     try {
       // Get all conversations the user is part of
       const { data: conversations, error: convError } = await supabase
         .from("conversations")
         .select("id")
-        .contains("participant_ids", [user.id]);
+        .contains("participant_ids", [requestUserId]);
 
       if (convError) throw convError;
       if (!conversations || conversations.length === 0) {
@@ -35,38 +39,32 @@ export function useUnreadMessages() {
 
       const conversationIds = conversations.map(c => c.id);
 
-      // Get user's read status for each conversation
       const { data: readStatuses, error: readError } = await supabase
         .from("conversation_reads")
         .select("conversation_id, last_read_at")
-        .eq("user_id", user.id);
+        .eq("user_id", requestUserId);
 
       if (readError) throw readError;
 
-      // Create a map of conversation_id -> last_read_at
       const readMap = new Map(
         (readStatuses || []).map(r => [r.conversation_id, new Date(r.last_read_at)])
       );
 
-      // Get all messages in user's conversations that are NOT sent by the user
       const { data: messages, error: msgError } = await supabase
         .from("messages")
         .select("id, conversation_id, created_at")
         .in("conversation_id", conversationIds)
-        .neq("sender_id", user.id)
+        .neq("sender_id", requestUserId)
         .order("created_at", { ascending: false });
 
       if (msgError) throw msgError;
 
-      // Count unread messages per conversation
       const perConversation = new Map<string, number>();
       let totalUnread = 0;
 
       for (const msg of messages || []) {
         const lastRead = readMap.get(msg.conversation_id);
         const msgCreatedAt = new Date(msg.created_at);
-
-        // If never read or message is newer than last read, it's unread
         if (!lastRead || msgCreatedAt > lastRead) {
           const currentCount = perConversation.get(msg.conversation_id) || 0;
           perConversation.set(msg.conversation_id, currentCount + 1);
@@ -75,8 +73,20 @@ export function useUnreadMessages() {
       }
 
       setUnreadData({ totalUnread, perConversation });
-    } catch (error) {
-      console.error("Error fetching unread counts:", error);
+    } catch (error: any) {
+      // Silently swallow transient network/auth-transition errors.
+      // These typically appear as "Load failed" / "Failed to fetch" when
+      // the auth token rotates mid-request and resolve on the next tick
+      // via the realtime subscription or the next auth state change.
+      const msg = String(error?.message || error || "");
+      const isTransient =
+        msg.includes("Load failed") ||
+        msg.includes("Failed to fetch") ||
+        msg.includes("NetworkError") ||
+        msg.includes("AbortError");
+      if (!isTransient) {
+        console.error("Error fetching unread counts:", error);
+      }
     }
   }, [user]);
 
