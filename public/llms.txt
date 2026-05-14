@@ -1,0 +1,21 @@
+# RedPaw Companion
+
+> A safer pet community app for dog owners — share moments, find pet care, report lost or found dogs, donate, adopt, and connect with nearby pet lovers.
+
+RedPaw Companion helps dog owners keep their pets safe and connected. Core features include a social feed, lost & found dog alerts with location and sightings, care requests for sitters, donation campaigns, adoption listings, an in-app pet shop, and an AI assistant for pet questions.
+
+## Pages
+
+- [Home](/): Social feed of community posts and updates from dog owners.
+- [Community](/community): Lost & found dog alerts, care requests, donations, and adoptions.
+- [Shop](/shop): In-app marketplace for pet products.
+- [Pet Spots](/pet-spots): Dog-friendly places nearby.
+- [Search](/search): Search users, dogs, and posts.
+- [AI Assistant](/ai-chat): RedPaw AI chat for pet care questions and lost dog help.
+- [Sign In](/auth): Account sign in and sign up.
+
+## Optional
+
+- [Notifications](/notifications): Personal notification feed (requires sign in).
+- [Messages](/messages): Direct messaging (requires sign in).
+- [Profile](/profile): User profile (requires sign in).
